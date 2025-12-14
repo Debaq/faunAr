@@ -1,13 +1,20 @@
 # FaunAR - Sistema Portal WebAR
 
+## REGLAS IMPORTANTES
+
+- NUNCA correr el proyecto (no usar python -m http.server, npm, ni ningún servidor)
+- NUNCA dar resúmenes de lo hecho al usuario
+
 ## Instrucciones para Claude Code
 
 Construir un sistema portal para experiencias AR en web que permita:
 - Portal principal para listar todos los proyectos/modelos AR disponibles
-- Acceso directo vía QR a modelos específicos
+- Generación automática de QR para acceso directo a modelos específicos
 - Cada modelo en subcarpeta independiente con su configuración
-- Soporte GPS y/o marcadores según configuración
-- Soporte archivos MIND para marcadores
+- SOLO tres modos AR permitidos:
+  1. **Sin AR** - Ver modelo 3D sin realidad aumentada
+  2. **Marcador .patt con AR.js** - Con o sin GPS
+  3. **Marcador .mind con MindAR.js** - Con o sin GPS
 
 ## Estructura del Proyecto
 
@@ -23,43 +30,117 @@ faunar/
 │   ├── ar-engine.js             # Motor AR (GPS + marcadores)
 │   └── config-loader.js         # Cargador de configuraciones
 └── models/                       # Subcarpetas de modelos
-    ├── jaguar/
-    │   ├── config.json          # Configuración del modelo
-    │   ├── model.glb            # Modelo 3D iOS/Android
-    │   ├── model.usdz           # Modelo 3D iOS nativo (opcional)
-    │   ├── sound.mp3            # Sonido (opcional)
-    │   ├── marker.mind          # Archivo MIND para marcador (opcional)
-    │   └── marker.patt          # Patrón AR.js (opcional)
-    └── otro-animal/
-        └── config.json
+    └── chucao/
+        ├── config.json          # Configuración del modelo
+        ├── chucao.glb           # Modelo 3D
+        ├── chucao.usdz          # Modelo 3D iOS nativo (opcional)
+        ├── thumbnail.jpg        # Miniatura (opcional)
+        ├── sound.mp3            # Sonido (opcional)
+        └── chucao.patt          # Patrón AR.js
+```
+
+## Modos AR Soportados
+
+### 1. Sin AR (arMode: "none" o "3d")
+Solo visualización 3D del modelo sin realidad aumentada.
+```json
+"arMode": "none",
+"gps": { "enabled": false },
+"marker": { "enabled": false }
+```
+
+### 2. Marcador .patt con AR.js (arMode: "marker")
+```json
+"arMode": "marker",
+"gps": { "enabled": false },
+"marker": {
+  "enabled": true,
+  "type": "pattern",
+  "file": "chucao.patt"
+}
+```
+
+### 3. Marcador .mind con MindAR.js (arMode: "marker")
+```json
+"arMode": "marker",
+"gps": { "enabled": false },
+"marker": {
+  "enabled": true,
+  "type": "mind",
+  "file": "chucao.mind"
+}
+```
+
+### 4. GPS + Marcador .patt (arMode: "hybrid")
+```json
+"arMode": "hybrid",
+"gps": {
+  "enabled": true,
+  "latitude": -41.4693,
+  "longitude": -72.9424,
+  "radius": 50
+},
+"marker": {
+  "enabled": true,
+  "type": "pattern",
+  "file": "chucao.patt"
+}
+```
+
+### 5. GPS + Marcador .mind (arMode: "hybrid")
+```json
+"arMode": "hybrid",
+"gps": {
+  "enabled": true,
+  "latitude": -41.4693,
+  "longitude": -72.9424,
+  "radius": 50
+},
+"marker": {
+  "enabled": true,
+  "type": "mind",
+  "file": "chucao.mind"
+}
+```
+
+### 6. Solo GPS (arMode: "gps")
+```json
+"arMode": "gps",
+"gps": {
+  "enabled": true,
+  "latitude": -41.4693,
+  "longitude": -72.9424,
+  "radius": 50
+},
+"marker": { "enabled": false }
 ```
 
 ## Paso 1: Crear config.json ejemplo
 
-Crear archivo en `models/jaguar/config.json`:
+Crear archivo en `models/chucao/config.json`:
 
 ```json
 {
-  "id": "jaguar",
-  "name": "Jaguar",
-  "scientificName": "Panthera onca",
-  "description": "El jaguar es el felino más grande de América y el tercero del mundo.",
+  "id": "chucao",
+  "name": "Chucao",
+  "scientificName": "Scelorchilus rubecula",
+  "description": "El chucao es un ave endémica de los bosques templados del sur de Chile y Argentina.",
   "thumbnail": "thumbnail.jpg",
-  "arMode": "hybrid",
+  "arMode": "marker",
   "gps": {
-    "enabled": true,
+    "enabled": false,
     "latitude": -41.4693,
     "longitude": -72.9424,
     "radius": 50
   },
   "marker": {
     "enabled": true,
-    "type": "mind",
-    "file": "marker.mind"
+    "type": "pattern",
+    "file": "chucao.patt"
   },
   "model": {
-    "glb": "model.glb",
-    "usdz": "model.usdz",
+    "glb": "chucao.glb",
+    "usdz": "chucao.usdz",
     "scale": "1 1 1",
     "position": "0 0 0",
     "rotation": "0 0 0"
@@ -69,9 +150,9 @@ Crear archivo en `models/jaguar/config.json`:
     "file": "sound.mp3"
   },
   "info": {
-    "habitat": "Selvas tropicales",
-    "diet": "Carnívoro",
-    "status": "Casi amenazado"
+    "habitat": "Bosques templados húmedos",
+    "diet": "Insectívoro",
+    "status": "Preocupación menor"
   }
 }
 ```
@@ -221,7 +302,7 @@ async function loadProjects() {
     const container = document.getElementById('projects-container');
     
     // Lista de modelos (esto se expande según agregues carpetas)
-    const modelFolders = ['jaguar']; // Agregar más según sea necesario
+    const modelFolders = ['chucao']; // Agregar más según sea necesario
     
     for (const folder of modelFolders) {
         try {
@@ -691,10 +772,32 @@ En `config.json` usa coordenadas reales:
 Subir a cualquier hosting con HTTPS (Netlify, Vercel, GitHub Pages).
 ```
 
+## Generar marcador .patt
+
+Para generar un marcador .patt desde una imagen:
+1. Visitar: https://ar-js-org.github.io/AR.js/three.js/examples/marker-training/examples/generator.html
+2. Subir imagen o diseño
+3. Descargar archivo .patt generado
+4. Renombrar y colocar en carpeta del modelo: `models/chucao/chucao.patt`
+
+## Generar marcador .mind
+
+Para generar archivos .mind desde una imagen:
+1. Visitar: https://hiukim.github.io/mind-ar-js-doc/tools/compile
+2. Subir imagen con buenos contrastes
+3. Descargar archivos generados (.mind, .iset, .fset, .fset3)
+4. Colocar todos en carpeta del modelo con el mismo nombre base
+
+IMPORTANTE: El viewer.html debe cargar MindAR cuando se use type: "mind"
+
 ## TAREA FINAL
 
 Crear la estructura de carpetas y archivos como se indica arriba. El sistema debe estar listo para:
 1. Mostrar portal con proyectos disponibles
-2. Cargar configuraciones dinámicamente
-3. Soportar GPS y marcadores según config
-4. Ser modular para agregar nuevos modelos fácilmente
+2. Generar QR automáticos para cada modelo
+3. Cargar configuraciones dinámicamente
+4. Soportar SOLO los 3 modos AR permitidos:
+   - Sin AR (visualización 3D)
+   - Marcador .patt con AR.js
+   - Marcador .mind con MindAR.js
+5. Ser modular para agregar nuevos modelos fácilmente
