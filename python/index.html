@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FaunAR - Portal</title>
+    <link rel="stylesheet" href="css/portal.css">
+</head>
+<body>
+    <header>
+        <h1>🌿 FaunAR</h1>
+        <p>Experiencias de fauna en Realidad Aumentada</p>
+    </header>
+
+    <main id="projects-container">
+        <!-- Se carga dinámicamente desde JS -->
+    </main>
+
+    <footer>
+        <p>Escanea un QR o selecciona un proyecto</p>
+    </footer>
+
+    <!-- Modal QR -->
+    <div id="qr-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title"></h3>
+            <p id="modal-subtitle"></p>
+            <div id="qr-container"></div>
+            <div class="modal-actions">
+                <button class="btn btn-close" onclick="closeQRModal()">Cerrar</button>
+                <button class="btn btn-download" onclick="downloadQR()">Descargar QR</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="js/portal.js"></script>
+</body>
+</html>

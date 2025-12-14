@@ -28,12 +28,29 @@ async function initAR() {
     }
 
     if (currentConfig.arMode === 'marker' || currentConfig.arMode === 'hybrid') {
+        console.log('Iniciando modo marcador...');
         await initMarker();
+        console.log('Modo marcador iniciado.');
     }
 
-    setTimeout(() => {
-        document.getElementById('loading').style.display = 'none';
-    }, 2000);
+    // console.log('Programando ocultar loading...');
+    // setTimeout(() => {
+    //     console.log('Ocultando loading...');
+    //     document.getElementById('loading').style.display = 'none';
+    // }, 2000);
+
+    // Diagnóstico de cámara (Desactivado para evitar conflicto con MindAR)
+    // checkCameraAccess();
+}
+
+async function checkCameraAccess() {
+    try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
+        console.log('Acceso a cámara verificado');
+    } catch (error) {
+        console.error('Error de acceso a cámara:', error);
+        alert(`Error de cámara: ${error.name} - ${error.message}. Asegúrate de usar HTTPS o localhost y cerrar otras apps que usen la cámara.`);
+    }
 }
 
 function updateInfoPanel() {
@@ -49,6 +66,16 @@ function updateInfoPanel() {
     }
 }
 
+// Toggle del panel de información
+window.toggleInfo = function() {
+    const panel = document.getElementById('info-panel');
+    if (panel.style.display === 'none' || !panel.style.display) {
+        panel.style.display = 'block';
+    } else {
+        panel.style.display = 'none';
+    }
+};
+
 function updateLoadingStatus(message) {
     document.getElementById('loading-status').textContent = message;
 }
@@ -60,6 +87,11 @@ async function initGPS() {
         console.error('GPS no disponible');
         return;
     }
+
+    // Activar componentes GPS en la cámara
+    const camera = document.getElementById('camera');
+    camera.setAttribute('gps-camera', '');
+    camera.setAttribute('rotation-reader', '');
 
     navigator.geolocation.watchPosition(
         (position) => {
@@ -102,10 +134,10 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     const Δφ = (lat2 - lat1) * Math.PI / 180;
     const Δλ = (lon2 - lon1) * Math.PI / 180;
 
-    const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-              Math.cos(φ1) * Math.cos(φ2) *
-              Math.sin(Δλ/2) * Math.sin(Δλ/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+        Math.cos(φ1) * Math.cos(φ2) *
+        Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
     return R * c; // Distancia en metros
 }
@@ -145,7 +177,11 @@ function showGPSModel() {
 
     container.appendChild(entity);
 
-    document.getElementById('info-panel').style.display = 'block';
+    // Animar botón de info para indicar que el modelo está disponible
+    const infoBtn = document.getElementById('info-toggle-btn');
+    if (infoBtn) {
+        infoBtn.style.animation = 'pulse 1s ease-in-out 3';
+    }
 
     // Reproducir sonido si está configurado
     if (currentConfig.audio?.enabled) {
@@ -155,60 +191,340 @@ function showGPSModel() {
 }
 
 async function initMarker() {
-    updateLoadingStatus('Inicializando detección de marcadores...');
+    updateLoadingStatus('Inicializando MindAR...');
 
     const scene = document.querySelector('a-scene');
-    const markerContainer = document.getElementById('marker-container');
 
-    let marker;
-
-    if (currentConfig.marker.type === 'mind') {
-        // MIND marker (NFT) - usar MindAR.js
-        marker = document.createElement('a-nft');
-        marker.setAttribute('type', 'nft');
-        marker.setAttribute('url', `models/${modelId}/${currentConfig.marker.file.replace('.mind', '')}`);
-    } else if (currentConfig.marker.type === 'pattern') {
-        // Pattern marker (.patt) - usar AR.js
-        marker = document.createElement('a-marker');
-        marker.setAttribute('type', 'pattern');
-        marker.setAttribute('url', `models/${modelId}/${currentConfig.marker.file}`);
+    // Configurar MindAR en la escena
+    let mindFile = `models/${modelId}/${currentConfig.marker.file}`;
+    if (currentConfig.marker.file.startsWith('http')) {
+        mindFile = currentConfig.marker.file;
     }
 
-    marker.setAttribute('smooth', 'true');
-    marker.setAttribute('smoothCount', '10');
-    marker.setAttribute('smoothTolerance', '0.01');
-    marker.setAttribute('smoothThreshold', '5');
+    console.log('Configurando MindAR con archivo:', mindFile);
+    scene.setAttribute('mindar-image', `imageTargetSrc: ${mindFile}; filterMinCF: 0.0001; filterBeta: 0.001;`);
 
-    // Agregar modelo al marcador
+    // Crear el target (anchor)
+    const anchor = document.createElement('a-entity');
+    anchor.setAttribute('mindar-image-target', 'targetIndex: 0');
+
+    // Crear modelo
     const modelEntity = document.createElement('a-entity');
     modelEntity.setAttribute('gltf-model', `models/${modelId}/${currentConfig.model.glb}`);
     modelEntity.setAttribute('scale', currentConfig.model.scale);
     modelEntity.setAttribute('position', currentConfig.model.position);
     modelEntity.setAttribute('rotation', currentConfig.model.rotation);
 
-    if (currentConfig.model.glb.includes('glb') || currentConfig.model.glb.includes('gltf')) {
-        modelEntity.setAttribute('animation-mixer', '');
+    anchor.appendChild(modelEntity);
+    scene.appendChild(anchor);
+
+    // Eventos
+    anchor.addEventListener('targetFound', () => {
+        console.log('Target encontrado');
+        document.getElementById('loading').style.display = 'none';
+    });
+
+    anchor.addEventListener('targetLost', () => {
+        console.log('Target perdido');
+    });
+
+    // Fallback timeout
+    setTimeout(() => {
+        document.getElementById('loading').style.display = 'none';
+    }, 5000);
+}
+
+window.enable3DMode = function () {
+    const scene = document.querySelector('a-scene');
+    const markerContainer = document.getElementById('marker-container');
+
+    // Ocultar/Remover marcadores
+    markerContainer.innerHTML = '';
+
+    let entity;
+
+    if (currentConfig.model.type === 'primitive') {
+        // Modelo primitivo (Cubo, Esfera, etc.)
+        entity = document.createElement(currentConfig.model.primitive || 'a-box');
+        entity.setAttribute('color', currentConfig.model.color || 'red');
+    } else {
+        // Modelo 3D (GLB/GLTF)
+        entity = document.createElement('a-entity');
+        entity.setAttribute('gltf-model', `models/${modelId}/${currentConfig.model.glb}`);
+
+        if (currentConfig.model.glb.includes('glb') || currentConfig.model.glb.includes('gltf')) {
+            entity.setAttribute('animation-mixer', '');
+        }
     }
 
-    marker.appendChild(modelEntity);
-    scene.appendChild(marker);
+    entity.setAttribute('scale', currentConfig.model.scale);
+    entity.setAttribute('position', '0 0 -2'); // 2 metros frente a la cámara
+    entity.setAttribute('rotation', '0 0 0');
 
-    // Eventos del marcador
-    marker.addEventListener('markerFound', () => {
-        console.log('Marcador encontrado');
-        document.getElementById('info-panel').style.display = 'block';
+    // Agregar controles de rotación básica
+    entity.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear');
 
-        if (currentConfig.audio?.enabled) {
-            const audio = new Audio(`models/${modelId}/${currentConfig.audio.file}`);
-            audio.play().catch(e => console.log('Audio bloqueado:', e));
+    // Agregar a la cámara para que siga al usuario o a la escena?
+    // Mejor a la escena pero frente a la cámara inicial.
+    // Como la cámara se mueve con el dispositivo, si lo agregamos a la escena en 0 0 -2, 
+    // el usuario tendrá que buscarlo si ya movió el dispositivo.
+    // Vamos a agregarlo como hijo de la cámara para que siempre esté visible "en la mano".
+    const camera = document.getElementById('camera');
+    camera.appendChild(entity);
+
+    // Animar botón de info
+    const infoBtn = document.getElementById('info-toggle-btn');
+    if (infoBtn) {
+        infoBtn.style.animation = 'pulse 1s ease-in-out 3';
+    }
+
+    document.getElementById('view-3d-btn').style.display = 'none';
+};
+
+window.testCamera = async function () {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        alert('Éxito: Cámara detectada y accesible.\nTracks: ' + stream.getVideoTracks().length);
+        // Detener el stream de prueba para no bloquear
+        stream.getTracks().forEach(track => track.stop());
+    } catch (err) {
+        console.error('Error de cámara:', err);
+        alert('Error de cámara: ' + err.name + ' - ' + err.message);
+    }
+};
+
+// ============================================
+// FUNCIONALIDAD DE CAPTURA DE FOTOS
+// ============================================
+
+let capturedPhotos = [];
+let currentPhotoData = null;
+
+// Cargar fotos guardadas del localStorage
+function loadSavedPhotos() {
+    const saved = localStorage.getItem('faunar_photos');
+    if (saved) {
+        capturedPhotos = JSON.parse(saved);
+        updateGalleryButton();
+    }
+}
+
+// Guardar fotos en localStorage
+function savePhotos() {
+    localStorage.setItem('faunar_photos', JSON.stringify(capturedPhotos));
+    updateGalleryButton();
+}
+
+// Capturar foto de la escena AR
+window.capturePhoto = function() {
+    const scene = document.querySelector('a-scene');
+
+    if (!scene) {
+        alert('Escena AR no disponible');
+        return;
+    }
+
+    // Efecto de flash
+    const flash = document.getElementById('capture-flash');
+    flash.classList.add('flash');
+    setTimeout(() => flash.classList.remove('flash'), 150);
+
+    // Sonido de cámara (opcional)
+    const clickSound = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBjGH0fPTgjMGHm7A7+OZURE');
+    clickSound.volume = 0.3;
+    clickSound.play().catch(() => {});
+
+    requestAnimationFrame(() => {
+        // Buscar el video de la cámara y el canvas de WebGL
+        const video = document.querySelector('video');
+        const glCanvas = scene.canvas || document.querySelector('canvas');
+
+        if (!video || !glCanvas) {
+            alert('No se pudo capturar: video o canvas no disponible');
+            return;
         }
-    });
 
-    marker.addEventListener('markerLost', () => {
-        console.log('Marcador perdido');
-        document.getElementById('info-panel').style.display = 'none';
+        // Crear canvas temporal para combinar video + modelo 3D
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = video.videoWidth || glCanvas.width;
+        tempCanvas.height = video.videoHeight || glCanvas.height;
+        const ctx = tempCanvas.getContext('2d');
+
+        // Dibujar el video de la cámara primero (fondo)
+        ctx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+
+        // Dibujar el canvas de WebGL encima (modelo 3D)
+        ctx.drawImage(glCanvas, 0, 0, tempCanvas.width, tempCanvas.height);
+
+        // Convertir a imagen
+        const dataURL = tempCanvas.toDataURL('image/png');
+
+        // Guardar foto con metadata
+        const photo = {
+            id: Date.now(),
+            data: dataURL,
+            timestamp: new Date().toISOString(),
+            modelId: modelId,
+            modelName: currentConfig?.name || 'Desconocido'
+        };
+
+        capturedPhotos.unshift(photo);
+        savePhotos();
+
+        // Mostrar preview
+        currentPhotoData = photo;
+        showPhotoPreview(photo.data);
     });
+};
+
+// Mostrar preview de la foto capturada
+function showPhotoPreview(imageData) {
+    const preview = document.getElementById('photo-preview');
+    const previewImage = document.getElementById('preview-image');
+
+    previewImage.src = imageData;
+    preview.style.display = 'flex';
+}
+
+// Cerrar preview
+window.closePreview = function() {
+    document.getElementById('photo-preview').style.display = 'none';
+    currentPhotoData = null;
+};
+
+// Descargar foto
+window.downloadPhoto = function() {
+    if (!currentPhotoData) return;
+
+    const link = document.createElement('a');
+    const fileName = `FaunAR_${currentConfig?.name || 'foto'}_${new Date().getTime()}.png`;
+
+    link.download = fileName;
+    link.href = currentPhotoData.data;
+    link.click();
+
+    // Mostrar confirmación
+    const downloadBtn = document.getElementById('download-btn');
+    const originalText = downloadBtn.textContent;
+    downloadBtn.textContent = '✓ Descargada';
+    setTimeout(() => {
+        downloadBtn.textContent = originalText;
+    }, 2000);
+};
+
+// Compartir foto (Web Share API)
+window.sharePhoto = async function() {
+    if (!currentPhotoData) return;
+
+    try {
+        // Convertir data URL a Blob
+        const response = await fetch(currentPhotoData.data);
+        const blob = await response.blob();
+        const file = new File([blob], `FaunAR_${currentConfig?.name}.png`, { type: 'image/png' });
+
+        // Verificar si Web Share API está disponible
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+                files: [file],
+                title: `Foto AR - ${currentConfig?.name}`,
+                text: `¡Mira esta foto AR de ${currentConfig?.name} capturada con FaunAR!`
+            });
+        } else {
+            // Fallback: copiar al portapapeles si está disponible
+            if (navigator.clipboard && navigator.clipboard.write) {
+                await navigator.clipboard.write([
+                    new ClipboardItem({
+                        'image/png': blob
+                    })
+                ]);
+                alert('Foto copiada al portapapeles');
+            } else {
+                alert('Función de compartir no disponible. Usa el botón de descargar.');
+            }
+        }
+    } catch (error) {
+        console.error('Error compartiendo:', error);
+        alert('No se pudo compartir la foto. Intenta descargarla.');
+    }
+};
+
+// Abrir galería
+window.openGallery = function() {
+    const gallery = document.getElementById('photo-gallery');
+    const grid = document.getElementById('photo-gallery-grid');
+
+    // Limpiar grid
+    grid.innerHTML = '';
+
+    if (capturedPhotos.length === 0) {
+        grid.innerHTML = '<p style="color: white; text-align: center; padding: 40px; grid-column: 1/-1;">No hay fotos capturadas aún. ¡Captura tu primera foto AR!</p>';
+    } else {
+        // Agregar fotos al grid
+        capturedPhotos.forEach((photo, index) => {
+            const item = document.createElement('div');
+            item.className = 'gallery-photo-item';
+            item.innerHTML = `<img src="${photo.data}" alt="Foto ${index + 1}">`;
+            item.onclick = () => {
+                currentPhotoData = photo;
+                showPhotoPreview(photo.data);
+            };
+            grid.appendChild(item);
+        });
+    }
+
+    gallery.style.display = 'flex';
+};
+
+// Cerrar galería
+window.closeGallery = function() {
+    document.getElementById('photo-gallery').style.display = 'none';
+};
+
+// Actualizar botón de galería con última foto
+function updateGalleryButton() {
+    const galleryBtn = document.getElementById('gallery-btn');
+
+    if (capturedPhotos.length > 0) {
+        galleryBtn.style.backgroundImage = `url('${capturedPhotos[0].data}')`;
+        galleryBtn.style.backgroundSize = 'cover';
+        galleryBtn.style.backgroundPosition = 'center';
+    }
+}
+
+// ============================================
+// MEJORA DE INICIALIZACIÓN DE CÁMARA
+// ============================================
+
+// Mejorar solicitud de permisos de cámara
+async function ensureCameraPermissions() {
+    try {
+        // Intentar obtener permisos de cámara de forma explícita
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: 'environment',
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            }
+        });
+
+        console.log('Permisos de cámara concedidos');
+
+        // Detener el stream de prueba
+        stream.getTracks().forEach(track => track.stop());
+
+        return true;
+    } catch (error) {
+        console.error('Error solicitando permisos de cámara:', error);
+        alert('Se necesitan permisos de cámara para usar la experiencia AR. Por favor, autoriza el acceso a la cámara.');
+        return false;
+    }
 }
 
 // Iniciar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', initAR);
+document.addEventListener('DOMContentLoaded', async () => {
+    // Cargar fotos guardadas
+    loadSavedPhotos();
+
+    // Iniciar AR directamente - MindAR maneja los permisos de cámara
+    await initAR();
+});

@@ -13,13 +13,12 @@
   },
   "marker": {
     "enabled": true,
-    "type": "pattern",
-    "file": "chucao.patt"
+    "type": "mind",
+    "file": "chucao.mind"
   },
   "model": {
     "glb": "chucao.glb",
-    "usdz": "chucao.usdz",
-    "scale": "1 1 1",
+    "scale": "0.5 0.5 0.5",
     "position": "0 0 0",
     "rotation": "0 0 0"
   },

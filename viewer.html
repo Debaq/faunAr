@@ -2,12 +2,14 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <title>FaunAR - Visor</title>
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
     <link rel="stylesheet" href="css/viewer.css">
+
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 </head>
 <body>
     <div id="loading">
@@ -16,9 +18,16 @@
         <p id="loading-status">Iniciando</p>
     </div>
 
-    <button id="back-btn" onclick="history.back()">← Volver</button>
+    <button id="back-btn" onclick="window.location.href='index.html'">← Volver</button>
+
+    <!-- Botón para mostrar/ocultar info -->
+    <button id="info-toggle-btn" onclick="toggleInfo()" style="position: fixed; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.6); color: white; border: none; padding: 10px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 300; width: 44px; height: 44px; backdrop-filter: blur(10px);">ℹ️</button>
+
+    <!-- Botón para modo 3D -->
+    <button id="view-3d-btn" onclick="enable3DMode()" style="position: fixed; top: 60px; right: 10px; background: rgba(0, 0, 0, 0.6); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-size: 14px; cursor: pointer; z-index: 300; backdrop-filter: blur(10px); display: none;">Ver en 3D</button>
 
     <div id="info-panel">
+        <button onclick="toggleInfo()" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
         <h3 id="animal-name"></h3>
         <p id="animal-scientific"></p>
         <div id="animal-details"></div>
@@ -29,20 +38,43 @@
         <p id="direction-text"></p>
     </div>
 
+    <!-- Controles de cámara tipo app móvil -->
+    <div id="camera-controls">
+        <button id="gallery-btn" onclick="openGallery()"></button>
+        <button id="capture-btn" onclick="capturePhoto()"></button>
+    </div>
+
+    <!-- Flash de captura -->
+    <div id="capture-flash"></div>
+
+    <!-- Preview de foto capturada -->
+    <div id="photo-preview">
+        <img id="preview-image" src="" alt="Foto capturada">
+        <div id="photo-preview-actions">
+            <button id="download-btn" onclick="downloadPhoto()">Descargar</button>
+            <button id="share-btn" onclick="sharePhoto()">Compartir</button>
+            <button id="close-preview-btn" onclick="closePreview()">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- Galería de fotos -->
+    <div id="photo-gallery">
+        <div id="photo-gallery-header">
+            <h2>Mis Fotos AR</h2>
+            <button onclick="closeGallery()" style="background: transparent; border: none; color: white; font-size: 24px; cursor: pointer;">✕</button>
+        </div>
+        <div id="photo-gallery-grid"></div>
+    </div>
+
     <a-scene
         id="ar-scene"
         embedded
-        arjs="sourceType: webcam; debugUIEnabled: false;"
+        color-space="sRGB"
+        renderer="colorManagement: true, physicallyCorrectLights; alpha: true; preserveDrawingBuffer: true"
         vr-mode-ui="enabled: false"
-        renderer="logarithmicDepthBuffer: true;">
+        device-orientation-permission-ui="enabled: false">
 
-        <a-camera gps-camera rotation-reader></a-camera>
-
-        <!-- Contenedor para modelos GPS -->
-        <a-entity id="gps-container"></a-entity>
-
-        <!-- Contenedor para marcadores -->
-        <div id="marker-container"></div>
+        <a-camera id="camera" position="0 0 0" look-controls="enabled: false"></a-camera>
     </a-scene>
 
     <script src="js/config-loader.js"></script>

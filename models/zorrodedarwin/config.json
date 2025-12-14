@@ -13,12 +13,12 @@
   },
   "marker": {
     "enabled": true,
-    "type": "mind",
-    "file": "marker.mind"
+    "type": "pattern",
+    "file": "chucao.patt"
   },
   "model": {
-    "glb": "model.glb",
-    "usdz": "model.usdz",
+    "glb": "zorrodedarwin.glb",
+    "usdz": "zorrodedarwin.usdz",
     "scale": "1 1 1",
     "position": "0 0 0",
     "rotation": "0 0 0"
