@@ -1,0 +1,45 @@
+{
+  "project_id": "faunar",
+  "language_code": "es",
+  "contact_info": {
+    "institution": "TecMedHub - Universidad Austral de Chile (Sede Puerto Montt)",
+    "social_media": [
+      {
+        "platform": "Instagram",
+        "username": "@tecmedhub",
+        "url": "https://www.instagram.com/tecmedhub"
+      }
+    ]
+  },
+  "content": {
+    "formal_title": "FaunAR: Plataforma de Inmersión y Educación para la Conservación del Ecosistema Austral",
+    "executive_summary": {
+      "title": "Resumen Ejecutivo",
+      "paragraph": "FaunAR es un proyecto de divulgación y educación ambiental desarrollado por **TecMedHub (Laboratorio de Prototipado Avanzado de la Universidad Austral de Chile, Sede Puerto Montt)**. Este sistema de Realidad Aumentada (RA) está diseñado para transformar rutas de senderismo y espacios naturales en laboratorios de aprendizaje interactivo. El objetivo principal es fomentar la conservación de la biodiversidad local a través de la inmersión digital, proporcionando conocimiento riguroso y detallado sobre la flora y fauna nativa."
+    },
+    "scope_and_location": {
+      "title": "Alcance y Localización",
+      "paragraph": "La implementación inicial de FaunAR se centra en el sendero del **Parque Laguna Azul**, Región de Los Lagos, Chile. Esta localización estratégica permite enfocar la experiencia en especies endémicas representativas del Bosque Templado Lluvioso y los ecosistemas lacustres del sur de Chile."
+    },
+    "methodology_and_technology": {
+      "title": "Metodología y Tecnología",
+      "description_paragraph": "El proyecto se basa en el despliegue de marcadores físicos de alta fidelidad, que combinan **códigos QR** con imágenes ilustrativas de las especies. La activación de la Realidad Aumentada se realiza mediante la tecnología **MindAR**, haciéndola accesible a cualquier usuario con un dispositivo móvil estándar, eliminando barreras de entrada tecnológicas.",
+      "content_list_title": "El contenido inmersivo incluye:",
+      "content_list": [
+        "**Modelos 3D e Ilustraciones:** Representación digital de la especie en su entorno.",
+        "**Fichas Informativas Detalladas:** Descripciones completas que abordan su taxonomía, biología, comportamiento y estado de conservación.",
+        "**Contenido Multimedia:** Incorporación de sonidos característicos y, en fases futuras, videos de comportamiento etológico."
+      ]
+    },
+    "impact_and_objectives": {
+      "title": "Impacto y Objetivos Estratégicos",
+      "preface_paragraph": "El diseño de FaunAR se fundamenta en la premisa de que **el conocimiento profundo conduce a la conservación activa**. Al proporcionar información rica y contextualizada sobre especies focales como el Carpintero Negro, la Nutria de Agua, el Chucao y el Zorro Chilote, el proyecto busca:",
+      "objectives_list": [
+        "**Educación Científica:** Elevar la comprensión del público sobre los procesos ecológicos y las dinámicas del ecosistema local.",
+        "**Concienciación:** Destacar la vulnerabilidad de las especies nativas y la importancia crítica de su preservación.",
+        "**Innovación Aplicada:** Demostrar la capacidad del prototipado ágil y las tecnologías de inmersión desarrolladas en el FabLab de TecMedHub para generar soluciones concretas en áreas no médicas, como la educación ambiental."
+      ],
+      "closing_paragraph": "FaunAR es un testimonio de la versatilidad de las capacidades de prototipado físico y de *software* de TecMedHub, aplicando la innovación tecnológica para abordar desafíos sociales y ecológicos de la Región de Los Lagos."
+    }
+  }
+}
