@@ -1,46 +1,82 @@
 let currentConfig = null;
 let userLocation = null;
+let arSystemReady = false;
 
 // Obtener parámetro de modelo desde URL
 const urlParams = new URLSearchParams(window.location.search);
 const modelId = urlParams.get('model');
 
+// Función para iniciar AR manualmente (llamada por el botón)
+window.manualStartAR = async function() {
+    console.log('🖱️ Usuario presionó botón de inicio manual');
+    const scene = document.querySelector('a-scene');
+    const arSystem = scene.systems['mindar-image-system'];
+
+    if (arSystem && arSystem.start) {
+        try {
+            console.log('🚀 Arrancando MindAR manualmente desde botón...');
+            await arSystem.start();
+            console.log('✓ MindAR arrancado exitosamente');
+
+            // Ocultar el botón
+            document.getElementById('start-ar-btn').style.display = 'none';
+            updateLoadingStatus('Cámara activada, apunta al marcador...');
+
+            // Continuar con el setup del modelo
+            await continueMarkerSetup();
+        } catch (error) {
+            console.error('✗ Error al arrancar MindAR:', error);
+            alert('Error al activar la cámara: ' + error.message);
+        }
+    } else {
+        console.error('Sistema MindAR no disponible');
+        alert('Error: Sistema AR no disponible');
+    }
+};
+
 async function initAR() {
     if (!modelId) {
         alert('No se especificó modelo');
+        document.getElementById('loading').style.display = 'none';
         return;
     }
 
-    updateLoadingStatus('Cargando configuración...');
-    currentConfig = await ConfigLoader.load(modelId);
+    // Timeout de seguridad: ocultar loading después de 8 segundos pase lo que pase
+    const safetyTimeout = setTimeout(() => {
+        console.warn('Timeout de seguridad: ocultando loading después de 8 segundos');
+        document.getElementById('loading').style.display = 'none';
+    }, 8000);
 
-    if (!currentConfig) {
-        alert('Error cargando configuración');
-        return;
+    try {
+        updateLoadingStatus('Cargando configuración...');
+        currentConfig = await ConfigLoader.load(modelId);
+
+        if (!currentConfig) {
+            alert('Error cargando configuración');
+            clearTimeout(safetyTimeout);
+            document.getElementById('loading').style.display = 'none';
+            return;
+        }
+
+        // Actualizar info panel
+        updateInfoPanel();
+
+        // Iniciar según modo AR
+        if (currentConfig.arMode === 'gps' || currentConfig.arMode === 'hybrid') {
+            await initGPS();
+        }
+
+        if (currentConfig.arMode === 'marker' || currentConfig.arMode === 'hybrid') {
+            console.log('Iniciando modo marcador...');
+            await initMarker();
+            console.log('Modo marcador iniciado.');
+        }
+    } catch (error) {
+        console.error('Error durante la inicialización de AR:', error);
+        alert('Error durante la inicialización de AR: ' + error.message);
+        clearTimeout(safetyTimeout);
+        document.getElementById('loading').style.display = 'none';
     }
-
-    // Actualizar info panel
-    updateInfoPanel();
-
-    // Iniciar según modo AR
-    if (currentConfig.arMode === 'gps' || currentConfig.arMode === 'hybrid') {
-        await initGPS();
-    }
-
-    if (currentConfig.arMode === 'marker' || currentConfig.arMode === 'hybrid') {
-        console.log('Iniciando modo marcador...');
-        await initMarker();
-        console.log('Modo marcador iniciado.');
-    }
-
-    // console.log('Programando ocultar loading...');
-    // setTimeout(() => {
-    //     console.log('Ocultando loading...');
-    //     document.getElementById('loading').style.display = 'none';
-    // }, 2000);
-
-    // Diagnóstico de cámara (Desactivado para evitar conflicto con MindAR)
-    // checkCameraAccess();
 }
 
 async function checkCameraAccess() {
@@ -192,8 +228,31 @@ function showGPSModel() {
 
 async function initMarker() {
     updateLoadingStatus('Inicializando MindAR...');
+    console.log('========== INICIO INICIALIZACIÓN MINDAR ==========');
 
     const scene = document.querySelector('a-scene');
+    console.log('Escena A-Frame obtenida:', scene ? 'OK' : 'ERROR');
+
+    // Verificar estado de video/cámara
+    const existingVideo = document.querySelector('video');
+    console.log('Video existente antes de MindAR:', existingVideo ? 'SÍ' : 'NO');
+    if (existingVideo) {
+        console.log('Video dimensions:', existingVideo.videoWidth, 'x', existingVideo.videoHeight);
+        console.log('Video readyState:', existingVideo.readyState);
+    }
+
+    // Limpiar cualquier configuración previa de MindAR
+    if (scene.systems['mindar-image-system']) {
+        console.log('⚠️ Limpiando sistema MindAR previo...');
+        scene.removeAttribute('mindar-image');
+        // Esperar un poco para que se limpie
+        await new Promise(resolve => setTimeout(resolve, 300));
+    }
+
+    // Limpiar entidades previas
+    const oldAnchors = scene.querySelectorAll('[mindar-image-target]');
+    console.log('Anchors previos encontrados:', oldAnchors.length);
+    oldAnchors.forEach(anchor => anchor.remove());
 
     // Configurar MindAR en la escena
     let mindFile = `models/${modelId}/${currentConfig.marker.file}`;
@@ -201,37 +260,185 @@ async function initMarker() {
         mindFile = currentConfig.marker.file;
     }
 
-    console.log('Configurando MindAR con archivo:', mindFile);
-    scene.setAttribute('mindar-image', `imageTargetSrc: ${mindFile}; filterMinCF: 0.0001; filterBeta: 0.001;`);
+    console.log('📁 Archivo MindAR:', mindFile);
+    console.log('🎨 Modelo 3D:', `models/${modelId}/${currentConfig.model.glb}`);
+
+    try {
+        scene.setAttribute('mindar-image', `imageTargetSrc: ${mindFile}; autoStart: true; uiLoading: no; uiScanning: no; uiError: no;`);
+        console.log('✓ Atributo mindar-image configurado en escena con autoStart');
+    } catch (error) {
+        console.error('✗ Error al configurar mindar-image:', error);
+    }
+
+    // Esperar a que MindAR se inicialice y arranque
+    console.log('⏳ Esperando 2 segundos para que MindAR arranque la cámara...');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Verificar que el sistema de MindAR esté activo
+    if (scene.systems['mindar-image-system']) {
+        console.log('✓ Sistema MindAR activo');
+
+        // Intentar iniciar manualmente si no ha arrancado
+        try {
+            const arSystem = scene.systems['mindar-image-system'];
+            if (arSystem && arSystem.start) {
+                console.log('🚀 Intentando arrancar MindAR manualmente...');
+                await arSystem.start();
+                console.log('✓ MindAR arrancado manualmente');
+            }
+        } catch (e) {
+            console.log('ℹ️ No se pudo arrancar manualmente (puede que ya esté arrancado):', e.message);
+        }
+    } else {
+        console.error('✗ Sistema MindAR NO está activo');
+    }
+
+    // Verificar video después de inicializar MindAR
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const videoAfter = document.querySelector('video');
+    console.log('Video después de inicializar MindAR:', videoAfter ? 'SÍ' : 'NO');
+    if (videoAfter) {
+        console.log('Video dimensions:', videoAfter.videoWidth, 'x', videoAfter.videoHeight);
+        console.log('Video readyState:', videoAfter.readyState);
+        console.log('Video srcObject:', videoAfter.srcObject ? 'OK' : 'NULL');
+    } else {
+        console.error('✗✗✗ NO SE CREÓ EL ELEMENTO VIDEO - LA CÁMARA NO ARRANCÓ');
+        console.log('💡 Mostrando botón de inicio manual...');
+
+        // Mostrar botón de inicio manual
+        updateLoadingStatus('Toca "Iniciar AR" para activar la cámara');
+        const startBtn = document.getElementById('start-ar-btn');
+        if (startBtn) {
+            startBtn.style.display = 'block';
+        }
+        return; // Salir hasta que el usuario presione el botón
+    }
 
     // Crear el target (anchor)
     const anchor = document.createElement('a-entity');
     anchor.setAttribute('mindar-image-target', 'targetIndex: 0');
+    console.log('✓ Anchor creado con targetIndex: 0');
 
     // Crear modelo
     const modelEntity = document.createElement('a-entity');
-    modelEntity.setAttribute('gltf-model', `models/${modelId}/${currentConfig.model.glb}`);
+    const modelPath = `models/${modelId}/${currentConfig.model.glb}`;
+    console.log('📦 Cargando modelo desde:', modelPath);
+
+    modelEntity.setAttribute('gltf-model', modelPath);
     modelEntity.setAttribute('scale', currentConfig.model.scale);
     modelEntity.setAttribute('position', currentConfig.model.position);
     modelEntity.setAttribute('rotation', currentConfig.model.rotation);
 
+    // Evento de carga del modelo
+    modelEntity.addEventListener('model-loaded', () => {
+        console.log('✓✓✓ Modelo 3D cargado exitosamente ✓✓✓');
+    });
+
+    modelEntity.addEventListener('model-error', (event) => {
+        console.error('✗✗✗ Error cargando modelo 3D:', event.detail);
+    });
+
     anchor.appendChild(modelEntity);
     scene.appendChild(anchor);
+    console.log('✓ Entidad anchor agregada a la escena');
 
     // Eventos
     anchor.addEventListener('targetFound', () => {
-        console.log('Target encontrado');
+        console.log('🎯🎯🎯 TARGET ENCONTRADO - MOSTRANDO MODELO 🎯🎯🎯');
         document.getElementById('loading').style.display = 'none';
+
+        // Reproducir sonido si está configurado
+        if (currentConfig.audio?.enabled) {
+            const audio = new Audio(`models/${modelId}/${currentConfig.audio.file}`);
+            audio.play().catch(e => console.log('Audio bloqueado:', e));
+        }
     });
 
     anchor.addEventListener('targetLost', () => {
-        console.log('Target perdido');
+        console.log('📍 Target perdido');
     });
 
-    // Fallback timeout
+    // Fallback timeout más corto
     setTimeout(() => {
+        console.log('⏰ Timeout de fallback: ocultando loading después de 3 segundos');
         document.getElementById('loading').style.display = 'none';
-    }, 5000);
+    }, 3000);
+
+    console.log('========== FIN INICIALIZACIÓN MINDAR ==========');
+}
+
+// Función para continuar el setup después del inicio manual
+async function continueMarkerSetup() {
+    console.log('Continuando setup del marcador...');
+    const scene = document.querySelector('a-scene');
+
+    // Verificar video
+    await new Promise(resolve => setTimeout(resolve, 500));
+    const video = document.querySelector('video');
+    console.log('Video después de inicio manual:', video ? 'SÍ' : 'NO');
+
+    if (!video) {
+        console.error('El video sigue sin crearse');
+        alert('Error: No se pudo activar la cámara');
+        return;
+    }
+
+    // Crear el target (anchor) si no existe
+    let anchor = scene.querySelector('[mindar-image-target]');
+    if (anchor) {
+        console.log('Anchor ya existe, reutilizando...');
+        document.getElementById('loading').style.display = 'none';
+        return;
+    }
+
+    anchor = document.createElement('a-entity');
+    anchor.setAttribute('mindar-image-target', 'targetIndex: 0');
+    console.log('✓ Anchor creado con targetIndex: 0');
+
+    // Crear modelo
+    const modelEntity = document.createElement('a-entity');
+    const modelPath = `models/${modelId}/${currentConfig.model.glb}`;
+    console.log('📦 Cargando modelo desde:', modelPath);
+
+    modelEntity.setAttribute('gltf-model', modelPath);
+    modelEntity.setAttribute('scale', currentConfig.model.scale);
+    modelEntity.setAttribute('position', currentConfig.model.position);
+    modelEntity.setAttribute('rotation', currentConfig.model.rotation);
+
+    // Evento de carga del modelo
+    modelEntity.addEventListener('model-loaded', () => {
+        console.log('✓✓✓ Modelo 3D cargado exitosamente ✓✓✓');
+    });
+
+    modelEntity.addEventListener('model-error', (event) => {
+        console.error('✗✗✗ Error cargando modelo 3D:', event.detail);
+    });
+
+    anchor.appendChild(modelEntity);
+    scene.appendChild(anchor);
+    console.log('✓ Entidad anchor agregada a la escena');
+
+    // Eventos
+    anchor.addEventListener('targetFound', () => {
+        console.log('🎯🎯🎯 TARGET ENCONTRADO - MOSTRANDO MODELO 🎯🎯🎯');
+        document.getElementById('loading').style.display = 'none';
+
+        // Reproducir sonido si está configurado
+        if (currentConfig.audio?.enabled) {
+            const audio = new Audio(`models/${modelId}/${currentConfig.audio.file}`);
+            audio.play().catch(e => console.log('Audio bloqueado:', e));
+        }
+    });
+
+    anchor.addEventListener('targetLost', () => {
+        console.log('📍 Target perdido');
+    });
+
+    // Timeout para ocultar loading
+    setTimeout(() => {
+        console.log('⏰ Ocultando loading');
+        document.getElementById('loading').style.display = 'none';
+    }, 3000);
 }
 
 window.enable3DMode = function () {
@@ -525,6 +732,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Cargar fotos guardadas
     loadSavedPhotos();
 
-    // Iniciar AR directamente - MindAR maneja los permisos de cámara
-    await initAR();
+    // Esperar a que A-Frame esté completamente cargado
+    const scene = document.querySelector('a-scene');
+
+    if (scene.hasLoaded) {
+        console.log('A-Frame ya cargado, iniciando AR...');
+        await initAR();
+    } else {
+        console.log('Esperando a que A-Frame cargue...');
+        scene.addEventListener('loaded', async () => {
+            console.log('A-Frame cargado, iniciando AR...');
+            await initAR();
+        });
+    }
 });

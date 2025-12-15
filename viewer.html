@@ -16,6 +16,7 @@
         <div class="spinner"></div>
         <h2>Cargando experiencia AR...</h2>
         <p id="loading-status">Iniciando</p>
+        <button id="start-ar-btn" style="display: none; margin-top: 20px; padding: 15px 30px; font-size: 18px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer;" onclick="manualStartAR()">Iniciar AR</button>
     </div>
 
     <button id="back-btn" onclick="window.location.href='index.html'">← Volver</button>
@@ -74,10 +75,10 @@
         vr-mode-ui="enabled: false"
         device-orientation-permission-ui="enabled: false">
 
-        <a-camera id="camera" position="0 0 0" look-controls="enabled: false"></a-camera>
+        <a-camera id="camera" position="0 0 0" look-controls="enabled: false" wasd-controls="enabled: false"></a-camera>
     </a-scene>
 
-    <script src="js/config-loader.js"></script>
-    <script src="js/ar-engine.js"></script>
+    <script src="js/config-loader.js?v=4"></script>
+    <script src="js/ar-engine.js?v=4"></script>
 </body>
 </html>

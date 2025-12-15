@@ -17,8 +17,8 @@
     "file": "pudu.mind"
   },
   "model": {
-    "glb": "model.glb",
-    "usdz": "model.usdz",
+    "glb": "pudu.glb",
+    "usdz": "pudu.usdz",
     "scale": "1 1 1",
     "position": "0 0 0",
     "rotation": "0 0 0"
