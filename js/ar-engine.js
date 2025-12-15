@@ -219,10 +219,12 @@ function showGPSModel() {
         infoBtn.style.animation = 'pulse 1s ease-in-out 3';
     }
 
-    // Reproducir sonido si está configurado
+    // Adjuntar y reproducir sonido si está configurado
     if (currentConfig.audio?.enabled) {
-        const audio = new Audio(`models/${modelId}/${currentConfig.audio.file}`);
-        audio.play().catch(e => console.log('Audio bloqueado:', e));
+        const soundEntity = document.createElement('a-sound');
+        soundEntity.setAttribute('src', `url(models/${modelId}/${currentConfig.audio.file})`);
+        soundEntity.setAttribute('autoplay', 'true');
+        entity.appendChild(soundEntity);
     }
 }
 
@@ -339,6 +341,17 @@ async function initMarker() {
     });
 
     anchor.appendChild(modelEntity);
+
+    // Adjuntar sonido al modelo si está configurado
+    if (currentConfig.audio?.enabled) {
+        const soundEntity = document.createElement('a-sound');
+        soundEntity.setAttribute('src', `url(models/${modelId}/${currentConfig.audio.file})`);
+        soundEntity.setAttribute('autoplay', 'true');
+        soundEntity.setAttribute('position', '0 1 0'); // Posición relativa al modelo
+        modelEntity.appendChild(soundEntity);
+        console.log('✓ Entidad de sonido configurada y adjunta al modelo');
+    }
+
     scene.appendChild(anchor);
     console.log('✓ Entidad anchor agregada a la escena');
 
@@ -346,12 +359,8 @@ async function initMarker() {
     anchor.addEventListener('targetFound', () => {
         console.log('🎯🎯🎯 TARGET ENCONTRADO - MOSTRANDO MODELO 🎯🎯🎯');
         document.getElementById('loading').style.display = 'none';
-
-        // Reproducir sonido si está configurado
-        if (currentConfig.audio?.enabled) {
-            const audio = new Audio(`models/${modelId}/${currentConfig.audio.file}`);
-            audio.play().catch(e => console.log('Audio bloqueado:', e));
-        }
+        
+        // El sonido ahora se reproduce automáticamente a través de a-sound
     });
 
     anchor.addEventListener('targetLost', () => {
@@ -415,6 +424,17 @@ async function continueMarkerSetup() {
     });
 
     anchor.appendChild(modelEntity);
+
+    // Adjuntar sonido al modelo si está configurado (para el caso manual)
+    if (currentConfig.audio?.enabled) {
+        const soundEntity = document.createElement('a-sound');
+        soundEntity.setAttribute('src', `url(models/${modelId}/${currentConfig.audio.file})`);
+        soundEntity.setAttribute('autoplay', 'true');
+        soundEntity.setAttribute('position', '0 1 0'); // Posición relativa al modelo
+        modelEntity.appendChild(soundEntity);
+        console.log('✓ Entidad de sonido configurada y adjunta al modelo (manual)');
+    }
+
     scene.appendChild(anchor);
     console.log('✓ Entidad anchor agregada a la escena');
 
@@ -423,11 +443,7 @@ async function continueMarkerSetup() {
         console.log('🎯🎯🎯 TARGET ENCONTRADO - MOSTRANDO MODELO 🎯🎯🎯');
         document.getElementById('loading').style.display = 'none';
 
-        // Reproducir sonido si está configurado
-        if (currentConfig.audio?.enabled) {
-            const audio = new Audio(`models/${modelId}/${currentConfig.audio.file}`);
-            audio.play().catch(e => console.log('Audio bloqueado:', e));
-        }
+        // El sonido ahora se reproduce automáticamente a través de a-sound
     });
 
     anchor.addEventListener('targetLost', () => {
