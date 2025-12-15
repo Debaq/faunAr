@@ -76,7 +76,7 @@ function createProjectCard(config, folder) {
                 🔍 Ver en AR
             </button>
             <button class="btn btn-secondary" onclick="showQR('${folder}', '${config.name}')">
-                📱 Ver QR
+                📱 Ver QR/Marcador
             </button>
         </div>
     `;
