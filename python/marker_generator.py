@@ -9,12 +9,13 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap, QColor
 import os
 import json
+import subprocess
 from pathlib import Path
 
 class MarkerGenerator(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("FaunAR - Generador de Marcadores")
+        self.setWindowTitle("FaunAR - Generador de Marcadores MindAR")
         self.setGeometry(100, 100, 1200, 700)
 
         # Variable para imagen del animal
@@ -24,7 +25,7 @@ class MarkerGenerator(QMainWindow):
 
         # Variables para tamaños personalizables
         self.qr_size_percent = 90  # Porcentaje del área interna (90%)
-        self.icon_scale = 100  # Escala del icono/imagen (100% = tamaño original)
+        self.icon_scale = 100  # Escala de la imagen (100% = tamaño original)
 
         # Widget central
         central_widget = QWidget()
@@ -48,31 +49,13 @@ class MarkerGenerator(QMainWindow):
         url_layout.addWidget(url_label)
         url_layout.addWidget(self.url_input)
         layout.addLayout(url_layout)
-        
-        # Selector de icono predefinido
-        icon_layout = QHBoxLayout()
-        icon_label = QLabel("Icono predefinido:")
-        self.icon_combo = QComboBox()
-        self.icon_combo.addItems([
-            "Ninguno",
-            "🦁 León",
-            "🐆 Jaguar",
-            "🐻 Oso",
-            "🦅 Águila",
-            "🦊 Zorro",
-            "🦌 Ciervo",
-            "🐺 Lobo"
-        ])
-        self.icon_combo.currentIndexChanged.connect(self.auto_generate_preview)
-        icon_layout.addWidget(icon_label)
-        icon_layout.addWidget(self.icon_combo)
-        layout.addLayout(icon_layout)
-        
-        # O cargar imagen custom
+
+        # Cargar imagen
         image_layout = QHBoxLayout()
-        self.load_image_btn = QPushButton("Cargar Imagen Custom")
+        self.load_image_btn = QPushButton("📁 Cargar Imagen del Animal")
         self.load_image_btn.clicked.connect(self.load_custom_image)
-        self.image_label = QLabel("No se ha cargado imagen")
+        self.image_label = QLabel("⚠️ Debes cargar una imagen primero")
+        self.image_label.setStyleSheet("color: #f44336; font-weight: bold;")
         image_layout.addWidget(self.load_image_btn)
         image_layout.addWidget(self.image_label)
         layout.addLayout(image_layout)
@@ -106,12 +89,12 @@ class MarkerGenerator(QMainWindow):
 
         layout.addWidget(qr_size_group)
 
-        # Control de escala del icono
-        icon_size_group = QGroupBox("⚙️ Tamaño del Icono/Imagen (dentro del área fija)")
+        # Control de escala de la imagen
+        icon_size_group = QGroupBox("⚙️ Tamaño de la Imagen (dentro del área fija)")
         icon_size_layout = QVBoxLayout(icon_size_group)
 
         icon_size_info_layout = QHBoxLayout()
-        icon_size_label = QLabel("Tamaño del contenido:")
+        icon_size_label = QLabel("Tamaño de la imagen:")
         self.icon_size_value_label = QLabel(f"{self.icon_scale}%")
         self.icon_size_value_label.setStyleSheet("font-weight: bold; color: #4CAF50;")
         icon_size_info_layout.addWidget(icon_size_label)
@@ -160,7 +143,7 @@ class MarkerGenerator(QMainWindow):
 
     def create_models_panel(self):
         """Crea el panel izquierdo con la lista de modelos"""
-        panel = QGroupBox("Modelos que necesitan marcadores")
+        panel = QGroupBox("Modelos que necesitan marcadores MindAR")
         panel_layout = QVBoxLayout(panel)
 
         # Botón de actualizar
@@ -189,7 +172,7 @@ class MarkerGenerator(QMainWindow):
         return panel
 
     def scan_models(self):
-        """Escanea la carpeta models/ y lista los que necesitan marcadores .patt"""
+        """Escanea la carpeta models/ y lista los que necesitan marcadores .mind"""
         self.models_list.clear()
         self.model_info.clear()
         self.current_model = None
@@ -218,24 +201,24 @@ class MarkerGenerator(QMainWindow):
 
                 marker_config = config.get('marker', {})
 
-                # Solo mostrar modelos que usen marcadores .patt
+                # Solo mostrar modelos que usen marcadores MindAR (image tracking)
                 if not marker_config.get('enabled', False):
                     continue
 
-                if marker_config.get('type', '') != 'pattern':
+                if marker_config.get('type', '') != 'image':
                     continue
 
                 marker_file = marker_config.get('file', '')
-                patt_path = model_folder / marker_file
+                mind_path = model_folder / marker_file
 
                 # Guardar datos del modelo
                 model_data = {
                     'folder': model_folder.name,
                     'name': config.get('name', 'Sin nombre'),
                     'config': config,
-                    'patt_file': marker_file,
-                    'patt_path': patt_path,
-                    'has_marker': patt_path.exists()
+                    'mind_file': marker_file,
+                    'mind_path': mind_path,
+                    'has_marker': mind_path.exists()
                 }
                 models_data.append(model_data)
 
@@ -260,7 +243,7 @@ class MarkerGenerator(QMainWindow):
             self.models_list.addItem(item)
 
         if not found_models:
-            item = QListWidgetItem("ℹ️ No hay modelos que usen marcadores .patt")
+            item = QListWidgetItem("ℹ️ No hay modelos que usen marcadores MindAR (.mind)")
             self.models_list.addItem(item)
 
     def on_model_selected(self, item):
@@ -278,10 +261,10 @@ class MarkerGenerator(QMainWindow):
 🏷️ Nombre: {model_data['name']}
 📝 Nombre científico: {model_data['config'].get('scientificName', 'N/A')}
 
-📄 Archivo necesario: {model_data['patt_file']}
-📍 Ruta: {model_data['patt_path']}
+📄 Archivo necesario: {model_data['mind_file']}
+📍 Ruta: {model_data['mind_path']}
 
-Estado: {"✅ Tiene marcador" if model_data['has_marker'] else "❌ Falta generar marcador"}
+Estado: {"✅ Tiene marcador MindAR" if model_data['has_marker'] else "❌ Falta generar marcador"}
 """
         self.model_info.setText(info_text)
 
@@ -324,15 +307,15 @@ Estado: {"✅ Tiene marcador" if model_data['has_marker'] else "❌ Falta genera
     def load_custom_image(self):
         file_path, _ = QFileDialog.getOpenFileName(
             self,
-            "Seleccionar Imagen",
+            "Seleccionar Imagen del Animal",
             "",
-            "Imágenes (*.png *.jpg *.jpeg *.svg)"
+            "Imágenes (*.png *.jpg *.jpeg)"
         )
-        
+
         if file_path:
             self.animal_image_path = file_path
-            self.image_label.setText(f"✓ {os.path.basename(file_path)}")
-            self.icon_combo.setCurrentIndex(0)  # Reset combo
+            self.image_label.setText(f"✅ {os.path.basename(file_path)}")
+            self.image_label.setStyleSheet("color: #4CAF50; font-weight: bold;")
             self.auto_generate_preview()
 
     def generate_preview(self):
@@ -436,68 +419,15 @@ Estado: {"✅ Tiene marcador" if model_data['has_marker'] else "❌ Falta genera
         return marker
     
     def get_animal_icon(self):
-        # Si hay imagen custom cargada
+        # Solo cargar imagen si está disponible
         if self.animal_image_path:
             try:
                 return Image.open(self.animal_image_path).convert('RGBA')
-            except:
-                pass
-        
-        # Si hay icono predefinido seleccionado
-        selected_icon = self.icon_combo.currentText()
-        if selected_icon == "Ninguno":
-            return None
-        
-        # Crear imagen con emoji
-        icon_size = 200
-        img = Image.new('RGBA', (icon_size, icon_size), (255, 255, 255, 0))
-        draw = ImageDraw.Draw(img)
-        
-        # Extraer el emoji
-        emoji = selected_icon.split()[0]
-        
-        try:
-            # Intentar cargar una fuente que soporte emojis
-            font_size = 150
-            
-            # Rutas comunes de fuentes emoji según el OS
-            font_paths = [
-                "/System/Library/Fonts/Apple Color Emoji.ttc",  # macOS
-                "/usr/share/fonts/truetype/noto/NotoColorEmoji.ttf",  # Linux
-                "C:\\Windows\\Fonts\\seguiemj.ttf",  # Windows
-            ]
-            
-            font = None
-            for font_path in font_paths:
-                if os.path.exists(font_path):
-                    try:
-                        font = ImageFont.truetype(font_path, font_size)
-                        break
-                    except:
-                        continue
-            
-            if not font:
-                # Fallback a fuente por defecto
-                font = ImageFont.load_default()
-            
-            # Calcular posición centrada
-            bbox = draw.textbbox((0, 0), emoji, font=font)
-            text_width = bbox[2] - bbox[0]
-            text_height = bbox[3] - bbox[1]
-            
-            position = (
-                (icon_size - text_width) // 2,
-                (icon_size - text_height) // 2
-            )
-            
-            draw.text(position, emoji, fill='black', font=font)
-            
-        except Exception as e:
-            print(f"Error dibujando emoji: {e}")
-            # Dibujar un círculo simple como fallback
-            draw.ellipse([50, 50, 150, 150], fill='black')
-        
-        return img
+            except Exception as e:
+                print(f"Error cargando imagen: {e}")
+                return None
+
+        return None
     
     def save_marker(self):
         if not self.current_marker:
@@ -505,8 +435,8 @@ Estado: {"✅ Tiene marcador" if model_data['has_marker'] else "❌ Falta genera
 
         # Determinar nombre y ruta por defecto
         if self.current_model:
-            default_name = self.current_model['patt_file'].replace('.patt', '.png')
-            default_dir = str(self.current_model['patt_path'].parent)
+            default_name = self.current_model['mind_file'].replace('.mind', '.png')
+            default_dir = str(self.current_model['mind_path'].parent)
             default_path = f"{default_dir}/{default_name}"
         else:
             default_path = "marker.png"
@@ -518,53 +448,89 @@ Estado: {"✅ Tiene marcador" if model_data['has_marker'] else "❌ Falta genera
             default_path,
             "PNG Images (*.png)"
         )
-        
+
         if file_path:
             try:
-                # Guardar imagen
+                # Guardar imagen del marcador completo (con QR y borde)
                 self.current_marker.save(file_path)
-                
-                # Generar también el archivo .patt
-                patt_path = file_path.replace('.png', '.patt')
-                self.generate_patt_file(self.current_marker, patt_path)
+                print(f"✅ Imagen del marcador guardada: {file_path}")
+
+                # Intentar generar el archivo .mind
+                mind_path = file_path.replace('.png', '.mind')
+                self.generate_mind_file(file_path, mind_path)
 
                 # Actualizar lista de modelos
                 self.scan_models()
 
+                QMessageBox.information(
+                    self,
+                    "Marcador Guardado",
+                    f"✅ Imagen guardada: {os.path.basename(file_path)}\n\n"
+                    f"Verifica la consola para el estado del archivo .mind"
+                )
+
             except Exception as e:
-                print(f"Error guardando: {str(e)}")
-    
-    def generate_patt_file(self, marker_image, output_path):
+                QMessageBox.critical(
+                    self,
+                    "Error",
+                    f"Error guardando marcador: {str(e)}"
+                )
+                print(f"❌ Error guardando: {str(e)}")
+
+    def generate_mind_file(self, image_path, output_path):
         """
-        Genera un archivo .patt básico para AR.js
-        Nota: Este es un formato simplificado. Para producción,
-        usar la herramienta oficial de AR.js es más confiable.
+        Intenta generar un archivo .mind usando el compilador de MindAR
         """
-        
-        # Extraer el área interna (sin bordes)
-        width, height = marker_image.size
-        border = 100
-        inner = marker_image.crop((border, border, width-border, height-border))
-        
-        # Redimensionar a 16x16 (tamaño estándar para patterns)
-        inner = inner.convert('L')  # Escala de grises
-        inner = inner.resize((16, 16), Image.Resampling.LANCZOS)
-        
-        # Convertir a matriz de valores
-        pixels = list(inner.getdata())
-        
-        # Generar archivo .patt
-        with open(output_path, 'w') as f:
-            # AR.js espera 3 matrices (R, G, B) aunque sean iguales
-            for color_channel in range(3):
-                for i in range(16):
-                    row = pixels[i*16:(i+1)*16]
-                    # Invertir valores (0=negro, 255=blanco en .patt)
-                    row_inverted = [255 - val for val in row]
-                    line = ' '.join(map(str, row_inverted))
-                    f.write(line + '\n')
-                if color_channel < 2:
-                    f.write('\n')
+        print("\n🔧 Intentando generar archivo .mind...")
+
+        # Verificar si el compilador está instalado
+        try:
+            result = subprocess.run(
+                ['mind-ar-js-compiler', '--help'],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+
+            if result.returncode != 0:
+                raise Exception("Compilador no responde correctamente")
+
+        except FileNotFoundError:
+            print("❌ Compilador MindAR no encontrado")
+            print("📌 Instala con: npm install -g mind-ar-js-compiler")
+            print(f"📌 Luego ejecuta: mind-ar-js-compiler {image_path} {output_path}")
+            return
+        except Exception as e:
+            print(f"❌ Error verificando compilador: {e}")
+            print(f"📌 Ejecuta manualmente: mind-ar-js-compiler {image_path} {output_path}")
+            return
+
+        # Ejecutar el compilador
+        try:
+            print(f"⏳ Compilando {os.path.basename(image_path)} → {os.path.basename(output_path)}...")
+
+            result = subprocess.run(
+                ['mind-ar-js-compiler', image_path, output_path],
+                capture_output=True,
+                text=True,
+                timeout=60  # Timeout de 60 segundos
+            )
+
+            if result.returncode == 0:
+                print(f"✅ Archivo .mind generado exitosamente: {output_path}")
+                if result.stdout:
+                    print(f"   {result.stdout}")
+            else:
+                print(f"❌ Error al compilar:")
+                print(f"   {result.stderr}")
+                print(f"📌 Intenta manualmente: mind-ar-js-compiler {image_path} {output_path}")
+
+        except subprocess.TimeoutExpired:
+            print("❌ Timeout: La compilación tardó demasiado")
+            print(f"📌 Intenta manualmente: mind-ar-js-compiler {image_path} {output_path}")
+        except Exception as e:
+            print(f"❌ Error ejecutando compilador: {e}")
+            print(f"📌 Intenta manualmente: mind-ar-js-compiler {image_path} {output_path}")
 
 def main():
     app = QApplication(sys.argv)

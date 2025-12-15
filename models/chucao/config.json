@@ -23,12 +23,13 @@
     "rotation": "0 0 0"
   },
   "audio": {
-    "enabled": false,
+    "enabled": true,
     "file": "sound.mp3"
   },
   "info": {
     "habitat": "Bosques templados húmedos",
     "diet": "Insectívoro",
-    "status": "Preocupación menor"
+    "status": "Preocupación menor",
+    "wikipedia": "https://es.wikipedia.org/wiki/Scelorchilus_rubecula"
   }
 }

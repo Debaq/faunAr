@@ -39,6 +39,29 @@ function createProjectCard(config, folder) {
     if (config.marker?.enabled) badges.push('<span class="badge">🎯 Marcador</span>');
     if (config.audio?.enabled) badges.push('<span class="badge">🔊 Audio</span>');
 
+    // Recursos adicionales
+    const resources = [];
+
+    // Modelo GLB
+    if (config.model?.glb) {
+        resources.push(`<button class="btn-resource" onclick="downloadResource('models/${folder}/${config.model.glb}', '${config.name}.glb')" title="Descargar modelo 3D GLB">📦 GLB</button>`);
+    }
+
+    // Modelo USDZ
+    if (config.model?.usdz) {
+        resources.push(`<button class="btn-resource" onclick="downloadResource('models/${folder}/${config.model.usdz}', '${config.name}.usdz')" title="Descargar modelo 3D USDZ">📦 USDZ</button>`);
+    }
+
+    // Sonido
+    if (config.audio?.enabled && config.audio?.file) {
+        resources.push(`<button class="btn-resource" id="sound-btn-${folder}" onclick="toggleSound('models/${folder}/${config.audio.file}', '${folder}')" title="Reproducir sonido">🔊 Sonido</button>`);
+    }
+
+    // Wikipedia
+    if (config.info?.wikipedia) {
+        resources.push(`<a class="btn-resource" href="${config.info.wikipedia}" target="_blank" title="Ver en Wikipedia">📖 Wiki</a>`);
+    }
+
     card.innerHTML = `
         ${config.thumbnail ? `<img src="models/${folder}/${config.thumbnail}" alt="${config.name}">` : '<img src="" alt="' + config.name + '" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">'}
         <h2>${config.name}</h2>
@@ -47,6 +70,7 @@ function createProjectCard(config, folder) {
         <div class="badges">
             ${badges.join('')}
         </div>
+        ${resources.length > 0 ? `<div class="resources">${resources.join('')}</div>` : ''}
         <div class="card-actions">
             <button class="btn btn-primary" onclick="openViewer('${folder}')">
                 🔍 Ver en AR
@@ -143,6 +167,70 @@ async function downloadQR() {
         link.href = canvas.toDataURL();
         link.click();
     }
+}
+
+// Descargar recurso
+function downloadResource(url, filename) {
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+}
+
+// Reproducir/detener sonido
+let currentAudio = null;
+let currentButton = null;
+let currentModelId = null;
+
+function toggleSound(url, modelId) {
+    const button = document.getElementById(`sound-btn-${modelId}`);
+
+    // Si es el mismo botón y está reproduciendo, detener
+    if (currentAudio && currentModelId === modelId) {
+        stopSound();
+        return;
+    }
+
+    // Si hay otro audio reproduciéndose, detenerlo
+    if (currentAudio) {
+        stopSound();
+    }
+
+    // Crear y reproducir nuevo audio
+    currentAudio = new Audio(url);
+    currentButton = button;
+    currentModelId = modelId;
+
+    // Cambiar botón a modo "detener"
+    button.innerHTML = '⏹️ Stop';
+    button.title = 'Detener sonido';
+
+    // Cuando el audio termine, restaurar botón
+    currentAudio.addEventListener('ended', () => {
+        stopSound();
+    });
+
+    // Reproducir
+    currentAudio.play().catch(error => {
+        console.error('Error reproduciendo sonido:', error);
+        stopSound();
+    });
+}
+
+function stopSound() {
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio = null;
+    }
+
+    if (currentButton) {
+        currentButton.innerHTML = '🔊 Sonido';
+        currentButton.title = 'Reproducir sonido';
+        currentButton = null;
+    }
+
+    currentModelId = null;
 }
 
 // Cerrar modal al hacer click fuera
