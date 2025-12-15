@@ -3,7 +3,7 @@
   "name": "Pudú",
   "scientificName": "Pudu puda",
   "description": "El pudú es el ciervo más pequeño del mundo y habita los bosques templados del sur de Chile y Argentina. Es de hábitos tímidos y principalmente crepusculares.",
-  "thumbnail": "thumbnail.png",
+  "thumbnail": "thumbnail.jpg",
   "arMode": "hybrid",
   "gps": {
     "enabled": false,

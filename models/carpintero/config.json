@@ -3,7 +3,7 @@
   "name": "Carpintero Negro",
   "scientificName": "Campephilus magellanicus",
   "description": "El carpintero negro es una de las aves más grandes de los bosques templados del sur de Chile y Argentina. Se caracteriza por su plumaje negro y la cresta roja del macho.",
-  "thumbnail": "thumbnail.png",
+  "thumbnail": "thumbnail.jpg",
   "arMode": "hybrid",
   "gps": {
     "enabled": false,

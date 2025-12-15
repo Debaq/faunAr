@@ -65,7 +65,7 @@ function createProjectCard(config, folder) {
     }
 
     card.innerHTML = `
-        ${config.thumbnail ? `<img src="models/${folder}/${config.thumbnail}" alt="${config.name}">` : '<img src="" alt="' + config.name + '" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">'}
+        ${config.thumbnail ? `<img src="models/${folder}/${config.thumbnail}" alt="${config.name}" loading="lazy">` : '<img src="" alt="' + config.name + '" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">'}
         <h2>${config.name}</h2>
         <p class="scientific">${config.scientificName || ''}</p>
         <p>${config.description}</p>
