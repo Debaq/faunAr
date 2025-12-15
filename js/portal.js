@@ -182,6 +182,15 @@ let currentAudio = null;
 let currentButton = null;
 let currentModelId = null;
 
+// Handlers de eventos de audio
+function handleAudioEnd() {
+    stopSound();
+}
+
+function handleAudioError() {
+    stopSound();
+}
+
 function toggleSound(url, modelId) {
     const button = document.getElementById(`sound-btn-${modelId}`);
 
@@ -191,13 +200,17 @@ function toggleSound(url, modelId) {
         return;
     }
 
-    // Si hay otro audio reproduciéndose, detenerlo
+    // Si hay otro audio reproduciéndose, detenerlo completamente
     if (currentAudio) {
         stopSound();
     }
 
-    // Crear y reproducir nuevo audio
-    currentAudio = new Audio(url);
+    // Crear nuevo audio
+    const newAudio = new Audio();
+    newAudio.src = url;
+
+    // Actualizar referencias globales ANTES de reproducir
+    currentAudio = newAudio;
     currentButton = button;
     currentModelId = modelId;
 
@@ -206,21 +219,40 @@ function toggleSound(url, modelId) {
     button.title = 'Detener sonido';
 
     // Cuando el audio termine, restaurar botón
-    currentAudio.addEventListener('ended', () => {
-        stopSound();
-    });
+    newAudio.addEventListener('ended', handleAudioEnd);
 
-    // Reproducir
-    currentAudio.play().catch(error => {
-        console.error('Error reproduciendo sonido:', error);
-        stopSound();
-    });
+    // Manejar errores de carga
+    newAudio.addEventListener('error', handleAudioError);
+
+    // Reproducir solo cuando esté listo Y siga siendo el audio actual
+    newAudio.addEventListener('canplaythrough', function playWhenReady() {
+        // Verificar que este audio sigue siendo el actual
+        if (currentAudio === newAudio) {
+            newAudio.play().catch(error => {
+                console.error('Error reproduciendo sonido:', error);
+                if (currentAudio === newAudio) {
+                    stopSound();
+                }
+            });
+        }
+        // Remover este listener después de usarlo
+        newAudio.removeEventListener('canplaythrough', playWhenReady);
+    }, { once: true });
+
+    // Iniciar carga
+    newAudio.load();
 }
 
 function stopSound() {
     if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
+        try {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            currentAudio.removeEventListener('ended', handleAudioEnd);
+            currentAudio.removeEventListener('error', handleAudioError);
+        } catch (e) {
+            // Ignorar errores al detener
+        }
         currentAudio = null;
     }
 
