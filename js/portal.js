@@ -33,6 +33,7 @@ async function loadProjects() {
 function createProjectCard(config, folder) {
     const card = document.createElement('div');
     card.className = 'project-card';
+    card.dataset.folder = folder;
 
     const badges = [];
     if (config.gps?.enabled) badges.push('<span class="badge">📍 GPS</span>');
@@ -54,7 +55,8 @@ function createProjectCard(config, folder) {
 
     // Sonido
     if (config.audio?.enabled && config.audio?.file) {
-        resources.push(`<button class="btn-resource" id="sound-btn-${folder}" onclick="toggleSound('models/${folder}/${config.audio.file}', '${folder}')" title="Reproducir sonido">🔊 Sonido</button>`);
+        const buttonId = `sound-btn-${folder}`;
+        resources.push(`<button class="btn-resource" id="${buttonId}" onclick="toggleSound('models/${folder}/${config.audio.file}', '${folder}', '${buttonId}')" title="Reproducir sonido">🔊 Sonido</button>`);
     }
 
     // Wikipedia
@@ -191,10 +193,10 @@ function handleAudioError() {
     stopSound();
 }
 
-function toggleSound(url, modelId) {
-    const button = document.getElementById(`sound-btn-${modelId}`);
+function toggleSound(url, modelId, buttonId) {
+    const button = document.getElementById(buttonId);
 
-    // Si es el mismo botón y está reproduciendo, detener
+    // Si es el mismo audio y está reproduciendo, detener
     if (currentAudio && currentModelId === modelId) {
         stopSound();
         return;
@@ -208,15 +210,26 @@ function toggleSound(url, modelId) {
     // Crear nuevo audio
     const newAudio = new Audio();
     newAudio.src = url;
+    newAudio.loop = false; // Asegurarse de que no se repita
 
     // Actualizar referencias globales ANTES de reproducir
     currentAudio = newAudio;
-    currentButton = button;
     currentModelId = modelId;
+    // currentButton ya no es la única referencia, pero lo actualizamos para el estado visual inmediato
+    currentButton = button; 
 
-    // Cambiar botón a modo "detener"
-    button.innerHTML = '⏹️ Stop';
-    button.title = 'Detener sonido';
+    // Cambiar texto de ambos botones (si existen)
+    const cardButton = document.getElementById(`sound-btn-${modelId}`);
+    const modalButton = document.getElementById(`sound-btn-modal-${modelId}`);
+    
+    if (cardButton) {
+        cardButton.innerHTML = '⏹️ Stop';
+        cardButton.title = 'Detener sonido';
+    }
+    if (modalButton) {
+        modalButton.innerHTML = '⏹️ Stop';
+        modalButton.title = 'Detener sonido';
+    }
 
     // Cuando el audio termine, restaurar botón
     newAudio.addEventListener('ended', handleAudioEnd);
@@ -224,44 +237,45 @@ function toggleSound(url, modelId) {
     // Manejar errores de carga
     newAudio.addEventListener('error', handleAudioError);
 
-    // Reproducir solo cuando esté listo Y siga siendo el audio actual
+    // Reproducir solo cuando esté listo
     newAudio.addEventListener('canplaythrough', function playWhenReady() {
-        // Verificar que este audio sigue siendo el actual
         if (currentAudio === newAudio) {
             newAudio.play().catch(error => {
                 console.error('Error reproduciendo sonido:', error);
-                if (currentAudio === newAudio) {
-                    stopSound();
-                }
+                stopSound();
             });
         }
-        // Remover este listener después de usarlo
         newAudio.removeEventListener('canplaythrough', playWhenReady);
     }, { once: true });
 
-    // Iniciar carga
     newAudio.load();
 }
 
 function stopSound() {
     if (currentAudio) {
-        try {
-            currentAudio.pause();
-            currentAudio.currentTime = 0;
-            currentAudio.removeEventListener('ended', handleAudioEnd);
-            currentAudio.removeEventListener('error', handleAudioError);
-        } catch (e) {
-            // Ignorar errores al detener
-        }
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+        currentAudio.removeEventListener('ended', handleAudioEnd);
+        currentAudio.removeEventListener('error', handleAudioError);
         currentAudio = null;
     }
 
-    if (currentButton) {
-        currentButton.innerHTML = '🔊 Sonido';
-        currentButton.title = 'Reproducir sonido';
-        currentButton = null;
+    // Restaurar ambos botones (card y modal) si existen
+    if (currentModelId) {
+        const cardButton = document.getElementById(`sound-btn-${currentModelId}`);
+        const modalButton = document.getElementById(`sound-btn-modal-${currentModelId}`);
+        
+        if (cardButton) {
+            cardButton.innerHTML = '🔊 Sonido';
+            cardButton.title = 'Reproducir sonido';
+        }
+        if (modalButton) {
+            modalButton.innerHTML = '🔊 Sonido';
+            modalButton.title = 'Reproducir sonido';
+        }
     }
 
+    currentButton = null;
     currentModelId = null;
 }
 
