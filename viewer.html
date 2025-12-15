@@ -26,7 +26,20 @@
     <button id="info-toggle-btn" onclick="toggleInfo()" style="position: fixed; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.6); color: white; border: none; padding: 10px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 300; width: 44px; height: 44px; backdrop-filter: blur(10px);">ℹ️</button>
 
     <!-- Botón para modo 3D -->
-    <button id="view-3d-btn" onclick="enable3DMode()" style="position: fixed; top: 60px; right: 10px; background: rgba(0, 0, 0, 0.6); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-size: 14px; cursor: pointer; z-index: 300; backdrop-filter: blur(10px); display: none;">Ver en 3D</button>
+    <button id="view-3d-btn" onclick="enable3DMode()" style="position: fixed; top: 60px; right: 10px; background: rgba(76, 175, 80, 0.8); color: white; border: none; padding: 10px 15px; border-radius: 8px; font-size: 14px; cursor: pointer; z-index: 300; backdrop-filter: blur(10px); font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">👁️ Ver en 3D</button>
+
+    <!-- Botón de control de audio -->
+    <button id="audio-control-btn" onclick="toggleAudio()" style="position: fixed; top: 110px; right: 10px; background: rgba(33, 150, 243, 0.8); color: white; border: none; padding: 10px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 300; width: 44px; height: 44px; backdrop-filter: blur(10px); display: none;">🔊</button>
+
+    <!-- Instrucciones de modo 3D -->
+    <div id="controls-hint" style="position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.85); color: white; padding: 15px 25px; border-radius: 12px; font-size: 14px; z-index: 400; backdrop-filter: blur(10px); display: none; text-align: center; max-width: 90%;">
+        <div style="font-weight: 600; margin-bottom: 8px;">Controles 3D</div>
+        <div style="font-size: 12px; opacity: 0.9;">
+            👆 1 dedo: Rotar<br>
+            ✌️ 2 dedos: Zoom y Mover<br>
+            📱 Mueve tu dispositivo para ver alrededor
+        </div>
+    </div>
 
     <div id="info-panel">
         <button onclick="toggleInfo()" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
@@ -75,6 +88,10 @@
         renderer="colorManagement: true, physicallyCorrectLights; alpha: true; preserveDrawingBuffer: true"
         vr-mode-ui="enabled: false"
         device-orientation-permission-ui="enabled: false">
+
+        <a-entity light="type: ambient; intensity: 2.5"></a-entity>
+        <a-entity light="type: directional; intensity: 1.5; castShadow: true" position="1 2 1"></a-entity>
+        <a-entity light="type: point; intensity: 1" position="0 2 0"></a-entity>
 
         <a-camera id="camera" position="0 0 0" look-controls="enabled: false" wasd-controls="enabled: false"></a-camera>
     </a-scene>
