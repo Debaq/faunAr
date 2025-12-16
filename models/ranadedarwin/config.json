@@ -1,0 +1,36 @@
+{
+  "id": "rana de darwin",
+  "name": "Rana de Darwin",
+  "scientificName": "Rhinoderma darwinii",
+  "description": "Pequeño anfibio anuro nativo de los bosques templados del sur de Chile y Argentina. Es famoso por su singular estrategia reproductiva, donde el macho incuba a los renacuajos dentro de su saco vocal hasta su metamorfosis.",
+  "thumbnail": "thumbnail.jpg",
+  "arMode": "marker",
+  "gps": {
+    "enabled": false,
+    "latitude": -41.4693,
+    "longitude": -72.9424,
+    "radius": 50
+  },
+  "marker": {
+    "enabled": true,
+    "type": "mind",
+    "file": "ranadedarwin.mind"
+  },
+  "model": {
+    "glb": "ranadedarwin.glb",
+    "usdz": "ranadedarwin.usdz",
+    "scale": "1 1 1",
+    "position": "0 0 0",
+    "rotation": "0 0 0"
+  },
+  "audio": {
+    "enabled": false,
+    "file": "sound.mp3"
+  },
+  "info": {
+    "habitat": "Bosques templados húmedos, suelo de hojarasca",
+    "diet": "Insectívoro",
+    "status": "En peligro",
+    "wikipedia": "https://es.wikipedia.org/wiki/Rhinoderma_darwinii"
+  }
+}
