@@ -59,6 +59,10 @@
         <button id="gallery-btn" onclick="openGallery()"></button>
         <button id="capture-btn" onclick="capturePhoto()"></button>
         <button id="capture-model-btn" onclick="captureModel()" title="Capturar modelo"></button>
+        <button id="field-journal-btn" onclick="openFieldJournal()" title="Diario de campo">
+            📖
+            <span id="field-journal-badge">0</span>
+        </button>
     </div>
 
     <!-- Flash de captura -->
@@ -66,7 +70,12 @@
 
     <!-- Preview de foto capturada -->
     <div id="photo-preview">
-        <img id="preview-image" src="" alt="Foto capturada">
+        <button id="prev-photo-btn" onclick="navigatePhoto(-1)">❮</button>
+        <div id="photo-preview-content">
+            <img id="preview-image" src="" alt="Foto capturada">
+            <div id="photo-counter"></div>
+        </div>
+        <button id="next-photo-btn" onclick="navigatePhoto(1)">❯</button>
         <div id="photo-preview-actions">
             <button id="download-btn" onclick="downloadPhoto()">Descargar</button>
             <button id="share-btn" onclick="sharePhoto()">Compartir</button>
@@ -81,6 +90,25 @@
             <button onclick="closeGallery()" style="background: transparent; border: none; color: white; font-size: 24px; cursor: pointer;">✕</button>
         </div>
         <div id="photo-gallery-grid"></div>
+    </div>
+
+    <!-- Diario de campo -->
+    <div id="field-journal">
+        <div id="field-journal-header">
+            <h2>📖 Diario de Campo</h2>
+            <button onclick="closeFieldJournal()" style="background: transparent; border: none; color: white; font-size: 24px; cursor: pointer;">✕</button>
+        </div>
+        <div id="field-journal-content">
+            <div id="field-journal-map">
+                <h3>Mapa del Sector</h3>
+                <img id="map-image" src="assets/images/map-placeholder.svg" alt="Mapa del área de exploración">
+            </div>
+            <div id="field-journal-animals">
+                <h3>Fauna Descubierta</h3>
+                <div id="animals-progress"></div>
+                <div id="animals-grid"></div>
+            </div>
+        </div>
     </div>
 
     <a-scene

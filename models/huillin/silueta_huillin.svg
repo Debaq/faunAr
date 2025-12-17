@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="currentColor">
+  <!-- Silueta de huillín (nutria) -->
+  <g fill="#654321">
+    <!-- Cuerpo alargado -->
+    <ellipse cx="90" cy="100" rx="40" ry="22"/>
+
+    <!-- Cabeza -->
+    <ellipse cx="130" cy="95" rx="18" ry="20"/>
+
+    <!-- Orejas pequeñas -->
+    <circle cx="125" cy="82" r="4"/>
+    <circle cx="135" cy="82" r="4"/>
+
+    <!-- Hocico -->
+    <ellipse cx="142" cy="95" rx="8" ry="6"/>
+
+    <!-- Patas cortas -->
+    <ellipse cx="75" cy="115" rx="6" ry="12"/>
+    <ellipse cx="95" cy="115" rx="6" ry="12"/>
+    <ellipse cx="105" cy="115" rx="6" ry="12"/>
+    <ellipse cx="115" cy="115" rx="6" ry="12"/>
+
+    <!-- Cola gruesa -->
+    <path d="M 55 100 Q 35 100 25 95 Q 15 90 10 85" stroke="#654321" stroke-width="16" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>

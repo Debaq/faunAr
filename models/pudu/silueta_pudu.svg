@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="currentColor">
+  <!-- Silueta de pudú (ciervo pequeño) -->
+  <g fill="#8B6914">
+    <!-- Cuerpo -->
+    <ellipse cx="90" cy="105" rx="35" ry="25"/>
+
+    <!-- Cuello -->
+    <rect x="108" y="85" width="12" height="25" rx="6"/>
+
+    <!-- Cabeza -->
+    <ellipse cx="120" cy="75" rx="15" ry="18"/>
+
+    <!-- Orejas grandes -->
+    <ellipse cx="112" cy="60" rx="6" ry="12"/>
+    <ellipse cx="128" cy="60" rx="6" ry="12"/>
+
+    <!-- Cuernos pequeños -->
+    <line x1="115" y1="58" x2="115" y2="48" stroke="#8B6914" stroke-width="3" stroke-linecap="round"/>
+    <line x1="125" y1="58" x2="125" y2="48" stroke="#8B6914" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Hocico -->
+    <ellipse cx="130" cy="78" rx="8" ry="7"/>
+
+    <!-- Patas delgadas -->
+    <rect x="70" y="120" width="6" height="35" rx="3"/>
+    <rect x="85" y="120" width="6" height="35" rx="3"/>
+    <rect x="100" y="120" width="6" height="35" rx="3"/>
+    <rect x="115" y="120" width="6" height="35" rx="3"/>
+
+    <!-- Cola pequeña -->
+    <ellipse cx="58" cy="100" rx="5" ry="8"/>
+  </g>
+</svg>

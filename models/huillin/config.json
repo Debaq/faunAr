@@ -5,6 +5,7 @@
   "description": "El huillín es una especie de nutria endémica de Chile. Habita en ríos, lagos y costas del sur del país, y es conocido por su agilidad tanto en el agua como en tierra. Su estado de conservación es crítico debido a la pérdida de hábitat y la contaminación.",
   "thumbnail": "thumbnail.jpg",
   "icon": "🦦",
+  "silhouette": "silueta_huillin.svg",
   "arMode": "hybrid",
   "gps": {
     "enabled": false,

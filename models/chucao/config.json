@@ -5,6 +5,7 @@
   "description": "El chucao es un ave endémica de los bosques templados del sur de Chile y Argentina. Es conocido por su canto melodioso y su plumaje rojizo.",
   "thumbnail": "thumbnail.jpg",
   "icon": "🐦",
+  "silhouette": "silueta_chucao.svg",
   "arMode": "marker",
   "gps": {
     "enabled": false,

@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="400" viewBox="0 0 600 400">
+  <!-- Fondo -->
+  <rect width="600" height="400" fill="#2d4a2e"/>
+
+  <!-- Montañas -->
+  <path d="M 0 200 L 100 100 L 200 200 L 300 120 L 400 200 L 500 140 L 600 200 L 600 400 L 0 400 Z" fill="#1a2e1b" opacity="0.7"/>
+
+  <!-- Lago/río -->
+  <ellipse cx="300" cy="280" rx="150" ry="60" fill="#4a7c8c" opacity="0.6"/>
+  <path d="M 250 310 Q 300 330 350 310" stroke="#6a9cac" stroke-width="3" fill="none" opacity="0.5"/>
+
+  <!-- Árboles (pequeños triángulos) -->
+  <g fill="#234a24" opacity="0.8">
+    <path d="M 80 250 L 70 270 L 90 270 Z"/>
+    <path d="M 140 240 L 130 260 L 150 260 Z"/>
+    <path d="M 200 255 L 190 275 L 210 275 Z"/>
+    <path d="M 420 245 L 410 265 L 430 265 Z"/>
+    <path d="M 480 250 L 470 270 L 490 270 Z"/>
+    <path d="M 530 240 L 520 260 L 540 260 Z"/>
+  </g>
+
+  <!-- Marcador de ubicación -->
+  <g transform="translate(300, 200)">
+    <circle cx="0" cy="0" r="30" fill="rgba(139, 69, 19, 0.3)" opacity="0.5">
+      <animate attributeName="r" from="30" to="50" dur="2s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" from="0.5" to="0" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <path d="M 0 -15 L -10 5 L 10 5 Z" fill="#d4a574"/>
+    <circle cx="0" cy="-20" r="8" fill="#8b4513"/>
+  </g>
+
+  <!-- Texto -->
+  <text x="300" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#d4a574" font-weight="bold">
+    Área de Exploración
+  </text>
+  <text x="300" y="385" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#a0a0a0" opacity="0.8">
+    Bosque Templado del Sur
+  </text>
+</svg>

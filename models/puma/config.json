@@ -5,6 +5,7 @@
   "description": "El puma es un gran felino nativo de América, con una amplia distribución desde Canadá hasta el sur de Chile y Argentina. Es un cazador solitario y adaptable que habita en diversos ecosistemas, incluyendo la estepa patagónica y los bosques andinos.",
   "thumbnail": "thumbnail.png",
   "icon": "🐆",
+  "silhouette": "silueta_puma.svg",
   "arMode": "marker",
   "gps": {
     "enabled": false,

@@ -260,6 +260,47 @@ canvas {
     font-size: 24px;
 }
 
+/* Botón de diario de campo */
+#field-journal-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    background: rgba(139, 69, 19, 0.8);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    cursor: pointer;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    transition: transform 0.2s, background 0.2s;
+    position: relative;
+}
+
+#field-journal-btn:active {
+    transform: scale(0.9);
+    background: rgba(139, 69, 19, 1);
+}
+
+#field-journal-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: rgba(220, 53, 69, 0.95);
+    color: white;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    font-size: 11px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease;
+}
+
 /* Modal de vista de foto */
 #photo-preview {
     position: fixed;
@@ -269,22 +310,67 @@ canvas {
     height: 100%;
     background: rgba(0, 0, 0, 0.95);
     display: none;
-    flex-direction: column;
+    flex-direction: row;
     justify-content: center;
     align-items: center;
     z-index: 2000;
     padding: 20px;
 }
 
+#photo-preview-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+}
+
 #photo-preview img {
     max-width: 100%;
-    max-height: 80vh;
+    max-height: 70vh;
     border-radius: 10px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
+#photo-counter {
+    color: white;
+    font-size: 14px;
+    margin-top: 10px;
+    opacity: 0.8;
+}
+
+#prev-photo-btn,
+#next-photo-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    font-size: 32px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s;
+    margin: 0 10px;
+}
+
+#prev-photo-btn:active,
+#next-photo-btn:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+#prev-photo-btn:disabled,
+#next-photo-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
 #photo-preview-actions {
-    margin-top: 20px;
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
     display: flex;
     gap: 15px;
 }
@@ -382,6 +468,233 @@ canvas {
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* Diario de campo */
+#field-journal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(20, 20, 20, 0.98);
+    display: none;
+    flex-direction: column;
+    z-index: 2000;
+    overflow: hidden;
+}
+
+#field-journal-header {
+    padding: 20px;
+    background: rgba(139, 69, 19, 0.9);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+#field-journal-header h2 {
+    margin: 0;
+    font-size: 1.4rem;
+}
+
+#field-journal-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+#field-journal-map,
+#field-journal-animals {
+    background: rgba(40, 40, 40, 0.8);
+    border-radius: 12px;
+    padding: 20px;
+    backdrop-filter: blur(10px);
+}
+
+#field-journal-map h3,
+#field-journal-animals h3 {
+    color: white;
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    border-bottom: 2px solid rgba(139, 69, 19, 0.6);
+    padding-bottom: 10px;
+}
+
+#map-image {
+    width: 100%;
+    height: auto;
+    max-height: 60vh;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+#map-placeholder {
+    width: 100%;
+    height: 300px;
+    background: rgba(60, 60, 60, 0.5);
+    border-radius: 8px;
+    border: 2px dashed rgba(255, 255, 255, 0.3);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+}
+
+#map-placeholder p {
+    font-size: 64px;
+    margin: 0 0 10px 0;
+}
+
+#animals-progress {
+    background: rgba(60, 60, 60, 0.6);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    color: white;
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+#animals-progress .progress-bar {
+    width: 100%;
+    height: 20px;
+    background: rgba(40, 40, 40, 0.8);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+#animals-progress .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, rgba(139, 69, 19, 0.8), rgba(205, 133, 63, 0.8));
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+}
+
+#animals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 15px;
+}
+
+.animal-item {
+    aspect-ratio: 1;
+    background: rgba(60, 60, 60, 0.6);
+    border-radius: 12px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.animal-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.animal-item.locked {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.animal-item.locked:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.animal-item.unlocked {
+    border-color: rgba(139, 69, 19, 0.8);
+    background: rgba(80, 80, 80, 0.8);
+}
+
+.animal-icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+    filter: grayscale(100%);
+}
+
+.animal-item.unlocked .animal-icon {
+    filter: grayscale(0%);
+}
+
+.animal-silhouette {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 8px;
+    object-fit: contain;
+    filter: grayscale(100%) brightness(0.5);
+    transition: filter 0.3s ease;
+}
+
+.animal-item.unlocked .animal-silhouette {
+    filter: grayscale(0%) brightness(1);
+}
+
+.animal-name {
+    color: white;
+    font-size: 12px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.animal-item.locked .animal-name {
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.lock-icon {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 16px;
+    opacity: 0.7;
+}
+
+/* Responsive: vista móvil */
+@media (max-width: 768px) {
+    #field-journal-content {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 1fr;
+    }
+
+    #field-journal-map {
+        max-height: 40vh;
+    }
+
+    #map-image {
+        max-height: 30vh;
+    }
+
+    #animals-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 10px;
+    }
+
+    .animal-icon {
+        font-size: 36px;
+    }
+
+    .animal-name {
+        font-size: 10px;
+    }
 }
 
 /* Ajustes para móvil */

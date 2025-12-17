@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="currentColor">
+  <!-- Silueta de carpintero -->
+  <g fill="#2C2C2C">
+    <!-- Cuerpo -->
+    <ellipse cx="100" cy="110" rx="22" ry="35"/>
+
+    <!-- Cabeza -->
+    <circle cx="100" cy="70" r="18"/>
+
+    <!-- Cresta (característica del carpintero) -->
+    <path d="M 95 55 L 92 45 L 100 52 Z" fill="#DC143C"/>
+    <path d="M 105 55 L 108 45 L 100 52 Z" fill="#DC143C"/>
+
+    <!-- Pico largo -->
+    <path d="M 100 78 L 112 82 L 100 86 Z" fill="#4A4A4A"/>
+
+    <!-- Cola -->
+    <path d="M 100 145 L 95 175 L 105 175 Z"/>
+
+    <!-- Ala -->
+    <ellipse cx="88" cy="105" rx="18" ry="30" transform="rotate(-15 88 105)"/>
+
+    <!-- Patas agarradas al tronco -->
+    <rect x="92" y="140" width="4" height="15" rx="2"/>
+    <rect x="104" y="140" width="4" height="15" rx="2"/>
+
+    <!-- Dedos -->
+    <path d="M 90 155 L 85 158" stroke="#2C2C2C" stroke-width="2"/>
+    <path d="M 106 155 L 111 158" stroke="#2C2C2C" stroke-width="2"/>
+  </g>
+</svg>

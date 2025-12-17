@@ -477,6 +477,11 @@ async function initMarker() {
         console.log('🎯🎯🎯 TARGET ENCONTRADO 🎯🎯🎯');
         document.getElementById('loading').style.display = 'none';
 
+        // Desbloquear animal en el diario de campo
+        if (modelId) {
+            unlockAnimal(modelId);
+        }
+
         // Si el modelo está capturado, no mostrar el del marcador
         if (isModelCaptured) {
             console.log('📦 Modelo ya capturado, manteniendo oculto el marcador');
@@ -581,6 +586,11 @@ async function continueMarkerSetup() {
     anchor.addEventListener('targetFound', () => {
         console.log('🎯🎯🎯 TARGET ENCONTRADO 🎯🎯🎯');
         document.getElementById('loading').style.display = 'none';
+
+        // Desbloquear animal en el diario de campo
+        if (modelId) {
+            unlockAnimal(modelId);
+        }
 
         // Si el modelo está capturado, no mostrar el del marcador
         if (isModelCaptured) {
@@ -1177,6 +1187,7 @@ window.testCamera = async function () {
 
 let capturedPhotos = [];
 let currentPhotoData = null;
+let currentPhotoIndex = -1;
 
 // Cargar fotos guardadas del localStorage
 function loadSavedPhotos() {
@@ -1256,18 +1267,54 @@ window.capturePhoto = function() {
 };
 
 // Mostrar preview de la foto capturada
-function showPhotoPreview(imageData) {
+function showPhotoPreview(imageData, photoIndex = -1) {
     const preview = document.getElementById('photo-preview');
     const previewImage = document.getElementById('preview-image');
+    const counter = document.getElementById('photo-counter');
+    const prevBtn = document.getElementById('prev-photo-btn');
+    const nextBtn = document.getElementById('next-photo-btn');
 
     previewImage.src = imageData;
+    currentPhotoIndex = photoIndex;
+
+    // Actualizar contador y botones de navegación
+    if (photoIndex >= 0 && capturedPhotos.length > 0) {
+        counter.textContent = `${photoIndex + 1} / ${capturedPhotos.length}`;
+        counter.style.display = 'block';
+
+        // Habilitar/deshabilitar botones según la posición
+        prevBtn.disabled = photoIndex === 0;
+        nextBtn.disabled = photoIndex === capturedPhotos.length - 1;
+        prevBtn.style.display = 'block';
+        nextBtn.style.display = 'block';
+    } else {
+        // Foto recién capturada, ocultar navegación
+        counter.style.display = 'none';
+        prevBtn.style.display = 'none';
+        nextBtn.style.display = 'none';
+    }
+
     preview.style.display = 'flex';
 }
+
+// Navegar entre fotos en el preview
+window.navigatePhoto = function(direction) {
+    if (currentPhotoIndex < 0 || capturedPhotos.length === 0) return;
+
+    const newIndex = currentPhotoIndex + direction;
+
+    if (newIndex >= 0 && newIndex < capturedPhotos.length) {
+        currentPhotoIndex = newIndex;
+        currentPhotoData = capturedPhotos[newIndex];
+        showPhotoPreview(currentPhotoData.data, newIndex);
+    }
+};
 
 // Cerrar preview
 window.closePreview = function() {
     document.getElementById('photo-preview').style.display = 'none';
     currentPhotoData = null;
+    currentPhotoIndex = -1;
 };
 
 // Descargar foto
@@ -1345,7 +1392,7 @@ window.openGallery = function() {
             item.onclick = () => {
                 currentPhotoData = photo;
                 closeGallery(); // Cerrar galería primero
-                showPhotoPreview(photo.data);
+                showPhotoPreview(photo.data, index);
             };
             grid.appendChild(item);
         });
@@ -1438,10 +1485,273 @@ async function ensureCameraPermissions() {
     }
 }
 
+// ============================================
+// DIARIO DE CAMPO (FIELD JOURNAL)
+// ============================================
+
+// Lista completa de animales - se carga dinámicamente desde los configs
+let ALL_ANIMALS = [];
+
+// Cargar todos los animales desde los configs
+async function loadAllAnimals() {
+    if (ALL_ANIMALS.length > 0) {
+        return ALL_ANIMALS; // Ya cargados
+    }
+
+    const configs = await ConfigLoader.loadAll();
+    ALL_ANIMALS = configs.map(config => ({
+        id: config.id,
+        name: config.name,
+        scientificName: config.scientificName,
+        icon: config.icon || '❓',
+        silhouette: config.silhouette || null
+    }));
+
+    console.log('📋 Animales cargados para diario:', ALL_ANIMALS);
+    return ALL_ANIMALS;
+}
+
+// Cargar animales descubiertos del localStorage
+function loadDiscoveredAnimals() {
+    const saved = localStorage.getItem('faunar_discovered_animals');
+    if (saved) {
+        return JSON.parse(saved);
+    }
+    return [];
+}
+
+// Guardar animales descubiertos
+function saveDiscoveredAnimals(discovered) {
+    localStorage.setItem('faunar_discovered_animals', JSON.stringify(discovered));
+}
+
+// Desbloquear un animal (llamar cuando se detecta el marcador)
+function unlockAnimal(animalId) {
+    let discovered = loadDiscoveredAnimals();
+
+    // Si ya está descubierto, no hacer nada
+    if (discovered.includes(animalId)) {
+        console.log(`Animal ${animalId} ya estaba descubierto`);
+        return false;
+    }
+
+    // Añadir a descubiertos
+    discovered.push(animalId);
+    saveDiscoveredAnimals(discovered);
+
+    console.log(`✅ ¡Nuevo animal descubierto: ${animalId}!`);
+
+    // Actualizar badge
+    updateFieldJournalBadge();
+
+    // Mostrar notificación
+    showAnimalUnlockedNotification(animalId);
+
+    return true;
+}
+
+// Actualizar badge del botón del diario
+function updateFieldJournalBadge() {
+    const badge = document.getElementById('field-journal-badge');
+    if (badge) {
+        const discovered = loadDiscoveredAnimals();
+        badge.textContent = discovered.length;
+
+        // Animar badge cuando cambia
+        badge.style.transform = 'scale(1.3)';
+        setTimeout(() => {
+            badge.style.transform = 'scale(1)';
+        }, 200);
+    }
+}
+
+// Mostrar notificación de animal desbloqueado
+async function showAnimalUnlockedNotification(animalId) {
+    await loadAllAnimals();
+    const animal = ALL_ANIMALS.find(a => a.id === animalId);
+    if (!animal) return;
+
+    // Crear elemento de notificación
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(139, 69, 19, 0.95);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 12px;
+        z-index: 3000;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        font-size: 16px;
+        text-align: center;
+        animation: slideDown 0.5s ease-out;
+    `;
+
+    notification.innerHTML = `
+        <div style="font-size: 32px; margin-bottom: 5px;">${animal.icon}</div>
+        <div style="font-weight: bold; margin-bottom: 3px;">¡Nuevo descubrimiento!</div>
+        <div style="font-size: 14px; opacity: 0.9;">${animal.name}</div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Añadir animación
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Remover después de 3 segundos
+    setTimeout(() => {
+        notification.style.transition = 'opacity 0.5s';
+        notification.style.opacity = '0';
+        setTimeout(() => {
+            notification.remove();
+            style.remove();
+        }, 500);
+    }, 3000);
+}
+
+// Abrir diario de campo
+window.openFieldJournal = async function() {
+    const journal = document.getElementById('field-journal');
+    journal.style.display = 'flex';
+
+    // Renderizar contenido
+    await renderFieldJournal();
+};
+
+// Cerrar diario de campo
+window.closeFieldJournal = function() {
+    document.getElementById('field-journal').style.display = 'none';
+};
+
+// Renderizar contenido del diario
+async function renderFieldJournal() {
+    await loadAllAnimals();
+
+    const discovered = loadDiscoveredAnimals();
+    const progressDiv = document.getElementById('animals-progress');
+    const gridDiv = document.getElementById('animals-grid');
+
+    // Calcular progreso
+    const totalAnimals = ALL_ANIMALS.length;
+    const discoveredCount = discovered.length;
+    const percentage = Math.round((discoveredCount / totalAnimals) * 100);
+
+    // Renderizar barra de progreso
+    progressDiv.innerHTML = `
+        <div style="margin-bottom: 10px;">
+            <strong>${discoveredCount}</strong> de <strong>${totalAnimals}</strong> especies descubiertas
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: ${percentage}%;">
+                ${percentage > 15 ? percentage + '%' : ''}
+            </div>
+        </div>
+    `;
+
+    // Renderizar grid de animales
+    gridDiv.innerHTML = '';
+
+    ALL_ANIMALS.forEach(animal => {
+        const isUnlocked = discovered.includes(animal.id);
+
+        const item = document.createElement('div');
+        item.className = `animal-item ${isUnlocked ? 'unlocked' : 'locked'}`;
+
+        // Usar silueta SVG si está disponible, sino emoji
+        let iconHTML;
+        if (animal.silhouette) {
+            const silhouettePath = `models/${animal.id}/${animal.silhouette}`;
+            iconHTML = `<img src="${silhouettePath}" class="animal-silhouette" alt="${animal.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                        <div class="animal-icon" style="display: none;">${animal.icon}</div>`;
+        } else {
+            iconHTML = `<div class="animal-icon">${animal.icon}</div>`;
+        }
+
+        item.innerHTML = `
+            ${isUnlocked ? '' : '<div class="lock-icon">🔒</div>'}
+            ${iconHTML}
+            <div class="animal-name">${isUnlocked ? animal.name : '???'}</div>
+        `;
+
+        // Click solo si está desbloqueado
+        if (isUnlocked) {
+            item.onclick = () => showAnimalDetail(animal);
+        }
+
+        gridDiv.appendChild(item);
+    });
+}
+
+// Mostrar detalle de un animal (modal simple)
+function showAnimalDetail(animal) {
+    const detail = `
+        <strong>${animal.icon} ${animal.name}</strong><br>
+        <em>${animal.scientificName}</em><br><br>
+        Animal descubierto ✓
+    `;
+
+    // Crear modal simple
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(40, 40, 40, 0.98);
+        color: white;
+        padding: 30px;
+        border-radius: 16px;
+        z-index: 3000;
+        max-width: 400px;
+        text-align: center;
+        border: 2px solid rgba(139, 69, 19, 0.8);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    `;
+
+    modal.innerHTML = `
+        ${detail}
+        <button onclick="this.parentElement.remove()" style="
+            margin-top: 20px;
+            padding: 10px 30px;
+            background: rgba(139, 69, 19, 0.8);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        ">Cerrar</button>
+    `;
+
+    document.body.appendChild(modal);
+}
+
 // Iniciar cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', async () => {
     // Cargar fotos guardadas
     loadSavedPhotos();
+
+    // Cargar animales disponibles para el diario de campo
+    await loadAllAnimals();
+
+    // Actualizar badge del diario de campo
+    updateFieldJournalBadge();
 
     // Esperar a que A-Frame esté completamente cargado
     const scene = document.querySelector('a-scene');
