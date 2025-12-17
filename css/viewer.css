@@ -197,6 +197,41 @@ canvas {
     background: white;
 }
 
+/* Botón de captura de modelo */
+#capture-model-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(76, 175, 80, 0.9);
+    border: 3px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.1s, background 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+#capture-model-btn::before {
+    content: '🦌';
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.5));
+}
+
+#capture-model-btn:active {
+    transform: scale(0.9);
+}
+
+#capture-model-btn.captured {
+    background: rgba(244, 67, 54, 0.9);
+}
+
+#capture-model-btn.captured::before {
+    content: '✕';
+    color: white;
+}
+
 /* Botón de galería (miniaturas) */
 #gallery-btn {
     width: 50px;

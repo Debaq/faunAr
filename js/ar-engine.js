@@ -3,10 +3,38 @@ let userLocation = null;
 let arSystemReady = false;
 let globalAudioInstance = null;
 let isAudioPlaying = false;
+let isModelCaptured = false;
+let markerAnchor = null;
+let captured3DModel = null;
 
 // Obtener parámetro de modelo desde URL
 const urlParams = new URLSearchParams(window.location.search);
 const modelId = urlParams.get('model');
+
+// Función para solicitar permisos desde el botón del usuario
+window.requestPermissionsFromUser = async function() {
+    console.log('🔐 Usuario solicitando permisos de sensores...');
+    const permissionsBtn = document.getElementById('request-permissions-btn');
+
+    try {
+        permissionsBtn.textContent = 'Solicitando permisos...';
+        permissionsBtn.disabled = true;
+
+        await requestAllPermissions();
+
+        console.log('✅ Permisos concedidos, continuando con AR...');
+        permissionsBtn.style.display = 'none';
+
+        // Continuar con la inicialización normal
+        updateLoadingStatus('Permisos concedidos, cargando configuración...');
+        await continueInitAR();
+    } catch (error) {
+        console.error('Error solicitando permisos:', error);
+        permissionsBtn.textContent = 'Reintentar Permisos';
+        permissionsBtn.disabled = false;
+        alert('Se necesitan permisos para continuar. Por favor, autoriza el acceso cuando se solicite.');
+    }
+};
 
 // Función para iniciar AR manualmente (llamada por el botón)
 window.manualStartAR = async function() {
@@ -43,6 +71,33 @@ async function initAR() {
         return;
     }
 
+    // Verificar si requiere permiso del usuario (iOS)
+    const needsUserPermission = (
+        (typeof DeviceOrientationEvent !== 'undefined' &&
+         typeof DeviceOrientationEvent.requestPermission === 'function') ||
+        (typeof DeviceMotionEvent !== 'undefined' &&
+         typeof DeviceMotionEvent.requestPermission === 'function')
+    );
+
+    if (needsUserPermission) {
+        // En iOS, mostrar botón para solicitar permisos
+        console.log('📱 iOS detectado, mostrando botón de permisos');
+        updateLoadingStatus('Toca "Permitir Sensores" para continuar');
+        document.getElementById('request-permissions-btn').style.display = 'block';
+        return;
+    } else {
+        // En Android u otros navegadores, solicitar permisos automáticamente
+        try {
+            updateLoadingStatus('Solicitando permisos de sensores...');
+            await requestAllPermissions();
+        } catch (error) {
+            console.warn('⚠️ Error solicitando permisos:', error);
+        }
+        await continueInitAR();
+    }
+}
+
+async function continueInitAR() {
     // Timeout de seguridad: ocultar loading después de 8 segundos pase lo que pase
     const safetyTimeout = setTimeout(() => {
         console.warn('Timeout de seguridad: ocultando loading después de 8 segundos');
@@ -102,6 +157,60 @@ function updateInfoPanel() {
         if (currentConfig.info.status) details += `<p>⚠️ ${currentConfig.info.status}</p>`;
         document.getElementById('animal-details').innerHTML = details;
     }
+
+    // Actualizar icono del botón de captura de modelo según el animal
+    updateCaptureModelButton();
+}
+
+// Actualizar el icono del botón de captura de modelo según el animal cargado
+function updateCaptureModelButton() {
+    const captureBtn = document.getElementById('capture-model-btn');
+    if (!captureBtn || !currentConfig) return;
+
+    // Obtener el emoji desde el config, con fallback a emoji por defecto
+    let emoji = '🦌'; // Default fallback
+
+    if (currentConfig.icon) {
+        // Si el config tiene un icono definido, usarlo
+        emoji = currentConfig.icon;
+        console.log('✓ Icono del botón cargado desde config:', emoji);
+    } else {
+        // Fallback: mapeo de animales a emojis (para configs antiguos sin icon)
+        const animalEmojis = {
+            'puma': '🐆',
+            'huemul': '🦌',
+            'huillin': '🦦',
+            'condor': '🦅',
+            'pudú': '🦌',
+            'zorro': '🦊',
+            'guanaco': '🦙',
+            'pingüino': '🐧'
+        };
+
+        const modelNameLower = (currentConfig.name || modelId || '').toLowerCase();
+        for (const [key, value] of Object.entries(animalEmojis)) {
+            if (modelNameLower.includes(key)) {
+                emoji = value;
+                break;
+            }
+        }
+        console.log('⚠️ Icono no encontrado en config, usando fallback:', emoji);
+    }
+
+    // Actualizar el CSS con el emoji correcto
+    const style = document.createElement('style');
+    style.id = 'capture-model-emoji-style';
+
+    // Remover estilo previo si existe
+    const prevStyle = document.getElementById('capture-model-emoji-style');
+    if (prevStyle) prevStyle.remove();
+
+    style.textContent = `
+        #capture-model-btn::before {
+            content: '${emoji}';
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 // Toggle del panel de información
@@ -349,6 +458,9 @@ async function initMarker() {
     scene.appendChild(anchor);
     console.log('✓ Entidad anchor agregada a la escena');
 
+    // Guardar referencia al anchor para poder ocultarlo después
+    markerAnchor = anchor;
+
     // Reproducir sonido si está configurado
     if (currentConfig.audio?.enabled) {
         globalAudioInstance = new Audio(`models/${modelId}/${currentConfig.audio.file}`);
@@ -362,10 +474,19 @@ async function initMarker() {
 
     // Eventos
     anchor.addEventListener('targetFound', () => {
-        console.log('🎯🎯🎯 TARGET ENCONTRADO - MOSTRANDO MODELO 🎯🎯🎯');
+        console.log('🎯🎯🎯 TARGET ENCONTRADO 🎯🎯🎯');
         document.getElementById('loading').style.display = 'none';
 
-        // Reproducir sonido
+        // Si el modelo está capturado, no mostrar el del marcador
+        if (isModelCaptured) {
+            console.log('📦 Modelo ya capturado, manteniendo oculto el marcador');
+            anchor.object3D.visible = false;
+            return;
+        }
+
+        console.log('👁️ Mostrando modelo en marcador');
+
+        // Reproducir sonido solo si no está capturado
         if (globalAudioInstance && !isAudioPlaying) {
             globalAudioInstance.play()
                 .then(() => {
@@ -383,8 +504,8 @@ async function initMarker() {
     anchor.addEventListener('targetLost', () => {
         console.log('📍 Target perdido');
 
-        // Pausar sonido
-        if (globalAudioInstance && isAudioPlaying) {
+        // Solo pausar sonido si el modelo NO está capturado
+        if (!isModelCaptured && globalAudioInstance && isAudioPlaying) {
             globalAudioInstance.pause();
             isAudioPlaying = false;
             updateAudioButton();
@@ -453,12 +574,24 @@ async function continueMarkerSetup() {
     scene.appendChild(anchor);
     console.log('✓ Entidad anchor agregada a la escena');
 
+    // Guardar referencia al anchor para poder ocultarlo después
+    markerAnchor = anchor;
+
     // Eventos
     anchor.addEventListener('targetFound', () => {
-        console.log('🎯🎯🎯 TARGET ENCONTRADO - MOSTRANDO MODELO 🎯🎯🎯');
+        console.log('🎯🎯🎯 TARGET ENCONTRADO 🎯🎯🎯');
         document.getElementById('loading').style.display = 'none';
 
-        // Reproducir sonido si está configurado
+        // Si el modelo está capturado, no mostrar el del marcador
+        if (isModelCaptured) {
+            console.log('📦 Modelo ya capturado, manteniendo oculto el marcador');
+            anchor.object3D.visible = false;
+            return;
+        }
+
+        console.log('👁️ Mostrando modelo en marcador');
+
+        // Reproducir sonido solo si no está capturado
         if (globalAudioInstance && !isAudioPlaying) {
             globalAudioInstance.play()
                 .then(() => {
@@ -476,8 +609,8 @@ async function continueMarkerSetup() {
     anchor.addEventListener('targetLost', () => {
         console.log('📍 Target perdido');
 
-        // Pausar sonido
-        if (globalAudioInstance && isAudioPlaying) {
+        // Solo pausar sonido si el modelo NO está capturado
+        if (!isModelCaptured && globalAudioInstance && isAudioPlaying) {
             globalAudioInstance.pause();
             isAudioPlaying = false;
             updateAudioButton();
@@ -502,6 +635,7 @@ let currentModelScale = 1;
 let currentModelPosition = { x: 0, y: 0, z: -15 };
 let lastTouchCount = 0;
 let gyroControlsEnabled = false;
+let captureDeviceOrientation = null; // Orientación capturada al momento de cazar
 
 // Calcular distancia entre dos toques (para pinch)
 function getTouchDistance(touch1, touch2) {
@@ -539,6 +673,78 @@ async function requestGyroPermission() {
         // Android o navegadores que no requieren permiso
         console.log('✅ Giroscopio disponible sin permiso');
         return true;
+    }
+}
+
+async function requestAllPermissions() {
+    console.log('🔐 Solicitando permisos de sensores...');
+
+    let permissionsGranted = {
+        orientation: false,
+        motion: false,
+        camera: false
+    };
+
+    // Solicitar permiso para DeviceOrientation (giroscopio)
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+            const orientationPermission = await DeviceOrientationEvent.requestPermission();
+            if (orientationPermission === 'granted') {
+                console.log('✅ Permiso de DeviceOrientation (giroscopio) concedido');
+                permissionsGranted.orientation = true;
+            } else {
+                console.log('⚠️ Permiso de DeviceOrientation denegado');
+            }
+        } catch (error) {
+            console.error('Error solicitando DeviceOrientation:', error);
+        }
+    } else {
+        // Navegadores que no requieren permiso
+        permissionsGranted.orientation = true;
+    }
+
+    // Solicitar permiso para DeviceMotion (acelerómetro)
+    if (typeof DeviceMotionEvent !== 'undefined' &&
+        typeof DeviceMotionEvent.requestPermission === 'function') {
+        try {
+            const motionPermission = await DeviceMotionEvent.requestPermission();
+            if (motionPermission === 'granted') {
+                console.log('✅ Permiso de DeviceMotion (acelerómetro) concedido');
+                permissionsGranted.motion = true;
+            } else {
+                console.log('⚠️ Permiso de DeviceMotion denegado');
+            }
+        } catch (error) {
+            console.error('Error solicitando DeviceMotion:', error);
+        }
+    } else {
+        // Navegadores que no requieren permiso
+        permissionsGranted.motion = true;
+    }
+
+    // Solicitar permiso de cámara (MindAR lo solicitará después si es necesario)
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: 'environment',
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
+            }
+        });
+        console.log('✅ Permiso de cámara concedido');
+        permissionsGranted.camera = true;
+        stream.getTracks().forEach(track => track.stop());
+    } catch (error) {
+        console.warn('⚠️ Permiso de cámara no concedido ahora, MindAR lo solicitará después');
+        // No lanzar error, continuar de todos modos
+    }
+
+    console.log('🔐 Permisos procesados:', permissionsGranted);
+
+    // Si al menos los permisos de sensores fueron concedidos, continuar
+    if (!permissionsGranted.orientation && !permissionsGranted.motion) {
+        throw new Error('Se necesitan permisos de sensores para la experiencia completa');
     }
 }
 
@@ -665,13 +871,41 @@ function setupModelRotationControls(entity) {
     canvas.addEventListener('mouseup', onMouseUp);
     canvas.addEventListener('mouseleave', onMouseUp);
 
-    // Activar giroscopio para la cámara
+    // Activar giroscopio para la cámara con orientación de referencia
     requestGyroPermission().then(granted => {
         if (granted) {
             // Habilitar look-controls en la cámara para seguir el giroscopio
             camera.setAttribute('look-controls', 'enabled: true; magicWindowTrackingEnabled: true; touchEnabled: false');
             gyroControlsEnabled = true;
             console.log('🔄 Controles de giroscopio activados - mueve tu dispositivo');
+
+            // Si hay orientación capturada, usarla como referencia
+            if (captureDeviceOrientation) {
+                console.log('📱 Usando orientación de captura como referencia:', captureDeviceOrientation);
+
+                // Escuchar eventos de orientación para ajustar el modelo relativo a la posición de captura
+                const orientationUpdateHandler = (event) => {
+                    if (!gyroControlsEnabled || !isModelCaptured) {
+                        window.removeEventListener('deviceorientation', orientationUpdateHandler);
+                        return;
+                    }
+
+                    // Calcular la diferencia de orientación desde la captura
+                    const deltaAlpha = (event.alpha || 0) - captureDeviceOrientation.alpha;
+                    const deltaBeta = (event.beta || 0) - captureDeviceOrientation.beta;
+                    const deltaGamma = (event.gamma || 0) - captureDeviceOrientation.gamma;
+
+                    // Aplicar las deltas como rotación adicional del modelo
+                    // Beta = rotación X, Gamma = rotación Y, Alpha = rotación Z
+                    const rotX = currentRotation.x + deltaBeta * 0.5;
+                    const rotY = currentRotation.y + deltaAlpha * 0.5;
+                    const rotZ = deltaGamma * 0.3;
+
+                    entity.setAttribute('rotation', `${rotX} ${rotY} ${rotZ}`);
+                };
+
+                window.addEventListener('deviceorientation', orientationUpdateHandler);
+            }
         } else {
             console.log('ℹ️ Modo 3D sin giroscopio - usa gestos táctiles');
         }
@@ -680,45 +914,107 @@ function setupModelRotationControls(entity) {
     entity.setAttribute('data-rotation-controls', 'true');
 }
 
+// Función legacy - ya no se usa, todo se maneja desde captureModel()
 window.enable3DMode = function () {
-    console.log('🎨 Botón Ver en 3D presionado');
+    console.log('⚠️ enable3DMode es una función legacy y ya no se usa');
+    console.log('💡 Usa el botón de captura de modelo en su lugar');
+};
 
-    // Verificar que la configuración esté cargada
-    if (!currentConfig) {
-        console.error('❌ Configuración no cargada aún');
-        alert('Espera un momento, cargando configuración...');
-        return;
-    }
+// Función para capturar la orientación actual del dispositivo
+function captureCurrentDeviceOrientation() {
+    return new Promise((resolve) => {
+        const orientationHandler = (event) => {
+            const orientation = {
+                alpha: event.alpha || 0,  // Rotación Z (0-360)
+                beta: event.beta || 0,    // Rotación X (-180 a 180)
+                gamma: event.gamma || 0,  // Rotación Y (-90 a 90)
+                timestamp: Date.now()
+            };
+            console.log('📱 Orientación capturada:', orientation);
+            window.removeEventListener('deviceorientation', orientationHandler);
+            resolve(orientation);
+        };
 
-    console.log('✓ Configuración disponible:', currentConfig);
+        window.addEventListener('deviceorientation', orientationHandler);
 
-    const scene = document.querySelector('a-scene');
+        // Timeout de seguridad si no hay eventos de orientación
+        setTimeout(() => {
+            window.removeEventListener('deviceorientation', orientationHandler);
+            resolve(null);
+        }, 1000);
+    });
+}
+
+// ============================================
+// CAPTURA DE MODELO DEL MARCADOR
+// ============================================
+
+window.captureModel = async function() {
+    console.log('🦌 Botón de captura de modelo presionado');
+
+    const captureBtn = document.getElementById('capture-model-btn');
+    const flash = document.getElementById('capture-flash');
     const camera = document.getElementById('camera');
-    const view3DBtn = document.getElementById('view-3d-btn');
 
-    if (!scene || !camera) {
-        console.error('❌ Escena o cámara no encontrada');
-        alert('Error: Escena AR no disponible');
+    // Verificar que el sistema esté listo
+    if (!currentConfig || !markerAnchor) {
+        console.warn('⚠️ Sistema AR no está listo aún');
         return;
     }
 
-    // Verificar si ya existe el modelo 3D
-    const existing3DModels = camera.querySelectorAll('[data-3d-preview]');
-    if (existing3DModels.length > 0) {
-        console.log('Modelos 3D ya visibles, removiendo...');
+    if (!isModelCaptured) {
+        // ===== CAPTURAR MODELO =====
+        console.log('📦 Capturando modelo del marcador...');
 
-        // Detener audio si está reproduciendo
-        if (globalAudioInstance && isAudioPlaying) {
-            globalAudioInstance.pause();
-            isAudioPlaying = false;
-            updateAudioButton();
-            console.log('🔇 Audio detenido');
+        // Capturar orientación del dispositivo al momento de "cazar"
+        captureDeviceOrientation = await captureCurrentDeviceOrientation();
+        if (captureDeviceOrientation) {
+            console.log('🎯 Orientación del dispositivo capturada para referencia 3D');
+        } else {
+            console.log('⚠️ No se pudo capturar orientación del dispositivo');
         }
 
-        // Remover todos los elementos de preview (modelo y cubo)
-        existing3DModels.forEach(el => el.remove());
+        // Efecto de flash
+        flash.classList.add('flash');
+        setTimeout(() => flash.classList.remove('flash'), 150);
 
-        // Desactivar controles de giroscopio
+        // Ocultar el modelo del marcador completamente
+        if (markerAnchor && markerAnchor.object3D) {
+            markerAnchor.object3D.visible = false;
+            console.log('👻 Modelo del marcador ocultado');
+        }
+
+        // Marcar como capturado ANTES de crear el modelo 3D
+        isModelCaptured = true;
+
+        // Crear el modelo 3D capturado
+        createCaptured3DModel();
+
+        // Cambiar botón a estado "capturado"
+        captureBtn.classList.add('captured');
+        captureBtn.title = 'Liberar modelo';
+
+        console.log('✅ Modelo capturado exitosamente');
+
+    } else {
+        // ===== LIBERAR MODELO =====
+        console.log('🔓 Liberando modelo al marcador...');
+
+        // Eliminar el modelo 3D capturado
+        if (captured3DModel) {
+            captured3DModel.remove();
+            captured3DModel = null;
+            console.log('🗑️ Modelo 3D capturado eliminado');
+        }
+
+        // Limpiar cualquier otro modelo 3D que pueda existir
+        const existing3DModels = camera.querySelectorAll('[data-3d-preview]');
+        existing3DModels.forEach(el => {
+            el.remove();
+            console.log('🗑️ Modelo 3D extra eliminado');
+        });
+
+        // Desactivar controles de giroscopio si estaban activos
         if (gyroControlsEnabled) {
             camera.setAttribute('look-controls', 'enabled: false');
             gyroControlsEnabled = false;
@@ -731,105 +1027,112 @@ window.enable3DMode = function () {
             controlsHint.style.display = 'none';
         }
 
-        // Resetear todas las variables
+        // Resetear variables
         currentRotation = { x: 0, y: 0 };
         currentModelScale = 1;
         currentModelPosition = { x: 0, y: 0, z: -15 };
         isRotating = false;
         isPanning = false;
+        captureDeviceOrientation = null; // Resetear orientación capturada
 
-        view3DBtn.innerHTML = '👁️ Ver en 3D';
-        view3DBtn.style.background = 'rgba(76, 175, 80, 0.8)';
+        // Marcar como NO capturado
+        isModelCaptured = false;
+
+        // Mostrar el modelo del marcador nuevamente
+        if (markerAnchor && markerAnchor.object3D) {
+            markerAnchor.object3D.visible = true;
+            console.log('👁️ Modelo del marcador visible nuevamente');
+        }
+
+        // Pausar audio si está reproduciendo
+        if (globalAudioInstance && isAudioPlaying) {
+            globalAudioInstance.pause();
+            isAudioPlaying = false;
+            updateAudioButton();
+            console.log('🔇 Audio pausado');
+        }
+
+        // Restaurar botón
+        captureBtn.classList.remove('captured');
+        captureBtn.title = 'Capturar modelo';
+
+        console.log('✅ Modelo liberado de vuelta al marcador');
+    }
+};
+
+// Función para crear el modelo 3D capturado
+function createCaptured3DModel() {
+    const camera = document.getElementById('camera');
+    const scene = document.querySelector('a-scene');
+
+    if (!camera || !scene) {
+        console.error('❌ Cámara o escena no encontrada');
         return;
     }
 
-    // Ocultar loading si está visible
-    document.getElementById('loading').style.display = 'none';
+    console.log('🎨 Creando modelo 3D capturado...');
 
-    // Asegurarse de que el video de la cámara esté visible
+    // Asegurar que el video de la cámara esté visible
     const video = document.querySelector('video');
     if (video) {
         video.style.display = 'block';
         video.style.zIndex = '-2';
-        console.log('📹 Video de cámara asegurado como visible');
     }
 
     // Asegurar que el canvas sea transparente
     const canvas = scene.canvas;
     if (canvas) {
         canvas.style.background = 'transparent';
-        console.log('🎨 Canvas configurado como transparente');
     }
 
     // Asegurar que la escena no tenga fondo
     scene.removeAttribute('background');
-    console.log('🎨 Fondo de escena removido para ver la cámara');
 
     let entity;
 
     if (currentConfig.model.type === 'primitive') {
-        // Modelo primitivo (Cubo, Esfera, etc.)
+        // Modelo primitivo
         entity = document.createElement(currentConfig.model.primitive || 'a-box');
         entity.setAttribute('color', currentConfig.model.color || 'red');
     } else {
         // Modelo 3D (GLB/GLTF)
         entity = document.createElement('a-entity');
         const modelPath = `models/${modelId}/${currentConfig.model.glb}`;
-        console.log('📦 Cargando modelo 3D desde:', modelPath);
         entity.setAttribute('gltf-model', modelPath);
 
         if (currentConfig.model.glb.includes('glb') || currentConfig.model.glb.includes('gltf')) {
             entity.setAttribute('animation-mixer', '');
         }
-
-        // Eventos de carga
-        entity.addEventListener('model-loaded', () => {
-            console.log('✅ Modelo 3D cargado exitosamente en modo preview');
-            console.log('🎨 El modelo debería estar visible girando frente a ti');
-        });
-
-        entity.addEventListener('model-error', (event) => {
-            console.error('❌ Error cargando modelo 3D:', event.detail);
-            alert('Error al cargar el modelo 3D. Verifica la consola para más detalles.');
-        });
     }
 
-    // Marcar para poder identificarlo después
+    // Marcar como modelo capturado
     entity.setAttribute('data-3d-preview', 'true');
 
-    // Configurar escala y posición - AUMENTAR para compensar la distancia
+    // Configurar escala y posición inicial
     const baseScale = currentConfig.model.scale || '1 1 1';
-    const scaleParts = baseScale.split(' ').map(v => parseFloat(v) * 8); // ESCALA x8 para que sea visible a distancia
+    const scaleParts = baseScale.split(' ').map(v => parseFloat(v) * 8);
     const scale = scaleParts.join(' ');
 
     entity.setAttribute('scale', scale);
-    entity.setAttribute('position', '0 0 -15'); // A 15 unidades (dentro del rango near:10, far:99999)
+    entity.setAttribute('position', '0 0 -15');
     entity.setAttribute('rotation', '0 0 0');
 
-    // Resetear todas las variables al activar modo 3D
+    // Resetear variables de control
     currentRotation = { x: 0, y: 0 };
     currentModelScale = 1;
     currentModelPosition = { x: 0, y: 0, z: -15 };
-    isRotating = false;
-    isPanning = false;
 
-    console.log('📐 Modelo configurado - Escala:', scale, 'Posición: 0 0 -15 (dentro del frustum)');
-
-    // NO agregar animación automática - permitir control manual
-    // entity.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear');
-
-    // Agregar a la cámara para que siempre esté visible
+    // Agregar a la cámara
     camera.appendChild(entity);
-    console.log('✓ Modelo agregado a la cámara');
+    captured3DModel = entity;
 
-    // Agregar controles táctiles/mouse para rotar el modelo manualmente
+    // Configurar controles
     setupModelRotationControls(entity);
 
     // Mostrar hint de controles
     const controlsHint = document.getElementById('controls-hint');
     if (controlsHint) {
         controlsHint.style.display = 'block';
-        // Ocultar después de 5 segundos
         setTimeout(() => {
             controlsHint.style.opacity = '0';
             controlsHint.style.transition = 'opacity 0.5s';
@@ -840,88 +1143,21 @@ window.enable3DMode = function () {
         }, 5000);
     }
 
-    // Verificar que el modelo esté en la escena
-    setTimeout(() => {
-        const object3D = entity.object3D;
-        if (object3D) {
-            console.log('🔍 Verificación Object3D del MODELO:', {
-                visible: object3D.visible,
-                position: `x:${object3D.position.x.toFixed(2)} y:${object3D.position.y.toFixed(2)} z:${object3D.position.z.toFixed(2)}`,
-                scale: `x:${object3D.scale.x.toFixed(2)} y:${object3D.scale.y.toFixed(2)} z:${object3D.scale.z.toFixed(2)}`,
-                parent: object3D.parent ? 'OK' : 'NULL',
-                children: object3D.children.length
-            });
-
-            // Verificar si tiene geometría
-            object3D.traverse((child) => {
-                if (child.geometry) {
-                    console.log('  └─ Geometría encontrada:', child.geometry.type);
-                }
-                if (child.material) {
-                    console.log('  └─ Material encontrado:', child.material.type, 'visible:', child.visible);
-                }
-            });
-        } else {
-            console.error('❌ Object3D no encontrado');
-        }
-
-        // Verificar cámara
-        const cameraObject = camera.object3D;
-        if (cameraObject) {
-            const cam = cameraObject.children.find(c => c.isCamera);
-            console.log('📷 Cámara Object3D:', {
-                position: `x:${cameraObject.position.x.toFixed(2)} y:${cameraObject.position.y.toFixed(2)} z:${cameraObject.position.z.toFixed(2)}`,
-                rotation: `x:${cameraObject.rotation.x.toFixed(2)} y:${cameraObject.rotation.y.toFixed(2)} z:${cameraObject.rotation.z.toFixed(2)}`,
-                children: cameraObject.children.length
-            });
-
-            if (cam) {
-                console.log('📷 Configuración de cámara THREE.js:', {
-                    near: cam.near,
-                    far: cam.far,
-                    fov: cam.fov,
-                    aspect: cam.aspect
-                });
-            }
-        }
-
-        // Verificar renderer
-        const renderer = scene.renderer;
-        if (renderer) {
-            console.log('🖼️ Renderer info:', {
-                alpha: renderer.alpha,
-                autoClear: renderer.autoClear,
-                sortObjects: renderer.sortObjects
-            });
-        }
-    }, 1000);
-
-    // Reproducir sonido si está configurado
-    if (currentConfig.audio?.enabled && globalAudioInstance) {
+    // Reproducir audio si está configurado
+    if (currentConfig.audio?.enabled && globalAudioInstance && !isAudioPlaying) {
         globalAudioInstance.play()
             .then(() => {
-                console.log('🔊 Sonido reproduciendo en modo 3D');
+                console.log('🔊 Sonido reproduciendo en modo capturado');
                 isAudioPlaying = true;
                 updateAudioButton();
             })
             .catch(err => {
                 console.log('⚠️ Error reproduciendo sonido:', err.message);
-                console.log('💡 Usa el botón de audio para reproducirlo manualmente');
             });
     }
 
-    // Animar botón de info
-    const infoBtn = document.getElementById('info-toggle-btn');
-    if (infoBtn) {
-        infoBtn.style.animation = 'pulse 1s ease-in-out 3';
-    }
-
-    // Cambiar texto del botón
-    view3DBtn.innerHTML = '✕ Ocultar 3D';
-    view3DBtn.style.background = 'rgba(244, 67, 54, 0.8)';
-
-    console.log('✅ Modelo 3D activado en modo preview');
-};
+    console.log('✅ Modelo 3D capturado creado exitosamente');
+}
 
 window.testCamera = async function () {
     try {
@@ -1108,6 +1344,7 @@ window.openGallery = function() {
             item.innerHTML = `<img src="${photo.data}" alt="Foto ${index + 1}">`;
             item.onclick = () => {
                 currentPhotoData = photo;
+                closeGallery(); // Cerrar galería primero
                 showPhotoPreview(photo.data);
             };
             grid.appendChild(item);

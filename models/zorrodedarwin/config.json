@@ -4,6 +4,7 @@
   "scientificName": "Lycalopex fulvipes",
   "description": "El zorro de Darwin es una especie endémica de las islas del Archipiélago de Juan Fernández, en Chile. Es una especie pequeña y de hábitos nocturnos.",
   "thumbnail": "thumbnail.jpg",
+  "icon": "🦊",
   "arMode": "hybrid",
   "gps": {
     "enabled": false,

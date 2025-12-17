@@ -1,0 +1,29 @@
+# FaunAR - Control de caché
+# Asegurar que los usuarios siempre obtengan la versión más reciente
+
+# Desactivar caché para HTML
+<FilesMatch "\.(html|htm)$">
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires 0
+</FilesMatch>
+
+# Caché corto para JS y CSS (con versionado ?v=X)
+<FilesMatch "\.(js|css)$">
+    Header set Cache-Control "max-age=3600, must-revalidate"
+</FilesMatch>
+
+# Caché largo para assets estáticos (imágenes, modelos 3D)
+<FilesMatch "\.(jpg|jpeg|png|gif|ico|glb|usdz|mp3|mind|patt)$">
+    Header set Cache-Control "max-age=31536000, public"
+</FilesMatch>
+
+# Caché corto para JSON (configuraciones)
+<FilesMatch "\.json$">
+    Header set Cache-Control "max-age=3600, must-revalidate"
+</FilesMatch>
+
+# Habilitar compresión GZIP
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/json
+</IfModule>
