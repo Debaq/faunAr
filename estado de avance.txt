@@ -1,0 +1,264 @@
+  ---
+  DIARIO DE CAMPO - FaunAR
+
+  Descripción General
+
+  Sistema tipo "coleccionable" donde los usuarios descubren animales al escanear sus marcadores AR. Funciona como un Pokédex de fauna nativa chilena.
+
+  Arquitectura del Sistema
+
+  Archivos Modificados/Creados
+
+  HTML (viewer.html)
+
+  - Línea 62-65: Botón de diario con badge de progreso
+  - Línea 93-113: Modal completo del diario (header + contenido)
+  - Estructura de 2 columnas: mapa + grid de animales
+
+  CSS (viewer.css)
+
+  - Línea 263-301: Estilos del botón y badge
+  - Línea 453-665: Estilos completos del modal
+  - Línea 639-650: Estilos específicos para siluetas SVG
+  - Sistema de filtros CSS para locked/unlocked (grayscale + brightness)
+  - Responsive: mobile cambia a 1 columna
+
+  JavaScript (ar-engine.js)
+
+  - Línea 1488-1512: Sistema de carga dinámica de animales
+  - Línea 1518-1556: Funciones de unlock y guardado en localStorage
+  - Línea 1569-1627: Notificación animada al descubrir
+  - Línea 1630-1700: Renderizado del diario con SVG
+  - Línea 481-483, 590-593: Integración con eventos de marcador
+
+  PHP (api/get-models.php)
+
+  - Ya existía: Escanea models/ dinámicamente
+  - Retorna lista de carpetas con config.json
+
+  Config Loader (js/config-loader.js)
+
+  - Línea 14-33: Nueva función getAvailableModels() que consulta PHP
+  - Línea 36-49: loadAll() ahora 100% dinámico
+  - Eliminado: Array hardcodeado de modelos
+
+  Configs Actualizados
+
+  Todos los config.json ahora tienen:
+  {
+    "id": "nombre-modelo",
+    "silhouette": "silueta_nombre-modelo.svg",
+    ...
+  }
+
+  Archivos modificados:
+  - models/puma/config.json (línea 8)
+  - models/huillin/config.json (línea 8)
+  - models/pudu/config.json (línea 8)
+  - models/zorrodedarwin/config.json (línea 2, 8) - también corregido id
+  - models/ranadedarwin/config.json (línea 2, 8) - también corregido id
+  - models/carpintero/config.json (línea 8)
+  - models/chucao/config.json (línea 8)
+  - models/martinpescador/config.json (línea 8)
+
+  Siluetas SVG Creadas
+
+  8 archivos SVG placeholder (reemplazar con diseños reales):
+  models/puma/silueta_puma.svg
+  models/huillin/silueta_huillin.svg
+  models/pudu/silueta_pudu.svg
+  models/zorrodedarwin/silueta_zorrodedarwin.svg
+  models/carpintero/silueta_carpintero.svg
+  models/chucao/silueta_chucao.svg ← Usuario lo editó con Inkscape
+  models/martinpescador/silueta_martinpescador.svg
+  models/ranadedarwin/silueta_ranadedarwin.svg
+
+  Funcionamiento
+
+  1. Carga Inicial
+
+  // Al cargar página
+  ConfigLoader.loadAll()
+    → PHP escanea models/
+    → Carga todos los config.json
+    → Extrae: id, name, scientificName, icon, silhouette
+    → Guarda en ALL_ANIMALS[]
+
+  2. Desbloqueo de Animales
+
+  // Cuando se detecta marcador (targetFound event)
+  unlockAnimal(modelId)
+    → Verifica si ya está descubierto
+    → Guarda en localStorage: 'faunar_discovered_animals'
+    → Actualiza badge del botón
+    → Muestra notificación animada (3 segundos)
+
+  3. Visualización del Diario
+
+  // Al abrir diario
+  openFieldJournal()
+    → renderFieldJournal()
+      → Calcula progreso (X de Y descubiertos)
+      → Renderiza barra de progreso
+      → Crea grid de animales:
+        - Locked: silueta oscura + 🔒 + "???"
+        - Unlocked: silueta color + nombre + clickeable
+
+  4. Sistema de Persistencia
+
+  localStorage keys:
+  - faunar_discovered_animals: Array de IDs descubiertos
+  - faunar_photos: Fotos capturadas (ya existía)
+
+  Ejemplo:
+  ["puma", "huillin", "ranadedarwin"]
+
+  Estados Visuales
+
+  Animal Bloqueado
+
+  .animal-item.locked {
+    opacity: 0.4;
+    cursor: default;
+  }
+  .animal-silhouette {
+    filter: grayscale(100%) brightness(0.5);
+  }
+
+  Animal Desbloqueado
+
+  .animal-item.unlocked {
+    border-color: rgba(139, 69, 19, 0.8);
+    background: rgba(80, 80, 80, 0.8);
+  }
+  .animal-silhouette {
+    filter: grayscale(0%) brightness(1);
+  }
+
+  Badge de Progreso
+
+  <span id="field-journal-badge">3</span>
+  - Anima al cambiar (scale 1.3 → 1)
+  - Actualiza automáticamente al desbloquear
+
+  Mapa Estático
+
+  Archivo: assets/images/map-placeholder.svg
+
+  SVG placeholder con:
+  - Montañas
+  - Lago/río
+  - Árboles
+  - Marcador de ubicación pulsante
+  - Texto: "Área de Exploración"
+
+  Para personalizar: Reemplazar con foto real del lugar o mapa topográfico.
+
+  Cómo Agregar Nuevo Animal
+
+  1. Crear estructura
+
+  mkdir models/nuevo-animal
+
+  2. Crear config.json
+
+  {
+    "id": "nuevo-animal",
+    "name": "Nombre Común",
+    "scientificName": "Nombre científico",
+    "icon": "🦊",
+    "silhouette": "silueta_nuevo-animal.svg",
+    "arMode": "marker",
+    ...
+  }
+
+  3. Crear silueta SVG
+
+  # Archivo: models/nuevo-animal/silueta_nuevo-animal.svg
+  # - ViewBox flexible (200x200 recomendado)
+  # - Color por defecto en <g fill="#...">
+  # - Forma simplificada y reconocible
+
+  4. ¡Listo!
+
+  El sistema detecta automáticamente el nuevo modelo vía PHP.
+
+  Mejoras Pendientes
+
+  Funcionalidades
+
+  - Click en animal desbloqueado → modal con más info (descripción, hábitat, etc.)
+  - Animación de "nuevo descubrimiento" más elaborada
+  - Sonido al desbloquear animal
+  - Compartir progreso en redes sociales
+  - Resetear progreso (botón de borrar localStorage)
+  - Estadísticas: tiempo, ubicaciones, etc.
+
+  UX/UI
+
+  - Reemplazar siluetas SVG placeholder con diseños profesionales
+  - Mapa real del área de exploración
+  - Indicadores visuales de "casi cerca" de desbloquear
+  - Efecto de "volteo de carta" al desbloquear
+  - Tutorial/onboarding primera vez
+
+  Técnico
+
+  - Cachear loadAll() en sessionStorage
+  - Optimizar carga paralela de SVGs
+  - Lazy loading de siluetas
+  - Versioning de localStorage para migraciones
+  - Analytics de animales más populares
+
+  Notas Técnicas
+
+  Performance
+
+  - SVGs cargan bajo demanda al abrir diario
+  - localStorage sincrónico pero pequeño (<1KB)
+  - PHP cacheable con headers apropiados
+
+  Compatibilidad
+
+  - SVG soportado en todos los navegadores modernos
+  - localStorage universal
+  - Fallback a emoji si SVG falla (onerror)
+
+  Consideraciones
+
+  - Sin conexión funciona: todo en localStorage
+  - PHP necesario solo para descubrimiento inicial
+  - Siluetas pueden ser editadas en Inkscape/Adobe Illustrator
+
+  Referencias de Código
+
+  Eventos Clave
+
+  // ar-engine.js:481-483
+  anchor.addEventListener('targetFound', () => {
+    unlockAnimal(modelId);  // ← Desbloquea al detectar
+  });
+
+  Renderizado
+
+  // ar-engine.js:1677-1685
+  if (animal.silhouette) {
+    const path = `models/${animal.id}/${animal.silhouette}`;
+    iconHTML = `<img src="${path}" class="animal-silhouette">`;
+  }
+
+  Estilos Dinámicos
+
+  /* viewer.css:644-650 */
+  .animal-silhouette {
+    filter: grayscale(100%) brightness(0.5);
+    transition: filter 0.3s ease;
+  }
+  .animal-item.unlocked .animal-silhouette {
+    filter: grayscale(0%) brightness(1);
+  }
+
+  ---
+  Última actualización: 2025-12-17
+  Versión: 1.0
+  Estado: Funcional - Siluetas placeholder

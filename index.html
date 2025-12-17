@@ -15,6 +15,12 @@
 <body>
     <header>
         <img src="assets/images/logo_faunar.png" alt="FaunAR" style="max-width: 400px; margin-bottom: 10px;">
+        <div class="language-selector" style="position: absolute; top: 20px; right: 20px;">
+            <select id="language-select" onchange="i18n.setLanguage(this.value)" style="padding: 8px 12px; border: 2px solid #2c5f2d; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;">
+                <option value="es">🇨🇱 ES</option>
+                <option value="en">🇺🇸 EN</option>
+            </select>
+        </div>
     </header>
 
     <main id="projects-container">
@@ -58,6 +64,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="js/i18n.js"></script>
     <script src="js/portal.js?v=5"></script>
     <script src="js/modal.js?v=5" defer></script>
     <script src="js/about.js?v=5" defer></script>

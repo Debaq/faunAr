@@ -1,0 +1,224 @@
+===========================================
+   PANEL DE ADMINISTRACIÓN FAUNAR
+   Sistema de Gestión Completo
+===========================================
+
+ACCESO AL PANEL
+---------------
+URL: http://localhost/faunAr/admin/
+Usuario: admin
+Contraseña: password
+
+NOTA: Cambia la contraseña en data/users.json usando password_hash() de PHP
+
+
+FUNCIONALIDADES IMPLEMENTADAS
+-----------------------------
+
+✅ 1. DASHBOARD
+   - Estadísticas generales (total animales, archivos, idiomas, GPS)
+   - Últimos animales registrados
+   - Acciones rápidas
+
+✅ 2. GESTIÓN DE ANIMALES (admin/animals.php)
+   - Listar todos los animales
+   - Crear nuevos animales
+   - Editar animales existentes
+   - Eliminar animales
+   - Búsqueda y filtros por modo AR
+
+   Campos del formulario:
+   - Información básica (ID, nombre, nombre científico, icono, descripción)
+   - Configuración AR (modo: marker/gps/hybrid)
+   - Configuración GPS (coordenadas, radio)
+   - Configuración de marcador (.mind)
+   - Configuración del modelo 3D (GLB, USDZ, escala, posición, rotación)
+   - Audio (MP3)
+   - Información adicional (hábitat, dieta, estado conservación, Wikipedia)
+   - Descripción detallada (HTML)
+
+✅ 3. UPLOAD DE ARCHIVOS (api/media/upload.php)
+   Soporta los siguientes tipos:
+   - GLB (modelos 3D web) - Max 50MB
+   - USDZ (modelos 3D iOS) - Max 100MB
+   - MIND (marcadores MindAR) - Max 5MB
+   - MP3 (audio) - Max 10MB
+   - PNG/JPG (miniaturas e imágenes) - Max 2-5MB
+   - SVG (siluetas) - Max 2MB
+
+   IMPORTANTE: Los archivos deben subirse manualmente vía FTP/SFTP
+   a la carpeta models/[animal-id]/ por ahora.
+
+✅ 4. GENERADOR DE QR (admin/qr-generator.php)
+   - Generar QR individuales
+   - Regenerar todos los QR
+   - Vista previa de QR existentes
+   - Descarga de QR
+
+   NOTA: Usa la API de Google Charts. Requiere conexión a internet.
+   URL Base configurable.
+
+✅ 5. SISTEMA DE TRADUCCIONES (admin/translations.php)
+   - Editor de traducciones por idioma (ES, EN)
+   - Organizado por secciones (Portal, Visor, Animales)
+   - Estadísticas de traducción
+   - Guardado automático en data/i18n/
+
+   Archivos de traducción:
+   - data/i18n/es.json (Español)
+   - data/i18n/en.json (Inglés)
+   - data/i18n/metadata.json (Configuración)
+
+   Sistema i18n integrado en:
+   - index.html (selector de idioma agregado)
+   - js/i18n.js (gestor de traducciones)
+   - Detección automática de idioma del navegador
+
+✅ 6. GESTIÓN GPS CON MAPA (admin/places.php)
+   - Mapa interactivo con Leaflet.js
+   - Click en mapa para establecer coordenadas
+   - Marcadores arrastrables
+   - Círculos de radio visuales
+   - Edición de coordenadas GPS
+   - Habilitar/deshabilitar GPS por animal
+
+
+ESTRUCTURA DE ARCHIVOS CREADOS
+-------------------------------
+
+admin/
+├── index.php                  # Login
+├── dashboard.php              # Dashboard principal
+├── animals.php                # CRUD de animales
+├── translations.php           # Editor de traducciones
+├── places.php                 # Gestión GPS
+├── qr-generator.php           # Generador de QR
+├── logout.php                 # Cerrar sesión
+├── css/
+│   └── admin.css             # Estilos del panel
+├── js/
+│   ├── admin.js              # Lógica principal
+│   ├── animal-form.js        # Formulario de animales
+│   ├── translation-editor.js # Editor de traducciones
+│   └── gps-map.js            # Mapa GPS
+└── includes/
+    ├── header.php            # Header común
+    ├── footer.php            # Footer común
+    └── nav.php               # Navegación lateral
+
+api/
+├── auth/
+│   ├── login.php             # Autenticación
+│   └── validate-session.php # Validar sesión
+├── animals/
+│   ├── list.php              # Listar animales
+│   ├── get.php               # Obtener animal
+│   ├── create.php            # Crear animal
+│   ├── update.php            # Actualizar animal
+│   └── delete.php            # Eliminar animal
+├── translations/
+│   ├── get-all.php           # Obtener idiomas
+│   ├── get-locale.php        # Obtener traducciones
+│   └── update.php            # Actualizar traducciones
+├── media/
+│   ├── upload.php            # Subir archivos
+│   └── delete.php            # Eliminar archivos
+└── qr/
+    ├── generate.php          # Generar QR
+    └── regenerate-all.php    # Regenerar todos
+
+data/
+├── users.json                # Usuarios admin
+├── config.json               # Configuración general
+├── .htaccess                 # Protección de directorio
+└── i18n/
+    ├── es.json               # Español
+    ├── en.json               # Inglés
+    └── metadata.json         # Metadatos de idiomas
+
+js/
+└── i18n.js                   # Sistema de traducciones
+
+
+FLUJO DE TRABAJO RECOMENDADO
+----------------------------
+
+1. CREAR UN NUEVO ANIMAL:
+   a. Ir a "Animales" → "Nuevo Animal"
+   b. Completar información básica (ID, nombre, etc.)
+   c. Configurar modo AR (marker/gps/hybrid)
+   d. Si usa GPS: establecer coordenadas en "Lugares GPS"
+   e. Guardar animal
+   f. Subir archivos (GLB, USDZ, MIND, MP3, imágenes) vía FTP a models/[id]/
+   g. Generar QR en "Códigos QR"
+
+2. ACTUALIZAR TRADUCCIONES:
+   a. Ir a "Traducciones"
+   b. Seleccionar idioma
+   c. Editar campos de texto
+   d. Guardar cambios
+
+3. GESTIONAR UBICACIONES GPS:
+   a. Ir a "Lugares GPS"
+   b. Seleccionar animal de la lista
+   c. Hacer click en el mapa o arrastrar marcador
+   d. Ajustar radio
+   e. Habilitar GPS
+   f. Guardar
+
+4. REGENERAR QR:
+   a. Ir a "Códigos QR"
+   b. Configurar URL base
+   c. Click en "Regenerar Todos" o regenerar individual
+   d. Descargar QR generados
+
+
+SEGURIDAD
+---------
+- Sesiones PHP con timeout de 30 minutos
+- Validación de tipos MIME en uploads
+- Sanitización de nombres de archivo
+- Protección de carpeta data/ con .htaccess
+- Password hasheado con bcrypt
+
+IMPORTANTE: Cambiar la contraseña por defecto en producción.
+
+
+REQUISITOS DEL SERVIDOR
+-----------------------
+- PHP >= 7.4
+- Extensiones: json, session, fileinfo
+- Permisos de escritura en:
+  - models/ (755)
+  - data/ (755)
+  - data/i18n/ (755)
+
+Ejecutar:
+chmod -R 755 models/
+chmod -R 755 data/
+
+
+PRÓXIMOS PASOS SUGERIDOS
+------------------------
+1. Implementar upload de archivos directamente desde el panel
+2. Preview de modelos 3D en formulario (model-viewer)
+3. Sistema de backup automático
+4. Logs de actividad
+5. Gestión de múltiples usuarios con roles
+6. Exportación de datos a CSV/JSON
+7. Estadísticas de uso
+
+
+SOPORTE
+-------
+Para cualquier problema o mejora, revisar:
+- /home/nick/.claude/plans/silly-stargazing-snowglobe.md (Plan completo)
+- Logs de PHP en el servidor
+- Consola del navegador para errores JS
+
+
+===========================================
+Sistema desarrollado con Claude Code
+Versión: 1.0.0
+Fecha: 2025-01-15
+===========================================

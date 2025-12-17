@@ -1,0 +1,23 @@
+{
+  "site": {
+    "title": "FaunAR",
+    "description": "Portal de Realidad Aumentada de Fauna Nativa de Chile",
+    "baseUrl": "http://localhost",
+    "defaultLanguage": "es",
+    "availableLanguages": ["es", "en"]
+  },
+  "ar": {
+    "defaultMode": "marker",
+    "gpsRadius": 50,
+    "modelScale": "1 1 1"
+  },
+  "media": {
+    "maxUploadSize": {
+      "glb": 52428800,
+      "usdz": 104857600,
+      "audio": 10485760,
+      "image": 2097152,
+      "mind": 5242880
+    }
+  }
+}

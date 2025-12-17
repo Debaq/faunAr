@@ -1,0 +1,160 @@
+{
+  "meta": {
+    "language": "es",
+    "languageName": "Español",
+    "version": "1.0.0",
+    "lastUpdated": "2025-01-15"
+  },
+  "portal": {
+    "title": "FaunAR - Portal",
+    "header": {
+      "logo_alt": "FaunAR"
+    },
+    "footer": {
+      "copyright": "TecMedHub @ 2025"
+    },
+    "buttons": {
+      "view_ar": "Ver en AR",
+      "view_qr": "Ver QR/Marcador",
+      "download_glb": "GLB",
+      "download_usdz": "USDZ",
+      "play_sound": "Sonido",
+      "stop_sound": "Stop",
+      "wikipedia": "Wiki"
+    },
+    "badges": {
+      "gps": "GPS",
+      "marker": "Marcador",
+      "audio": "Audio"
+    },
+    "modal": {
+      "close": "Cerrar",
+      "download": "Descargar QR",
+      "qr_subtitle": "Escanea este código QR para ver el modelo en AR",
+      "marker_subtitle": "Descarga e imprime este marcador para ver el modelo en AR"
+    },
+    "no_models": "No se encontraron modelos disponibles",
+    "error_loading": "Error cargando modelos"
+  },
+  "viewer": {
+    "title": "FaunAR - Visor",
+    "loading": {
+      "initializing": "Iniciando",
+      "loading_experience": "Cargando experiencia AR...",
+      "loading_config": "Cargando configuración...",
+      "requesting_permissions": "Solicitando permisos de sensores...",
+      "initializing_mindar": "Inicializando MindAR...",
+      "camera_activated": "Cámara activada, apunta al marcador...",
+      "error_no_model": "No se especificó modelo",
+      "error_loading_config": "Error cargando configuración"
+    },
+    "buttons": {
+      "back": "Volver",
+      "info": "ℹ️",
+      "audio_on": "🔊",
+      "audio_off": "🔇",
+      "capture": "Capturar",
+      "capture_model": "Capturar Modelo",
+      "release_model": "Liberar Modelo",
+      "gallery": "Galería",
+      "field_journal": "Diario de campo"
+    },
+    "controls": {
+      "title": "Controles 3D",
+      "one_finger": "1 dedo: Rotar",
+      "two_fingers": "2 dedos: Zoom y Mover",
+      "move_device": "Mueve tu dispositivo para ver alrededor"
+    },
+    "gps": {
+      "distance": "Distancia: {distance}m",
+      "at_location": "¡Estás en el punto! Busca el marcador o mira alrededor",
+      "get_closer": "Acércate {distance}m más",
+      "status": "Estado GPS"
+    },
+    "photo": {
+      "download": "Descargar",
+      "share": "Compartir",
+      "close": "Cerrar",
+      "delete": "Eliminar",
+      "gallery_title": "Mis Fotos AR",
+      "no_photos": "No hay fotos capturadas aún. ¡Captura tu primera foto AR!",
+      "captured": "Foto capturada"
+    },
+    "field_journal": {
+      "title": "Diario de Campo",
+      "map_title": "Mapa del Sector",
+      "fauna_title": "Fauna Descubierta",
+      "progress": "{count} de {total} especies descubiertas",
+      "locked": "???",
+      "new_discovery": "¡Nuevo descubrimiento!",
+      "discovered": "Animal descubierto ✓",
+      "unlock_hint": "Apunta al marcador para descubrir"
+    }
+  },
+  "animals": {
+    "puma": {
+      "name": "Puma",
+      "scientific_name": "Puma concolor",
+      "description": "El puma es un gran felino nativo de América, con una amplia distribución desde Canadá hasta el sur de Chile y Argentina. Es un cazador solitario y adaptable que habita en diversos ecosistemas, incluyendo la estepa patagónica y los bosques andinos.",
+      "habitat": "Diversos: montañas, bosques, estepas",
+      "diet": "Carnívoro",
+      "status": "Preocupación menor"
+    },
+    "huillin": {
+      "name": "Huillín",
+      "scientific_name": "Lontra provocax",
+      "description": "El huillín es una nutria de río nativa del sur de Chile y Argentina. Es un mamífero semiacuático que habita en ríos, lagos y estuarios de agua dulce.",
+      "habitat": "Ríos, lagos y estuarios",
+      "diet": "Carnívoro (peces, crustáceos)",
+      "status": "En peligro"
+    },
+    "pudu": {
+      "name": "Pudú",
+      "scientific_name": "Pudu puda",
+      "description": "El pudú es el ciervo más pequeño del mundo, endémico de los bosques del sur de Chile y Argentina.",
+      "habitat": "Bosques templados húmedos",
+      "diet": "Herbívoro",
+      "status": "Casi amenazado"
+    },
+    "ranadedarwin": {
+      "name": "Rana de Darwin",
+      "scientific_name": "Rhinoderma darwinii",
+      "description": "Pequeño anfibio anuro endémico de los bosques templados de Chile y Argentina, notable por su cuidado parental único.",
+      "habitat": "Bosques templados húmedos, suelo de hojarasca",
+      "diet": "Insectívoro",
+      "status": "En peligro"
+    },
+    "carpintero": {
+      "name": "Carpintero Negro",
+      "scientific_name": "Campephilus magellanicus",
+      "description": "El carpintero de mayor tamaño en Sudamérica, habita en bosques nativos del sur de Chile y Argentina.",
+      "habitat": "Bosques nativos antiguos",
+      "diet": "Insectívoro",
+      "status": "Preocupación menor"
+    },
+    "chucao": {
+      "name": "Chucao",
+      "scientific_name": "Scelorchilus rubecula",
+      "description": "Ave endémica de los bosques templados de Chile y Argentina, conocida por su canto característico.",
+      "habitat": "Bosques templados, sotobosque denso",
+      "diet": "Insectívoro",
+      "status": "Preocupación menor"
+    },
+    "martinpescador": {
+      "name": "Martín Pescador",
+      "scientific_name": "Megaceryle torquata",
+      "description": "Ave acuática que habita cerca de ríos, lagos y costas, conocida por su habilidad para pescar.",
+      "habitat": "Ríos, lagos, costas",
+      "diet": "Piscívoro",
+      "status": "Preocupación menor"
+    },
+    "zorrodedarwin": {
+      "name": "Zorro de Darwin",
+      "scientific_name": "Lycalopex fulvipes",
+      "description": "Cánido endémico de Chile, considerado uno de los canidos más raros del mundo.",
+      "habitat": "Bosques templados costeros",
+      "diet": "Omnívoro",
+      "status": "En peligro"
+    }
+  }
+}

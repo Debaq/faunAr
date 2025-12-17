@@ -1,0 +1,160 @@
+{
+  "meta": {
+    "language": "en",
+    "languageName": "English",
+    "version": "1.0.0",
+    "lastUpdated": "2025-01-15"
+  },
+  "portal": {
+    "title": "FaunAR - Portal",
+    "header": {
+      "logo_alt": "FaunAR"
+    },
+    "footer": {
+      "copyright": "TecMedHub @ 2025"
+    },
+    "buttons": {
+      "view_ar": "View in AR",
+      "view_qr": "View QR/Marker",
+      "download_glb": "GLB",
+      "download_usdz": "USDZ",
+      "play_sound": "Sound",
+      "stop_sound": "Stop",
+      "wikipedia": "Wiki"
+    },
+    "badges": {
+      "gps": "GPS",
+      "marker": "Marker",
+      "audio": "Audio"
+    },
+    "modal": {
+      "close": "Close",
+      "download": "Download QR",
+      "qr_subtitle": "Scan this QR code to view the model in AR",
+      "marker_subtitle": "Download and print this marker to view the model in AR"
+    },
+    "no_models": "No models available",
+    "error_loading": "Error loading models"
+  },
+  "viewer": {
+    "title": "FaunAR - Viewer",
+    "loading": {
+      "initializing": "Initializing",
+      "loading_experience": "Loading AR experience...",
+      "loading_config": "Loading configuration...",
+      "requesting_permissions": "Requesting sensor permissions...",
+      "initializing_mindar": "Initializing MindAR...",
+      "camera_activated": "Camera activated, point at the marker...",
+      "error_no_model": "No model specified",
+      "error_loading_config": "Error loading configuration"
+    },
+    "buttons": {
+      "back": "Back",
+      "info": "ℹ️",
+      "audio_on": "🔊",
+      "audio_off": "🔇",
+      "capture": "Capture",
+      "capture_model": "Capture Model",
+      "release_model": "Release Model",
+      "gallery": "Gallery",
+      "field_journal": "Field Journal"
+    },
+    "controls": {
+      "title": "3D Controls",
+      "one_finger": "1 finger: Rotate",
+      "two_fingers": "2 fingers: Zoom and Move",
+      "move_device": "Move your device to look around"
+    },
+    "gps": {
+      "distance": "Distance: {distance}m",
+      "at_location": "You're at the point! Look for the marker or look around",
+      "get_closer": "Get {distance}m closer",
+      "status": "GPS Status"
+    },
+    "photo": {
+      "download": "Download",
+      "share": "Share",
+      "close": "Close",
+      "delete": "Delete",
+      "gallery_title": "My AR Photos",
+      "no_photos": "No photos captured yet. Capture your first AR photo!",
+      "captured": "Photo captured"
+    },
+    "field_journal": {
+      "title": "Field Journal",
+      "map_title": "Area Map",
+      "fauna_title": "Discovered Fauna",
+      "progress": "{count} of {total} species discovered",
+      "locked": "???",
+      "new_discovery": "New discovery!",
+      "discovered": "Animal discovered ✓",
+      "unlock_hint": "Point at the marker to discover"
+    }
+  },
+  "animals": {
+    "puma": {
+      "name": "Puma",
+      "scientific_name": "Puma concolor",
+      "description": "The puma is a large feline native to the Americas, with a wide distribution from Canada to southern Chile and Argentina. It is a solitary and adaptable hunter that inhabits diverse ecosystems, including the Patagonian steppe and Andean forests.",
+      "habitat": "Diverse: mountains, forests, steppes",
+      "diet": "Carnivore",
+      "status": "Least Concern"
+    },
+    "huillin": {
+      "name": "Southern River Otter",
+      "scientific_name": "Lontra provocax",
+      "description": "The huillín is a river otter native to southern Chile and Argentina. It is a semi-aquatic mammal that inhabits rivers, lakes and freshwater estuaries.",
+      "habitat": "Rivers, lakes and estuaries",
+      "diet": "Carnivore (fish, crustaceans)",
+      "status": "Endangered"
+    },
+    "pudu": {
+      "name": "Pudú",
+      "scientific_name": "Pudu puda",
+      "description": "The pudú is the world's smallest deer, endemic to the forests of southern Chile and Argentina.",
+      "habitat": "Temperate rainforests",
+      "diet": "Herbivore",
+      "status": "Near Threatened"
+    },
+    "ranadedarwin": {
+      "name": "Darwin's Frog",
+      "scientific_name": "Rhinoderma darwinii",
+      "description": "Small anuran amphibian endemic to the temperate forests of Chile and Argentina, notable for its unique parental care.",
+      "habitat": "Temperate rainforests, leaf litter",
+      "diet": "Insectivore",
+      "status": "Endangered"
+    },
+    "carpintero": {
+      "name": "Magellanic Woodpecker",
+      "scientific_name": "Campephilus magellanicus",
+      "description": "The largest woodpecker in South America, inhabiting native forests of southern Chile and Argentina.",
+      "habitat": "Ancient native forests",
+      "diet": "Insectivore",
+      "status": "Least Concern"
+    },
+    "chucao": {
+      "name": "Chucao Tapaculo",
+      "scientific_name": "Scelorchilus rubecula",
+      "description": "Endemic bird of the temperate forests of Chile and Argentina, known for its characteristic song.",
+      "habitat": "Temperate forests, dense understory",
+      "diet": "Insectivore",
+      "status": "Least Concern"
+    },
+    "martinpescador": {
+      "name": "Ringed Kingfisher",
+      "scientific_name": "Megaceryle torquata",
+      "description": "Aquatic bird that inhabits near rivers, lakes and coasts, known for its fishing ability.",
+      "habitat": "Rivers, lakes, coasts",
+      "diet": "Piscivore",
+      "status": "Least Concern"
+    },
+    "zorrodedarwin": {
+      "name": "Darwin's Fox",
+      "scientific_name": "Lycalopex fulvipes",
+      "description": "Canid endemic to Chile, considered one of the rarest canids in the world.",
+      "habitat": "Coastal temperate forests",
+      "diet": "Omnivore",
+      "status": "Endangered"
+    }
+  }
+}
