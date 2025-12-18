@@ -1,121 +1,190 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
 
+// --- Functions ---
+function send_json_error($message, $code = 400) {
+    http_response_code($code);
+    echo json_encode(['success' => false, 'message' => $message]);
+    exit();
+}
+
+function handle_file_upload($file_key, $animal_id, &$config) {
+    if (isset($_FILES[$file_key]) && $_FILES[$file_key]['error'] === UPLOAD_ERR_OK) {
+        $file = $_FILES[$file_key];
+        
+        $name_map = [
+            'image_file' => "imagen_{$animal_id}.png",
+            'thumbnail_file' => 'thumbnail.png',
+            'silhouette_file' => "silueta_{$animal_id}.svg",
+            'mind_file' => "{$animal_id}.mind",
+            'audio_file' => 'sound.mp3',
+            'glb_file' => "{$animal_id}.glb",
+            'usdz_file' => "{$animal_id}.usdz",
+        ];
+        $filename = $name_map[$file_key] ?? basename($file['name']);
+        
+        $target_dir = __DIR__ . "/../../models/{$animal_id}";
+        $target_path = "{$target_dir}/{$filename}";
+
+        if (!move_uploaded_file($file['tmp_name'], $target_path)) {
+            // Clean up created directory on failure
+            rmdir($target_dir);
+            send_json_error("Error al mover el archivo {$filename}.", 500);
+        }
+
+        // Update config path
+        $keys_to_update = [
+            'image_file' => 'image',
+            'thumbnail_file' => 'thumbnail',
+            'silhouette_file' => 'silhouette',
+            'mind_file' => ['marker', 'file'],
+            'audio_file' => ['audio', 'file'],
+            'glb_file' => ['model', 'glb'],
+            'usdz_file' => ['model', 'usdz'],
+        ];
+        
+        $key_path = $keys_to_update[$file_key];
+        if (is_array($key_path)) {
+            $config[$key_path[0]][$key_path[1]] = $filename;
+        } else {
+            $config[$key_path] = $filename;
+        }
+    }
+}
+
+
+// --- Security and Setup ---
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'error' => 'Método no permitido']);
-    exit();
+    send_json_error('Método no permitido', 405);
 }
 
-// Verificar autenticación
 if (!isset($_SESSION['admin_user'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'error' => 'No autenticado']);
-    exit();
+    send_json_error('No autenticado', 401);
 }
 
-$input = file_get_contents('php://input');
-$data = json_decode($input, true);
+// --- Validation ---
+$id = $_POST['id'] ?? '';
+$name = $_POST['name'] ?? '';
 
-if (!$data) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Datos inválidos']);
-    exit();
+if (empty($id) || empty($name)) {
+    send_json_error('El ID y el Nombre son obligatorios.');
 }
 
-// Validar campos requeridos
-$id = $data['id'] ?? '';
-$name = $data['name'] ?? '';
-$scientificName = $data['scientificName'] ?? '';
-
-if (empty($id) || empty($name) || empty($scientificName)) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'Campos requeridos faltantes']);
-    exit();
+if (!preg_match('/^[a-z0-9_]+$/', $id)) {
+    send_json_error('ID debe contener solo minúsculas, números y guiones bajos, sin espacios.');
 }
 
-// Validar formato de ID (solo minúsculas, sin espacios)
-if (!preg_match('/^[a-z]+$/', $id)) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'error' => 'ID debe contener solo minúsculas sin espacios']);
-    exit();
+$model_path = __DIR__ . "/../../models/{$id}";
+
+if (file_exists($model_path)) {
+    send_json_error('El ID del animal ya existe.', 409);
 }
 
-$modelPath = __DIR__ . "/../../models/{$id}";
+// --- Logic ---
 
-// Verificar que no exista
-if (file_exists($modelPath)) {
-    http_response_code(409);
-    echo json_encode(['success' => false, 'error' => 'El ID ya existe']);
-    exit();
+// 1. Create directory
+if (!mkdir($model_path, 0755, true)) {
+    send_json_error('Error al crear el directorio para el animal.', 500);
 }
 
-// Crear estructura de configuración
+// 2. Build initial config from POST
 $config = [
     'id' => $id,
     'name' => $name,
-    'scientificName' => $scientificName,
-    'description' => $data['description'] ?? '',
-    'thumbnail' => $data['thumbnail'] ?? 'thumbnail.png',
-    'icon' => $data['icon'] ?? '',
-    'silhouette' => $data['silhouette'] ?? "silueta_{$id}.svg",
-    'arMode' => $data['arMode'] ?? 'marker',
+    'scientificName' => $_POST['scientificName'] ?? '',
+    'description' => $_POST['description'] ?? '',
+    'icon' => $_POST['icon'] ?? '',
+    'arMode' => $_POST['arMode'] ?? 'marker',
+    'image' => "imagen_{$id}.png",
+    'thumbnail' => 'thumbnail.png',
+    'silhouette' => "silueta_{$id}.svg",
     'gps' => [
-        'enabled' => $data['gps']['enabled'] ?? false,
-        'latitude' => $data['gps']['latitude'] ?? 0,
-        'longitude' => $data['gps']['longitude'] ?? 0,
-        'radius' => $data['gps']['radius'] ?? 50
+        'enabled' => isset($_POST['gps_enabled']),
+        'latitude' => floatval($_POST['gps_latitude'] ?? 0),
+        'longitude' => floatval($_POST['gps_longitude'] ?? 0),
+        'radius' => intval($_POST['gps_radius'] ?? 50)
     ],
     'marker' => [
-        'enabled' => $data['marker']['enabled'] ?? true,
-        'type' => $data['marker']['type'] ?? 'mind',
-        'file' => $data['marker']['file'] ?? "{$id}.mind"
-    ],
-    'model' => [
-        'glb' => $data['model']['glb'] ?? "{$id}.glb",
-        'usdz' => $data['model']['usdz'] ?? "{$id}.usdz",
-        'scale' => $data['model']['scale'] ?? '0.5 0.5 0.5',
-        'position' => $data['model']['position'] ?? '0 0 0',
-        'rotation' => $data['model']['rotation'] ?? '0 0 0'
+        'enabled' => isset($_POST['marker_enabled']),
+        'type' => 'mind',
+        'file' => "{$id}.mind"
     ],
     'audio' => [
-        'enabled' => $data['audio']['enabled'] ?? false,
-        'file' => $data['audio']['file'] ?? 'sound.mp3'
+        'enabled' => isset($_POST['audio_enabled']),
+        'file' => 'sound.mp3'
+    ],
+    'model' => [
+        'glb' => "{$id}.glb",
+        'usdz' => "{$id}.usdz",
+        'scale' => '0.5 0.5 0.5',
+        'position' => '0 0 0',
+        'rotation' => '0 0 0'
     ],
     'info' => [
-        'habitat' => $data['info']['habitat'] ?? '',
-        'diet' => $data['info']['diet'] ?? '',
-        'status' => $data['info']['status'] ?? '',
-        'wikipedia' => $data['info']['wikipedia'] ?? ''
-    ]
+        'habitat' => $_POST['info_habitat'] ?? '',
+        'diet' => $_POST['info_diet'] ?? '',
+        'status' => $_POST['info_status'] ?? '',
+        'wikipedia' => $_POST['info_wikipedia'] ?? ''
+    ],
+    'video_url' => $_POST['video_url'] ?? ''
 ];
 
-// Crear carpeta
-if (!mkdir($modelPath, 0755, true)) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'error' => 'Error al crear directorio']);
-    exit();
+// 3. Handle file uploads (this will override default names if files are provided)
+handle_file_upload('image_file', $id, $config);
+handle_file_upload('thumbnail_file', $id, $config);
+handle_file_upload('silhouette_file', $id, $config);
+handle_file_upload('mind_file', $id, $config);
+handle_file_upload('audio_file', $id, $config);
+handle_file_upload('glb_file', $id, $config);
+handle_file_upload('usdz_file', $id, $config);
+
+// 4. Create translations.json structure
+// Leer idiomas disponibles
+$languages_file = __DIR__ . '/../../data/languages.json';
+$languages = json_decode(file_get_contents($languages_file), true);
+
+$translations = [];
+
+// Español con datos actuales
+$translations['es'] = [
+    'name' => $config['name'],
+    'short_description' => $config['description'],
+    'habitat' => $config['info']['habitat'],
+    'diet' => $config['info']['diet'],
+    'status' => $config['info']['status'],
+    'detailed_description' => $_POST['detailed_description'] ?? '',
+    'wikipedia' => $config['info']['wikipedia']
+];
+
+// Solo agregar idiomas habilitados
+foreach ($languages as $code => $lang) {
+    if ($code !== 'es' && isset($lang['enabled']) && $lang['enabled']) {
+        $translations[$code] = [
+            'name' => '',
+            'short_description' => '',
+            'habitat' => '',
+            'diet' => '',
+            'status' => '',
+            'detailed_description' => '',
+            'wikipedia' => ''
+        ];
+    }
 }
 
-// Guardar config.json
-$configJson = json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-file_put_contents("{$modelPath}/config.json", $configJson);
-
-// Guardar description.json si se proporciona
-if (!empty($data['detailedDescription'])) {
-    $descData = ['description' => $data['detailedDescription']];
-    file_put_contents(
-        "{$modelPath}/description.json",
-        json_encode($descData, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-    );
+$translations_path = "{$model_path}/translations.json";
+if (!file_put_contents($translations_path, json_encode($translations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
+    send_json_error('Error al crear el archivo de traducciones.', 500);
 }
 
-echo json_encode([
-    'success' => true,
-    'id' => $id,
-    'message' => 'Animal creado correctamente'
-]);
+// 5. Save config.json
+$config_path = "{$model_path}/config.json";
+if (!file_put_contents($config_path, json_encode($config, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
+    send_json_error('Error al guardar la configuración.', 500);
+}
+
+// description.json ya no se usa - todo está en translations.json
+
+// --- Success ---
+echo json_encode(['success' => true, 'message' => 'Animal creado correctamente.']);
 ?>

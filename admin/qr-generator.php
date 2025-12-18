@@ -5,6 +5,50 @@
     <h1>📱 Generador de Códigos QR</h1>
 </div>
 
+<div class="form-section">
+    <h2>Generador de QR Personalizado</h2>
+    <form id="custom-qr-form">
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="animal-select">Seleccionar Animal (Opcional)</label>
+                <select id="animal-select" name="animal_id">
+                    <option value="">-- URL e Imagen Manual --</option>
+                    <!-- Animales se cargarán aquí -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="qr-url">URL a codificar</label>
+                <input type="text" id="qr-url" name="url" placeholder="https://ejemplo.com" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="qr-center-image">Imagen Central (si no se selecciona animal)</label>
+            <input type="file" id="qr-center-image" name="center_image" accept="image/png, image/jpeg">
+        </div>
+
+        <div class="form-group">
+            <label for="qr-size-slider">Tamaño del QR (<span id="qr-size-value">90</span>%)</label>
+            <input type="range" id="qr-size-slider" name="qr_size" min="50" max="98" value="90" class="slider">
+        </div>
+
+        <div class="form-group">
+            <label for="icon-size-slider">Tamaño de la Imagen Central (<span id="icon-size-value">100</span>%)</label>
+            <input type="range" id="icon-size-slider" name="icon_size" min="30" max="150" value="100" class="slider">
+        </div>
+
+        <div class="form-actions">
+            <a href="#" id="download-qr-btn" class="btn btn-secondary" style="display: none;" download="custom_qr.png">📥 Descargar</a>
+        </div>
+    </form>
+    
+    <div id="custom-qr-preview-container" style="margin-top: 20px; text-align: center;">
+        <h3 id="preview-title" style="display: none;">Preview</h3>
+        <img id="custom-qr-preview" style="max-width: 300px; max-height: 300px; margin-top: 10px; border: 1px solid #ccc;">
+    </div>
+</div>
+
+<hr style="margin: 40px 0; border: 1px solid var(--border-color);">
+
 <div class="quick-actions">
     <h2>Acciones</h2>
     <button onclick="regenerateAll()" class="btn btn-primary">🔄 Regenerar Todos los QR</button>
@@ -29,8 +73,198 @@
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Custom QR Generator Logic ---
+    const customQrForm = document.getElementById('custom-qr-form');
+    if (customQrForm) {
+        const animalSelect = document.getElementById('animal-select');
+        const qrUrlInput = document.getElementById('qr-url');
+        const imageInput = document.getElementById('qr-center-image');
+        const qrSizeSlider = document.getElementById('qr-size-slider');
+        const iconSizeSlider = document.getElementById('icon-size-slider');
+        const qrSizeValue = document.getElementById('qr-size-value');
+        const iconSizeValue = document.getElementById('icon-size-value');
+        const previewImg = document.getElementById('custom-qr-preview');
+        const previewTitle = document.getElementById('preview-title');
+        const downloadBtn = document.getElementById('download-qr-btn');
+        let selectedAnimalImage = null;
+
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        const triggerQrGeneration = () => {
+            const url = qrUrlInput.value;
+            const imageFile = imageInput.files[0];
+            if (!url) return;
+
+            let imageSource = null;
+            if (selectedAnimalImage && selectedAnimalImage.complete) {
+                imageSource = selectedAnimalImage;
+            } else if (imageFile) {
+                imageSource = new Image();
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    imageSource.onload = () => generateCustomQr(url, imageSource);
+                    imageSource.src = event.target.result;
+                };
+                reader.readAsDataURL(imageFile);
+                return;
+            }
+            
+            if (imageSource) {
+                generateCustomQr(url, imageSource);
+            }
+        };
+        
+        const debouncedGeneration = debounce(triggerQrGeneration, 300);
+
+        function generateCustomQr(url, centerImage) {
+            QRCode.toDataURL(url, { errorCorrectionLevel: 'H', width: 1024, margin: 1 }, (err, qrDataUrl) => {
+                if (err) {
+                    showNotification('Error generando el código QR.', 'error');
+                    console.error(err);
+                    return;
+                }
+
+                const qrImg = new Image();
+                qrImg.onload = () => {
+                    const finalSize = 1000;
+                    const borderSize = 100;
+                    const innerSize = finalSize - (borderSize * 2);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = finalSize;
+                    canvas.height = finalSize;
+                    const ctx = canvas.getContext('2d');
+
+                    ctx.fillStyle = 'black';
+                    ctx.fillRect(0, 0, finalSize, finalSize);
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(borderSize, borderSize, innerSize, innerSize);
+
+                    const qrSizePercent = parseInt(qrSizeSlider.value, 10);
+                    const qrDrawSize = Math.round(innerSize * (qrSizePercent / 100));
+                    const qrPos = Math.round((innerSize - qrDrawSize) / 2) + borderSize;
+                    
+                    ctx.drawImage(qrImg, qrPos, qrPos, qrDrawSize, qrDrawSize);
+
+                    const iconSizePercent = parseInt(iconSizeSlider.value, 10);
+                    const safeAreaSize = qrDrawSize * 0.30;
+                    const iconDrawSize = Math.round(safeAreaSize * (iconSizePercent / 100));
+
+                    const centerBgPos = Math.round((finalSize - safeAreaSize) / 2);
+                    ctx.fillStyle = 'white';
+                    ctx.fillRect(centerBgPos, centerBgPos, safeAreaSize, safeAreaSize);
+                    
+                    const centerIconPos = Math.round((finalSize - iconDrawSize) / 2);
+                    ctx.drawImage(centerImage, centerIconPos, centerIconPos, iconDrawSize, iconDrawSize);
+
+                    const finalImageURL = canvas.toDataURL('image/png');
+                    previewImg.src = finalImageURL;
+                    previewTitle.style.display = 'block';
+                    downloadBtn.href = finalImageURL;
+                    downloadBtn.style.display = 'inline-block';
+                    const selectedAnimalName = animalSelect.value || 'custom';
+                    downloadBtn.download = `qr_personalizado_${selectedAnimalName}.png`;
+                };
+                qrImg.src = qrDataUrl;
+            });
+        }
+
+        async function loadAnimalsForSelect() {
+            try {
+                const response = await fetch('../api/get-models.php');
+                const data = await response.json();
+                if (data.success) {
+                    for (const modelId of data.models) {
+                        try {
+                            const configRes = await fetch(`../models/${modelId}/config.json`);
+                            const config = await configRes.json();
+                            const option = document.createElement('option');
+                            option.value = modelId;
+                            option.textContent = config.name || modelId;
+                            option.dataset.thumbnail = config.thumbnail || '';
+                            animalSelect.appendChild(option);
+                        } catch (e) {}
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading animals for select:', error);
+            }
+        }
+
+        animalSelect.addEventListener('change', async (e) => {
+            const selectedOption = e.target.options[e.target.selectedIndex];
+            const modelId = e.target.value;
+            const thumbnail = selectedOption.dataset.thumbnail;
+            
+            selectedAnimalImage = null;
+            if (modelId && thumbnail) {
+                const baseUrl = document.getElementById('base-url').value.replace(/\/$/, "");
+                qrUrlInput.value = `${baseUrl}/viewer.html?model=${modelId}`;
+                imageInput.disabled = true;
+                imageInput.value = '';
+
+                const imageUrl = `../models/${modelId}/${thumbnail}`;
+                try {
+                    const response = await fetch(imageUrl);
+                    if (!response.ok) throw new Error('Network response was not ok');
+                    const blob = await response.blob();
+                    const objectURL = URL.createObjectURL(blob);
+                    selectedAnimalImage = new Image();
+                    selectedAnimalImage.onload = () => debouncedGeneration();
+                    selectedAnimalImage.onerror = () => {
+                        showNotification(`No se pudo cargar la imagen para ${selectedOption.textContent}.`, 'error');
+                        imageInput.disabled = false;
+                    };
+                    selectedAnimalImage.src = objectURL;
+                } catch (error) {
+                    showNotification(`No se pudo cargar la imagen para ${selectedOption.textContent}.`, 'error');
+                    imageInput.disabled = false;
+                    debouncedGeneration();
+                }
+            } else {
+                qrUrlInput.value = '';
+                imageInput.disabled = false;
+                debouncedGeneration();
+            }
+        });
+        
+        qrUrlInput.addEventListener('input', debouncedGeneration);
+        imageInput.addEventListener('change', debouncedGeneration);
+        qrSizeSlider.addEventListener('input', (e) => { qrSizeValue.textContent = e.target.value; debouncedGeneration(); });
+        iconSizeSlider.addEventListener('input', (e) => { iconSizeValue.textContent = e.target.value; debouncedGeneration(); });
+
+        loadAnimalsForSelect();
+    }
+});
+</script>
+
 <script>
 let animals = [];
+
+async function loadSettingsAndQRs() {
+    // Primero, cargar la configuración para obtener la URL base
+    try {
+        const settingsResponse = await fetch('../api/settings/get.php');
+        const settingsData = await settingsResponse.json();
+        if (settingsData.success && settingsData.settings.site.baseUrl) {
+            document.getElementById('base-url').value = settingsData.settings.site.baseUrl;
+        }
+    } catch (error) {
+        console.error('Error fetching settings for QR generator:', error);
+    }
+    
+    // Luego, cargar los QRs
+    await loadQRs();
+}
+
 
 async function loadQRs() {
     try {
@@ -158,7 +392,7 @@ function downloadAllQR() {
     showNotification('Esta funcionalidad requiere crear un archivo ZIP en el servidor', 'error');
 }
 
-loadQRs();
+loadSettingsAndQRs();
 </script>
 
 <?php include 'includes/footer.php'; ?>

@@ -1,0 +1,20 @@
+{
+  "es": {
+    "name": "Traro",
+    "short_description": "El Carancho o traro es una ave rapaz grande y distintiva de Sudamérica. Se reconoce por su cresta oscura, cara pálida con piel desnuda que cambia de color, y su hábito de caminar frecuentemente por el suelo en busca de carroña o presas vivas.",
+    "habitat": "Sabanas, pastizales, zonas agrícolas y bordes de ríos.",
+    "diet": "Omnívoro oportunista (carroña, insectos, pequeños vertebrados).",
+    "status": "Preocupación menor",
+    "detailed_description": "<p>{</p><p>&nbsp; \"description\": \"&lt;h3&gt;El Carancho: Adaptabilidad y oportunismo terrestre&lt;/h3&gt;&lt;p&gt;El &lt;strong&gt;Carancho&lt;/strong&gt; o Traro (&lt;em&gt;Caracara plancus&lt;/em&gt;) es una ave rapaz de la familia Falconidae que se distingue por sus hábitos &lt;strong&gt;predominantemente terrestres&lt;/strong&gt;. A diferencia de la mayoría de los halcones, posee tarsos largos y garras menos curvadas, adaptaciones evolutivas que le permiten caminar y correr con agilidad para buscar alimento en el suelo. Su dieta es &lt;strong&gt;generalista y oportunista&lt;/strong&gt;, desempeñando un rol ecológico crucial como carroñero, aunque también caza activamente insectos, reptiles y pequeños mamíferos, e incluso practica el &lt;strong&gt;cleptoparasitismo&lt;/strong&gt; (robo de comida a otras aves).&lt;/p&gt;&lt;p&gt;Un rasgo fisiológico distintivo es la piel desnuda de su rostro (la cera). Esta área está altamente vascularizada y puede &lt;strong&gt;cambiar de color rápidamente&lt;/strong&gt; de un amarillo pálido a un &lt;span style='color: #cc3300;'&gt;rojo o naranja intenso&lt;/span&gt;. Este cambio no es voluntario, sino una respuesta hemodinámica involuntaria ante situaciones de &lt;strong&gt;estrés, excitación o agresión&lt;/strong&gt;, funcionando como una señal visual intraespecífica. Además, su vuelo es potente y directo, caracterizado por sus distintivas manchas blancas en los extremos de las alas (primarias), visibles claramente a distancia.&lt;/p&gt;\"</p><p>}</p>",
+    "wikipedia": "https://es.wikipedia.org/wiki/Caracara_plancus"
+  },
+  "en": {
+    "name": "",
+    "short_description": "",
+    "habitat": "",
+    "diet": "",
+    "status": "",
+    "detailed_description": "",
+    "wikipedia": ""
+  }
+}

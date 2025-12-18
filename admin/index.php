@@ -16,10 +16,7 @@
             <button type="submit">Iniciar Sesión</button>
             <div id="error-message"></div>
         </form>
-        <div style="text-align: center; margin-top: 20px; color: #7f8c8d; font-size: 12px;">
-            <p>Usuario por defecto: <strong>admin</strong></p>
-            <p>Contraseña: <strong>password</strong></p>
-        </div>
+        <div style="text-align: center; margin-top: 20px; color: #7f8c8d; font-size: 12px;"></div>
     </div>
     <script src="js/admin.js"></script>
 </body>

@@ -17,8 +17,7 @@
         <img src="assets/images/logo_faunar.png" alt="FaunAR" style="max-width: 400px; margin-bottom: 10px;">
         <div class="language-selector" style="position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; align-items: center;">
             <select id="language-select" onchange="i18n.setLanguage(this.value)" style="padding: 8px 12px; border: 2px solid #2c5f2d; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;">
-                <option value="es">🇨🇱 ES</option>
-                <option value="en">🇺🇸 EN</option>
+                <!-- Opciones cargadas dinámicamente por i18n.js -->
             </select>
             <a href="admin/" class="admin-btn" style="padding: 8px 16px; background: rgba(44, 95, 45, 0.1); border: 2px solid #2c5f2d; border-radius: 6px; font-size: 13px; color: #2c5f2d; text-decoration: none; transition: all 0.3s; font-weight: 600;"
                onmouseover="this.style.background='#2c5f2d'; this.style.color='white';"
@@ -34,7 +33,7 @@
     </main>
 
     <footer>
-        <p>TecMedHub @ 2025</p>
+        <p id="footer-text">TecMedHub @ 2025</p>
     </footer>
 
     <!-- Modal QR -->
@@ -70,6 +69,7 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="js/config-loader.js?v=5"></script>
     <script src="js/i18n.js"></script>
     <script src="js/portal.js?v=5"></script>
     <script src="js/modal.js?v=5" defer></script>

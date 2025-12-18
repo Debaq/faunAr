@@ -59,24 +59,30 @@ document.addEventListener('DOMContentLoaded', () => {
     // 6. Función para poblar el modal y abrirlo
     const populateAndOpenModal = async (folder, card) => {
         try {
-            // Cargar datos de config.json y description.json
-            const [configRes, descRes] = await Promise.all([
+            // Obtener idioma actual
+            const currentLang = window.i18n ? window.i18n.getCurrentLanguage() : 'es';
+
+            // Cargar datos de config.json y translations.json
+            const [configRes, translationsRes] = await Promise.all([
                 fetch(`models/${folder}/config.json`),
-                fetch(`models/${folder}/description.json`)
+                fetch(`models/${folder}/translations.json`)
             ]);
 
-            if (!configRes.ok || !descRes.ok) {
+            if (!configRes.ok || !translationsRes.ok) {
                 throw new Error(`No se pudo cargar la información para ${folder}`);
             }
 
             const config = await configRes.json();
-            const description = await descRes.json();
+            const translations = await translationsRes.json();
+
+            // Obtener traducción del idioma actual o fallback a español
+            const translation = translations[currentLang] || translations['es'] || {};
 
             // Poblar contenido
-            modalTitle.textContent = config.name || 'Detalles';
+            modalTitle.textContent = translation.name || config.name || 'Detalles';
             modalImage.src = `models/${folder}/imagen_${folder}.png`;
-            modalImage.alt = `Imagen de ${config.name}`;
-            modalText.innerHTML = description.description || '<p>No hay descripción disponible.</p>';
+            modalImage.alt = `Imagen de ${translation.name || config.name}`;
+            modalText.innerHTML = translation.detailed_description || '<p>No hay descripción disponible.</p>';
 
             // Limpiar acciones anteriores y clonar nuevas
             modalActions.innerHTML = '';

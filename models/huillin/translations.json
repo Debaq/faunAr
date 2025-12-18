@@ -1,0 +1,20 @@
+{
+  "es": {
+    "name": "Huillín",
+    "short_description": "El huillín es una especie de nutria endémica de Chile. Habita en ríos, lagos y costas del sur del país, y es conocido por su agilidad tanto en el agua como en tierra. Su estado de conservación es crítico debido a la pérdida de hábitat y la contaminación.",
+    "habitat": "Ríos, lagos y costas del sur de Chile",
+    "diet": "Carnívoro (peces, crustáceos y pequeños animales acuáticos)",
+    "status": "Críticamente amenazado",
+    "detailed_description": "<h3>El Huillín: la nutria que desapareció 50 años y volvió sin avisar</h3><p>El <strong>Huillín</strong> o <em>nutria de río chilena</em> fue declarada <span style='color: #990000;'>extinta en la mayor parte de su rango</span> durante los años 80; sin embargo, en 2013 un ejemplar fue fotografiado por cámaras trampa en el Parque Nacional Alerce Andino sin que nadie supiera cómo había sobrevivido. Su pelaje posee <strong>microvellos huecos que atrapan aire y duplican su aislamiento térmico</strong>, permitiéndole nadar en aguas a 4 °C sin aumentar el metabolismo. Cada individuo marca hasta <strong>latrina</strong> (baños comunales) en orillas de río; los análisis de ADN fecal permiten censar poblaciones enteras sin ver un solo animal.</p><p>Curiosidad poco difundida: el Huillín <strong>entierra peces vivos</strong> en fondos poco profundos como “alacena” subacuática, comportamiento que solo se había documentado en nutrias marinas. Además, su cráneo presenta un <span style='color: #0066cc;'>seno frontal neumatizado</span> —similar al de los delfines— que actúa como cámara de eco interna para localizar presas en aguas turbias. La hembra tiene <strong>implantación diferida del óvulo</strong>: el cigoto se desarrolla 10 meses después de la fecundación, una estrategia que sincroniza el nacimiento con el máximo flujo de alimento.</p>",
+    "wikipedia": "https://es.wikipedia.org/wiki/Lontra_provocax"
+  },
+  "en": {
+    "name": "",
+    "short_description": "",
+    "habitat": "",
+    "diet": "",
+    "status": "",
+    "detailed_description": "",
+    "wikipedia": ""
+  }
+}

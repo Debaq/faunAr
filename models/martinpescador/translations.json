@@ -1,0 +1,20 @@
+{
+  "es": {
+    "name": "Martín Pescador",
+    "short_description": "El Martín Pescador Grande es un ave inconfundible que habita a lo largo de casi todo Chile, frecuentando ríos, lagos y costas. Es conocido por su gran tamaño, su cabeza crestada, su característico llamado ruidoso tipo matraca y su espectacular forma de pescar, zambulléndose en picada para atrapar peces bajo el agua.",
+    "habitat": "Ríos, lagos, esteros y zonas costeras a lo largo de Chile",
+    "diet": "Piscívoro (principalmente peces, ocasionalmente crustáceos y anfibios)",
+    "status": "Preocupación menor",
+    "detailed_description": "<h3>El Martín Pescador: un proyectil viviente</h3><p>Este <span style='color: #0066cc;'>maestro de la hidrodinámica</span> es inconfundible por su cresta desordenada y su vuelo patrullero. Es capaz de lanzarse en picada desde 10 metros de altura, plegando sus alas milisegundos antes del impacto para entrar al agua como una flecha. Posee un marcado <strong>dimorfismo sexual</strong>: curiosamente, la hembra es quien luce una ancha banda gris azulada en el pecho que el macho no tiene.</p><p>Curiosidad poco difundida: Sus ojos son una maravilla evolutiva con <strong>doble fóvea</strong>. Esto actúa como un \"lente bifocal\" integrado que le permite calcular distancias en el aire y corregir instantáneamente la <strong>refracción de la luz</strong> bajo el agua. Para criar, no hace nidos de ramas; excava con su pico <span style='color: #990000;'>túneles de hasta 3 metros</span> en barrancos verticales, usando sus patas con dedos fusionados (<strong>sindactilia</strong>) como palas para remover la tierra.</p>",
+    "wikipedia": "https://es.wikipedia.org/wiki/Megaceryle_torquata"
+  },
+  "en": {
+    "name": "",
+    "short_description": "",
+    "habitat": "",
+    "diet": "",
+    "status": "",
+    "detailed_description": "",
+    "wikipedia": ""
+  }
+}

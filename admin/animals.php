@@ -86,7 +86,7 @@ $animalId = $_GET['id'] ?? '';
                 <td>
                     <img src="${thumbnailUrl}"
                          alt="${animal.name}"
-                         style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px;"
+                         class="animal-list-thumbnail"
                          onerror="this.src='../assets/images/placeholder.png'">
                 </td>
                 <td><code>${animal.id}</code></td>
@@ -158,10 +158,21 @@ $animalId = $_GET['id'] ?? '';
     </script>
 
 <?php elseif ($action === 'create' || $action === 'edit'): ?>
+    <link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
     <div class="page-header">
         <h1><?= $action === 'create' ? 'Nuevo Animal' : 'Editar Animal' ?></h1>
         <a href="animals.php" class="btn btn-cancel">← Volver</a>
     </div>
+
+    <?php if ($action === 'edit'): ?>
+    <div style="background: white; padding: 15px 25px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 20px;">
+        <span style="font-weight: 600; color: #2c3e50; font-size: 14px;">🌐 Idioma:</span>
+        <select id="language-selector" style="padding: 6px 10px; border: 2px solid #dfe6e9; border-radius: 6px; font-size: 13px; min-width: 130px;">
+            <!-- Opciones cargadas dinámicamente desde languages.json -->
+        </select>
+        <small style="color: #7f8c8d; font-size: 12px;">Los campos con <span style="color: #3498db;">★</span> son traducibles</small>
+    </div>
+    <?php endif; ?>
 
     <form id="animal-form" enctype="multipart/form-data">
         <input type="hidden" name="action" value="<?= $action ?>">
@@ -178,9 +189,9 @@ $animalId = $_GET['id'] ?? '';
                     <input type="text" name="id" pattern="[a-z]+" required
                            <?= $action === 'edit' ? 'readonly' : '' ?>>
                 </div>
-                <div class="form-group">
-                    <label>Nombre*</label>
-                    <input type="text" name="name" required>
+                <div class="form-group translatable-field">
+                    <label><span class="translatable-indicator">★</span> Nombre*</label>
+                    <input type="text" name="name" class="translatable" data-field="name" required>
                 </div>
                 <div class="form-group">
                     <label>Nombre Científico*</label>
@@ -188,13 +199,19 @@ $animalId = $_GET['id'] ?? '';
                 </div>
                 <div class="form-group">
                     <label>Emoji/Icono</label>
-                    <input type="text" name="icon" placeholder="🐆">
+                    <div class="emoji-picker-container">
+                        <input type="text" name="icon" id="emoji-input" readonly placeholder="Selecciona un emoji">
+                        <button type="button" id="emoji-picker-btn" class="btn btn-secondary">🎨</button>
+                        <div id="emoji-panel" class="emoji-panel" style="display: none;">
+                            <!-- Emojis will be populated here -->
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>Descripción Corta</label>
-                <textarea name="description" rows="3"></textarea>
+            <div class="form-group translatable-field">
+                <label><span class="translatable-indicator">★</span> Descripción Corta</label>
+                <textarea name="description" class="translatable" data-field="short_description" rows="3"></textarea>
             </div>
         </div>
 
@@ -254,43 +271,86 @@ $animalId = $_GET['id'] ?? '';
             </div>
         </div>
 
-        <!-- Configuración del Modelo 3D -->
+        <!-- Archivos del Modelo -->
         <div class="form-section">
-            <h2>🎨 Configuración del Modelo 3D</h2>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Archivo GLB</label>
-                    <input type="text" name="model_glb" placeholder="animal.glb">
-                </div>
-                <div class="form-group">
-                    <label>Archivo USDZ (iOS)</label>
-                    <input type="text" name="model_usdz" placeholder="animal.usdz">
-                </div>
-                <div class="form-group">
-                    <label>Escala (X Y Z)</label>
-                    <input type="text" name="model_scale" value="0.5 0.5 0.5">
-                </div>
-                <div class="form-group">
-                    <label>Posición (X Y Z)</label>
-                    <input type="text" name="model_position" value="0 0 0">
-                </div>
-                <div class="form-group">
-                    <label>Rotación (X Y Z)</label>
-                    <input type="text" name="model_rotation" value="0 0 0">
-                </div>
-            </div>
-        </div>
+            <h2>📂 Archivos del Modelo</h2>
+            <p style="margin-bottom: 20px; color: #7f8c8d;">
+                Gestiona todos los archivos asociados a este animal. Si subes un nuevo archivo, reemplazará al existente.
+            </p>
 
-        <!-- Audio -->
-        <div class="form-section">
-            <h2>🔊 Audio</h2>
-            <div class="form-checkbox">
-                <input type="checkbox" name="audio_enabled" id="audio-enabled">
-                <label for="audio-enabled">Habilitar Audio</label>
-            </div>
-            <div class="form-group">
-                <label>Archivo de Audio</label>
-                <input type="text" name="audio_file" placeholder="sound.mp3">
+            <div class="file-upload-grid">
+                <!-- Imagen Principal -->
+                <div class="form-group file-upload-group">
+                    <label>Imagen Principal</label>
+                    <img src="../assets/images/map-placeholder.svg" id="preview-image-file" class="file-preview-image">
+                    <div class="file-info">
+                        <span id="current-image-file" class="current-file-name"></span>
+                        <a id="download-image-file" href="#" class="btn btn-secondary btn-small" download>Descargar</a>
+                    </div>
+                    <input type="file" name="image_file" accept="image/png, image/jpeg" data-preview-id="preview-image-file">
+                </div>
+
+                <!-- Miniatura -->
+                <div class="form-group file-upload-group">
+                    <label>Miniatura</label>
+                    <img src="../assets/images/map-placeholder.svg" id="preview-thumbnail-file" class="file-preview-image">
+                    <div class="file-info">
+                        <span id="current-thumbnail-file" class="current-file-name"></span>
+                        <a id="download-thumbnail-file" href="#" class="btn btn-secondary btn-small" download>Descargar</a>
+                    </div>
+                    <input type="file" name="thumbnail_file" accept="image/png, image/jpeg" data-preview-id="preview-thumbnail-file">
+                </div>
+
+                <!-- Silueta -->
+                <div class="form-group file-upload-group">
+                    <label>Silueta</label>
+                    <img src="../assets/images/map-placeholder.svg" id="preview-silhouette-file" class="file-preview-image">
+                    <div class="file-info">
+                        <span id="current-silhouette-file" class="current-file-name"></span>
+                        <a id="download-silhouette-file" href="#" class="btn btn-secondary btn-small" download>Descargar</a>
+                    </div>
+                    <input type="file" name="silhouette_file" accept="image/svg+xml" data-preview-id="preview-silhouette-file">
+                </div>
+
+                <!-- Archivo MIND -->
+                <div class="form-group file-upload-group">
+                    <label>Archivo de Marcador (.mind)</label>
+                    <div class="file-info">
+                        <span id="current-mind-file" class="current-file-name"></span>
+                        <a id="download-mind-file" href="#" class="btn btn-secondary btn-small" download>Descargar</a>
+                    </div>
+                    <input type="file" name="mind_file">
+                </div>
+                
+                <!-- Archivo de Audio -->
+                <div class="form-group file-upload-group">
+                    <label>Archivo de Audio</label>
+                    <div class="file-info">
+                        <span id="current-audio-file" class="current-file-name"></span>
+                        <a id="download-audio-file" href="#" class="btn btn-secondary btn-small" download>Descargar</a>
+                    </div>
+                    <input type="file" name="audio_file" accept="audio/mpeg">
+                </div>
+                
+                <!-- Modelo GLB -->
+                <div class="form-group file-upload-group">
+                    <label>Modelo 3D (.glb)</label>
+                    <div class="file-info">
+                        <span id="current-glb-file" class="current-file-name"></span>
+                        <a id="download-glb-file" href="#" class="btn btn-secondary btn-small" download>Descargar</a>
+                    </div>
+                    <input type="file" name="glb_file" accept=".glb">
+                </div>
+
+                <!-- Modelo USDZ -->
+                <div class="form-group file-upload-group">
+                    <label>Modelo 3D iOS (.usdz)</label>
+                    <div class="file-info">
+                        <span id="current-usdz-file" class="current-file-name"></span>
+                        <a id="download-usdz-file" href="#" class="btn btn-secondary btn-small" download>Descargar</a>
+                    </div>
+                    <input type="file" name="usdz_file" accept=".usdz">
+                </div>
             </div>
         </div>
 
@@ -298,50 +358,41 @@ $animalId = $_GET['id'] ?? '';
         <div class="form-section">
             <h2>ℹ️ Información Adicional</h2>
             <div class="form-grid">
-                <div class="form-group">
-                    <label>Hábitat</label>
-                    <input type="text" name="info_habitat" placeholder="Bosques templados, montañas...">
+                <div class="form-group translatable-field">
+                    <label><span class="translatable-indicator">★</span> Hábitat</label>
+                    <input type="text" name="info_habitat" class="translatable" data-field="habitat" placeholder="Bosques templados, montañas...">
                 </div>
-                <div class="form-group">
-                    <label>Dieta</label>
-                    <input type="text" name="info_diet" placeholder="Carnívoro, Herbívoro...">
+                <div class="form-group translatable-field">
+                    <label><span class="translatable-indicator">★</span> Dieta</label>
+                    <input type="text" name="info_diet" class="translatable" data-field="diet" placeholder="Carnívoro, Herbívoro...">
                 </div>
-                <div class="form-group">
-                    <label>Estado de Conservación</label>
-                    <input type="text" name="info_status" placeholder="En peligro, Vulnerable...">
+                <div class="form-group translatable-field">
+                    <label><span class="translatable-indicator">★</span> Estado de Conservación</label>
+                    <input type="text" name="info_status" class="translatable" data-field="status" placeholder="En peligro, Vulnerable...">
                 </div>
-                <div class="form-group">
-                    <label>Wikipedia URL</label>
-                    <input type="url" name="info_wikipedia" placeholder="https://es.wikipedia.org/wiki/...">
+                <div class="form-group translatable-field">
+                    <label><span class="translatable-indicator">★</span> Wikipedia URL</label>
+                    <input type="url" name="info_wikipedia" class="translatable" data-field="wikipedia" placeholder="https://es.wikipedia.org/wiki/...">
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label>🎬 Video URL <small>(YouTube, Vimeo, etc. - usar URL embebida)</small></label>
+                <input type="url" name="video_url" placeholder="https://www.youtube.com/embed/...">
+                <small style="display: block; margin-top: 5px; color: #7f8c8d;">
+                    Para YouTube: Usar formato https://www.youtube.com/embed/ID_DEL_VIDEO
+                </small>
             </div>
         </div>
 
         <!-- Descripción Detallada -->
         <div class="form-section">
             <h2>📄 Descripción Detallada (HTML)</h2>
-            <div class="form-group">
-                <textarea name="detailed_description" id="detailed-description" rows="10"
+            <div class="form-group translatable-field">
+                <label><span class="translatable-indicator">★</span> Contenido</label>
+                <textarea name="detailed_description" id="detailed-description" class="translatable" data-field="detailed_description" rows="10"
                           placeholder="Puedes usar HTML: <h3>Título</h3>, <p>Párrafo</p>, <strong>Negrita</strong>"></textarea>
             </div>
-        </div>
-
-        <!-- Archivos -->
-        <div class="form-section">
-            <h2>📁 Nombres de Archivos</h2>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Miniatura</label>
-                    <input type="text" name="thumbnail" placeholder="thumbnail.png">
-                </div>
-                <div class="form-group">
-                    <label>Silueta SVG</label>
-                    <input type="text" name="silhouette" placeholder="silueta_animal.svg">
-                </div>
-            </div>
-            <small style="color: #7f8c8d;">
-                Los archivos deben subirse por separado en la sección de "Upload de Archivos"
-            </small>
         </div>
 
         <!-- Botones -->
@@ -351,7 +402,27 @@ $animalId = $_GET['id'] ?? '';
         </div>
     </form>
 
+
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
     <script src="js/animal-form.js"></script>
+
+    <style>
+    .translatable-indicator {
+        color: #3498db;
+        margin-right: 3px;
+        font-size: 12px;
+    }
+    .translatable-field {
+        position: relative;
+    }
+    .translatable-field.changed {
+        background: #fff9e6;
+        padding: 10px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+    }
+    </style>
 <?php endif; ?>
 
 <?php include 'includes/footer.php'; ?>

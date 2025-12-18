@@ -1,0 +1,118 @@
+{
+  "es": {
+    "name": "Español",
+    "enabled": true
+  },
+  "en": {
+    "name": "English",
+    "enabled": true
+  },
+  "pt": {
+    "name": "Português",
+    "enabled": false
+  },
+  "fr": {
+    "name": "Français",
+    "enabled": false
+  },
+  "de": {
+    "name": "Deutsch",
+    "enabled": false
+  },
+  "it": {
+    "name": "Italiano",
+    "enabled": false
+  },
+  "zh": {
+    "name": "中文",
+    "enabled": false
+  },
+  "ja": {
+    "name": "日本語",
+    "enabled": false
+  },
+  "ko": {
+    "name": "한국어",
+    "enabled": false
+  },
+  "ru": {
+    "name": "Русский",
+    "enabled": false
+  },
+  "ar": {
+    "name": "العربية",
+    "enabled": false
+  },
+  "hi": {
+    "name": "हिन्दी",
+    "enabled": false
+  },
+  "nl": {
+    "name": "Nederlands",
+    "enabled": false
+  },
+  "sv": {
+    "name": "Svenska",
+    "enabled": false
+  },
+  "no": {
+    "name": "Norsk",
+    "enabled": false
+  },
+  "da": {
+    "name": "Dansk",
+    "enabled": false
+  },
+  "fi": {
+    "name": "Suomi",
+    "enabled": false
+  },
+  "pl": {
+    "name": "Polski",
+    "enabled": false
+  },
+  "tr": {
+    "name": "Türkçe",
+    "enabled": false
+  },
+  "th": {
+    "name": "ไทย",
+    "enabled": false
+  },
+  "vi": {
+    "name": "Tiếng Việt",
+    "enabled": false
+  },
+  "id": {
+    "name": "Bahasa Indonesia",
+    "enabled": false
+  },
+  "he": {
+    "name": "עברית",
+    "enabled": false
+  },
+  "el": {
+    "name": "Ελληνικά",
+    "enabled": false
+  },
+  "cs": {
+    "name": "Čeština",
+    "enabled": false
+  },
+  "ro": {
+    "name": "Română",
+    "enabled": false
+  },
+  "hu": {
+    "name": "Magyar",
+    "enabled": false
+  },
+  "uk": {
+    "name": "Українська",
+    "enabled": false
+  },
+  "ca": {
+    "name": "Català",
+    "enabled": false
+  }
+}

@@ -12,7 +12,7 @@ if (empty($id)) {
 
 $modelPath = __DIR__ . "/../../models/{$id}";
 $configPath = "{$modelPath}/config.json";
-$descriptionPath = "{$modelPath}/description.json";
+$translationsPath = "{$modelPath}/translations.json";
 
 if (!is_dir($modelPath) || !file_exists($configPath)) {
     http_response_code(404);
@@ -23,11 +23,11 @@ if (!is_dir($modelPath) || !file_exists($configPath)) {
 // Leer configuración
 $config = json_decode(file_get_contents($configPath), true);
 
-// Leer descripción detallada si existe
+// Leer descripción detallada desde translations.json
 $description = null;
-if (file_exists($descriptionPath)) {
-    $descData = json_decode(file_get_contents($descriptionPath), true);
-    $description = $descData['description'] ?? null;
+if (file_exists($translationsPath)) {
+    $translations = json_decode(file_get_contents($translationsPath), true);
+    $description = $translations['es']['detailed_description'] ?? null;
 }
 
 // Listar archivos en la carpeta

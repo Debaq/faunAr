@@ -125,3 +125,95 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+// Change Password
+if (document.getElementById('change-password-form')) {
+    document.getElementById('change-password-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const currentPassword = e.target['current-password'].value;
+        const newPassword = e.target['new-password'].value;
+        const confirmPassword = e.target['confirm-password'].value;
+        const messageDiv = document.getElementById('password-message');
+
+        messageDiv.textContent = '';
+        messageDiv.className = 'message';
+
+        if (newPassword !== confirmPassword) {
+            messageDiv.textContent = 'Las nuevas contraseñas no coinciden.';
+            messageDiv.classList.add('error');
+            return;
+        }
+
+        try {
+            const response = await fetch('../api/auth/update-password.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                messageDiv.textContent = data.message + ' Serás redirigido.';
+                messageDiv.classList.add('success');
+                e.target.reset();
+                setTimeout(() => {
+                    window.location.href = 'logout.php';
+                }, 2000);
+            } else {
+                messageDiv.textContent = data.message || 'Error al cambiar la contraseña.';
+                messageDiv.classList.add('error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            messageDiv.textContent = 'Error de conexión.';
+            messageDiv.classList.add('error');
+        }
+    });
+}
+
+// Change Email
+if (document.getElementById('change-email-form')) {
+    document.getElementById('change-email-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = e.target.email.value;
+        const password = e.target.password.value;
+        const messageDiv = document.getElementById('email-message');
+
+        messageDiv.textContent = '';
+        messageDiv.className = 'message';
+
+        try {
+            const response = await fetch('../api/auth/update-email.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                messageDiv.textContent = data.message;
+                messageDiv.classList.add('success');
+                e.target.password.value = '';
+                 // also update the email in the sidebar
+                const emailInSidebar = document.querySelector('.user-info div');
+                if(emailInSidebar) emailInSidebar.textContent = email;
+
+            } else {
+                messageDiv.textContent = data.message || 'Error al cambiar el correo.';
+                messageDiv.classList.add('error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            messageDiv.textContent = 'Error de conexión.';
+            messageDiv.classList.add('error');
+        }
+    });
+}

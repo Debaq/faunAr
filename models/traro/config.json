@@ -1,0 +1,40 @@
+{
+    "id": "traro",
+    "name": "Traro",
+    "scientificName": "Caracara plancus",
+    "description": "El Carancho o traro es una ave rapaz grande y distintiva de Sudamérica. Se reconoce por su cresta oscura, cara pálida con piel desnuda que cambia de color, y su hábito de caminar frecuentemente por el suelo en busca de carroña o presas vivas.",
+    "icon": "🦅",
+    "arMode": "hybrid",
+    "image": "imagen_traro.png",
+    "thumbnail": "thumbnail.png",
+    "silhouette": "silueta_traro.svg",
+    "gps": {
+        "enabled": true,
+        "latitude": -34.6037,
+        "longitude": -58.3816,
+        "radius": 50
+    },
+    "marker": {
+        "enabled": true,
+        "type": "mind",
+        "file": "traro.mind"
+    },
+    "audio": {
+        "enabled": false,
+        "file": "sound.mp3"
+    },
+    "model": {
+        "glb": "traro.glb",
+        "usdz": "traro.usdz",
+        "scale": "0.5 0.5 0.5",
+        "position": "0 0 0",
+        "rotation": "0 0 0"
+    },
+    "info": {
+        "habitat": "Sabanas, pastizales, zonas agrícolas y bordes de ríos.",
+        "diet": "Omnívoro oportunista (carroña, insectos, pequeños vertebrados).",
+        "status": "Preocupación menor",
+        "wikipedia": "https:\/\/es.wikipedia.org\/wiki\/Caracara_plancus"
+    },
+    "video_url": ""
+}

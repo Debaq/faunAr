@@ -1,0 +1,20 @@
+{
+  "es": {
+    "name": "Tiuque",
+    "short_description": "El Tiuque es la ave rapaz más común y visible de Chile y el sur de Sudamérica. De plumaje marrón y vuelo ágil, es conocido por su gran inteligencia y su capacidad de adaptarse a entornos urbanos y rurales.",
+    "habitat": "Campos, ciudades, costas, bosques y bordes de caminos.",
+    "diet": "Omnívoro generalista (insectos, carroña, gusanos, residuos humanos).",
+    "status": "Preocupación menor",
+    "detailed_description": "<h3>El Tiuque: El gran oportunista del sur</h3><p>El <strong>Tiuque</strong> (<em>Milvago chimango</em>) es un miembro de la familia Falconidae que destaca no por su tamaño, sino por su increíble <strong>adaptabilidad y abundancia</strong>. A diferencia de las rapaces cazadoras estrictas, el tiuque posee un comportamiento altamente social y una inteligencia que le permite prosperar cerca de asentamientos humanos. Su dieta es extremadamente <strong>versátil</strong>, alimentándose desde insectos y larvas que descubre escarbando la tierra, hasta carroña y desperdicios urbanos, cumpliendo un rol sanitario vital.</p><p>Físicamente, presenta un plumaje de tonos <span style=\"color: #8B4513;\">café canela y ocre</span> que le brinda un excelente camuflaje en tierra. Sin embargo, al desplegar el vuelo, revela su característica más distintiva: unos parches de color <strong>blanco pálido</strong> en la base de las alas primarias, inconfundibles desde abajo. Es un ave vocal y territorial, conocida por sus gritos agudos y por defender valientemente sus nidos ante aves mucho más grandes, demostrando un temperamento tenaz y vivaz.jjj</p><br>",
+    "wikipedia": "https://es.wikipedia.org/wiki/Milvago_chimango"
+  },
+  "en": {
+    "name": "",
+    "short_description": "",
+    "habitat": "",
+    "diet": "",
+    "status": "",
+    "detailed_description": "",
+    "wikipedia": ""
+  }
+}

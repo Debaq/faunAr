@@ -1,0 +1,20 @@
+{
+  "es": {
+    "name": "Chucao",
+    "short_description": "El chucao es un ave endémica de los bosques templados del sur de Chile y Argentina. Es conocido por su canto melodioso y su plumaje rojizo.",
+    "habitat": "Bosques templados húmedos",
+    "diet": "Insectívoro",
+    "status": "Preocupación menor",
+    "detailed_description": "<h3>El Chucao: el pájaro que 'predice' la lluvia</h3><p>El <strong>Chucao</strong> es un <em>tapaculo</em> que vive en el sotobosque húmedo y <strong>su canto se intensifica horas antes de una lluvia</strong>; los colonos lo usaban como barómetro natural. A diferencia de la mayoría de los passeriformes, <strong>construye su nido en cuevas excavadas entre raíces o troncos caídos</strong>, con un túnel de entrada que puede medir hasta 40 cm. Su voz posee <strong>armónicos ultrasonicos</strong> que los humanos no percibimos, pero que sirven para que la pareja se localice en la espesura sin atraer depredadores.</p><p>Un dato poco conocido: su sistema digestivo alberga una <span style='color: #0066cc;'>bacteria simbionte única</span> que le permite asimilar alcaloides de los hongos que consume, algo raro en aves. Además, <strong>el macho y la hembra cantan en dúo a frecuencias ligeramente desfasadas</strong>, creando un efecto de 'beat' que hace que el sonido parezca venir de varios puntos a la vez, confundiendo a los observadores.</p>",
+    "wikipedia": "https://es.wikipedia.org/wiki/Scelorchilus_rubecula"
+  },
+  "en": {
+    "name": "",
+    "short_description": "",
+    "habitat": "",
+    "diet": "",
+    "status": "",
+    "detailed_description": "",
+    "wikipedia": ""
+  }
+}

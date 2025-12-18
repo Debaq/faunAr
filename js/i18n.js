@@ -2,28 +2,74 @@
 
 class I18nManager {
     constructor() {
-        this.currentLang = this.detectLanguage();
+        this.currentLang = null;
         this.translations = {};
         this.fallbackLang = 'es';
         this.initialized = false;
+        this.availableLanguages = [];
+        this.languageFlags = {
+            'es': '🇪🇸', 'en': '🇬🇧', 'pt': '🇵🇹', 'fr': '🇫🇷', 'de': '🇩🇪',
+            'it': '🇮🇹', 'zh': '🇨🇳', 'ja': '🇯🇵', 'ko': '🇰🇷', 'ru': '🇷🇺',
+            'ar': '🇸🇦', 'hi': '🇮🇳', 'nl': '🇳🇱', 'sv': '🇸🇪', 'no': '🇳🇴',
+            'da': '🇩🇰', 'fi': '🇫🇮', 'pl': '🇵🇱', 'tr': '🇹🇷', 'th': '🇹🇭',
+            'vi': '🇻🇳', 'id': '🇮🇩', 'he': '🇮🇱', 'el': '🇬🇷', 'cs': '🇨🇿',
+            'ro': '🇷🇴', 'hu': '🇭🇺', 'uk': '🇺🇦', 'ca': '🇪🇸'
+        };
     }
 
     detectLanguage() {
         // 1. Verificar localStorage
         const saved = localStorage.getItem('faunar_language');
-        if (saved) return saved;
+        if (saved && this.availableLanguages.includes(saved)) {
+            return saved;
+        }
 
         // 2. Detectar idioma del navegador
         const browserLang = navigator.language || navigator.userLanguage;
         const langCode = browserLang.split('-')[0];
 
         // 3. Verificar si es soportado
-        const supportedLangs = ['es', 'en'];
-        return supportedLangs.includes(langCode) ? langCode : 'es';
+        if (this.availableLanguages.includes(langCode)) {
+            return langCode;
+        }
+
+        // 4. Usar fallback
+        return this.availableLanguages.length > 0 ? this.availableLanguages[0] : 'es';
+    }
+
+    async loadAvailableLanguages() {
+        try {
+            const response = await fetch('api/languages/get-enabled.php');
+            const data = await response.json();
+
+            if (data.success && data.languages) {
+                this.availableLanguages = Object.keys(data.languages);
+                this.languagesData = data.languages;
+                return true;
+            }
+
+            // Fallback si falla
+            this.availableLanguages = ['es', 'en'];
+            return false;
+        } catch (error) {
+            console.error('Error cargando idiomas disponibles:', error);
+            this.availableLanguages = ['es', 'en'];
+            return false;
+        }
     }
 
     async init() {
         try {
+            // Primero cargar idiomas disponibles
+            await this.loadAvailableLanguages();
+
+            // Luego detectar el idioma
+            this.currentLang = this.detectLanguage();
+
+            // Renderizar selector de idiomas
+            this.renderLanguageSelector();
+
+            // Cargar traducciones
             await this.loadLanguage(this.currentLang);
             this.initialized = true;
             return true;
@@ -131,6 +177,28 @@ class I18nManager {
         this.updateLanguageSelector();
     }
 
+    renderLanguageSelector() {
+        const selector = document.getElementById('language-select');
+        if (!selector) return;
+
+        // Limpiar opciones existentes
+        selector.innerHTML = '';
+
+        // Generar opciones dinámicamente
+        this.availableLanguages.forEach(code => {
+            const option = document.createElement('option');
+            option.value = code;
+            const flag = this.languageFlags[code] || '🌍';
+            const name = this.languagesData && this.languagesData[code] ? this.languagesData[code].name : code.toUpperCase();
+            option.textContent = `${flag} ${code.toUpperCase()}`;
+            option.title = name;
+            selector.appendChild(option);
+        });
+
+        // Seleccionar idioma actual
+        selector.value = this.currentLang;
+    }
+
     updateLanguageSelector() {
         const selector = document.getElementById('language-select');
         if (selector) {
@@ -157,7 +225,7 @@ class I18nManager {
     }
 
     getAvailableLanguages() {
-        return ['es', 'en'];
+        return this.availableLanguages;
     }
 }
 

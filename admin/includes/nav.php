@@ -30,6 +30,17 @@
                         📱 Códigos QR
                     </a>
                 </li>
+
+                <li>
+                    <a href="roadmap.php" class="<?= $currentPage === 'roadmap' ? 'active' : '' ?>">
+                        🗺️ Hoja de Ruta
+                    </a>
+                </li>
+                <li>
+                    <a href="backup.php" class="<?= $currentPage === 'backup' ? 'active' : '' ?>">
+                        📦 Copia de Seguridad
+                    </a>
+                </li>
             </ul>
 
             <div class="sidebar-footer">
@@ -39,7 +50,11 @@
                         <?= htmlspecialchars($_SESSION['admin_user']['email']) ?>
                     </div>
                 </div>
-                <a href="logout.php" class="btn btn-logout">🚪 Cerrar Sesión</a>
+                <div class="sidebar-footer-actions">
+                    <a href="settings.php" class="btn btn-icon-only <?= $currentPage === 'settings' ? 'active' : '' ?>" title="Configuración">🔧</a>
+                    <a href="account.php" class="btn btn-icon-only <?= $currentPage === 'account' ? 'active' : '' ?>" title="Mi Cuenta">⚙️</a>
+                    <a href="logout.php" class="btn btn-logout">🚪 Cerrar Sesión</a>
+                </div>
             </div>
         </nav>
 

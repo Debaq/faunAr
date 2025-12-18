@@ -1,9 +1,64 @@
 // Animal Form Handler
 
+let currentLanguage = 'es';
+let translations = {};
+let availableLanguages = {};
+
+$(document).ready(function() {
+    $('#detailed-description').summernote({
+        placeholder: 'Escribe la descripción detallada aquí. Puedes usar HTML.',
+        tabsize: 2,
+        height: 300,
+        toolbar: [
+          ['style', ['style']],
+          ['font', ['bold', 'underline', 'clear']],
+          ['color', ['color']],
+          ['para', ['ul', 'ol', 'paragraph']],
+          ['table', ['table']],
+          ['insert', ['link', 'picture', 'video']],
+          ['view', ['fullscreen', 'codeview', 'help']]
+        ],
+        callbacks: {
+            onPaste: function(e) {
+                var clipboardData = (e.originalEvent || e).clipboardData;
+                var pastedText = clipboardData.getData('text/plain');
+
+                // Simple heuristic: if the pasted text appears to be an HTML string
+                // This regex checks for a string that contains at least one HTML tag structure
+                if (/<[a-z][\s\S]*>/i.test(pastedText.trim())) {
+                    e.preventDefault(); // Prevent default plain text paste
+                    $('#detailed-description').summernote('pasteHTML', pastedText);
+                }
+            }
+        }
+    });
+
+    // Cargar idiomas disponibles
+    if (action === 'edit') {
+        loadAvailableLanguages();
+    }
+});
+
 const form = document.getElementById('animal-form');
 const urlParams = new URLSearchParams(window.location.search);
 const action = urlParams.get('action');
 const animalId = urlParams.get('id');
+
+// --- Preview Logic for File Inputs ---
+document.querySelectorAll('input[type="file"][data-preview-id]').forEach(input => {
+    input.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const previewId = event.target.dataset.previewId;
+        const previewElement = document.getElementById(previewId);
+
+        if (previewElement) {
+            previewElement.src = URL.createObjectURL(file);
+        }
+    });
+});
+
 
 // Cargar datos si es edición
 if (action === 'edit' && animalId) {
@@ -12,11 +67,17 @@ if (action === 'edit' && animalId) {
 
 async function loadAnimalData(id) {
     try {
+        // Cargar traducciones primero
+        await loadTranslations(id);
+
         const response = await fetch(`../api/animals/get.php?id=${id}`);
         const data = await response.json();
 
         if (data.success) {
             populateForm(data.config, data.detailedDescription);
+
+            // Cargar datos del idioma actual (español por defecto)
+            loadLanguageData(currentLanguage);
         } else {
             showNotification('Error al cargar animal', 'error');
         }
@@ -37,34 +98,12 @@ function populateForm(config, detailedDescription) {
     // Configuración AR
     form.querySelector('[name="arMode"]').value = config.arMode || 'marker';
 
-    // Marcador
-    if (config.marker) {
-        form.querySelector('[name="marker_enabled"]').checked = config.marker.enabled || false;
-        form.querySelector('[name="marker_type"]').value = config.marker.type || 'mind';
-        form.querySelector('[name="marker_file"]').value = config.marker.file || '';
-    }
-
     // GPS
     if (config.gps) {
         form.querySelector('[name="gps_enabled"]').checked = config.gps.enabled || false;
         form.querySelector('[name="gps_latitude"]').value = config.gps.latitude || '';
         form.querySelector('[name="gps_longitude"]').value = config.gps.longitude || '';
         form.querySelector('[name="gps_radius"]').value = config.gps.radius || 50;
-    }
-
-    // Modelo 3D
-    if (config.model) {
-        form.querySelector('[name="model_glb"]').value = config.model.glb || '';
-        form.querySelector('[name="model_usdz"]').value = config.model.usdz || '';
-        form.querySelector('[name="model_scale"]').value = config.model.scale || '0.5 0.5 0.5';
-        form.querySelector('[name="model_position"]').value = config.model.position || '0 0 0';
-        form.querySelector('[name="model_rotation"]').value = config.model.rotation || '0 0 0';
-    }
-
-    // Audio
-    if (config.audio) {
-        form.querySelector('[name="audio_enabled"]').checked = config.audio.enabled || false;
-        form.querySelector('[name="audio_file"]').value = config.audio.file || '';
     }
 
     // Info adicional
@@ -75,71 +114,91 @@ function populateForm(config, detailedDescription) {
         form.querySelector('[name="info_wikipedia"]').value = config.info.wikipedia || '';
     }
 
-    // Archivos
-    form.querySelector('[name="thumbnail"]').value = config.thumbnail || '';
-    form.querySelector('[name="silhouette"]').value = config.silhouette || '';
-
-    // Descripción detallada
-    if (detailedDescription) {
-        form.querySelector('[name="detailed_description"]').value = detailedDescription;
+    // Video URL (campo global, no traducible)
+    if (config.video_url) {
+        form.querySelector('[name="video_url"]').value = config.video_url || '';
     }
+
+    // La descripción detallada ahora se carga desde translations.json vía loadLanguageData()
+    // No la cargamos aquí para evitar sobrescribirla
+
+    // --- Cargar Archivos ---
+    const populateFileGroup = (filePath, groupPrefix) => {
+        const nameElement = document.getElementById(`current-${groupPrefix}-file`);
+        const downloadElement = document.getElementById(`download-${groupPrefix}-file`);
+        const previewElement = document.getElementById(`preview-${groupPrefix}-file`);
+
+        if (filePath) {
+            const fileName = filePath.split('/').pop();
+            nameElement.textContent = fileName;
+            
+            const fileUrl = `../models/${config.id}/${fileName}`;
+            downloadElement.href = fileUrl;
+            downloadElement.style.display = 'inline-block';
+
+            if (previewElement) {
+                previewElement.src = `${fileUrl}?t=${new Date().getTime()}`;
+            }
+        } else {
+            nameElement.textContent = 'No hay archivo';
+            downloadElement.style.display = 'none';
+            if (previewElement) {
+                previewElement.src = '../assets/images/map-placeholder.svg';
+            }
+        }
+    };
+
+    populateFileGroup(config.image, 'image');
+    populateFileGroup(config.thumbnail, 'thumbnail');
+    populateFileGroup(config.silhouette, 'silhouette');
+    populateFileGroup(config.marker?.file, 'mind');
+    populateFileGroup(config.audio?.file, 'audio');
+    populateFileGroup(config.model?.glb, 'glb');
+    populateFileGroup(config.model?.usdz, 'usdz');
+    
+    // Trigger change para visibilidad
+    form.querySelector('[name="arMode"]').dispatchEvent(new Event('change'));
 }
 
 // Submit del formulario
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const formData = new FormData(form);
-    const action = formData.get('action');
-    const id = action === 'edit' ? formData.get('original_id') : formData.get('id');
+    // Guardar traducciones del idioma actual antes de enviar
+    if (action === 'edit') {
+        saveCurrentLanguageData();
 
-    // Construir objeto de configuración
-    const animalData = {
-        id: formData.get('id'),
-        name: formData.get('name'),
-        scientificName: formData.get('scientificName'),
-        description: formData.get('description'),
-        icon: formData.get('icon'),
-        thumbnail: formData.get('thumbnail') || `thumbnail.png`,
-        silhouette: formData.get('silhouette') || `silueta_${formData.get('id')}.svg`,
-        arMode: formData.get('arMode'),
-        gps: {
-            enabled: formData.get('gps_enabled') === 'on',
-            latitude: parseFloat(formData.get('gps_latitude')) || 0,
-            longitude: parseFloat(formData.get('gps_longitude')) || 0,
-            radius: parseInt(formData.get('gps_radius')) || 50
-        },
-        marker: {
-            enabled: formData.get('marker_enabled') === 'on',
-            type: formData.get('marker_type') || 'mind',
-            file: formData.get('marker_file') || `${formData.get('id')}.mind`
-        },
-        model: {
-            glb: formData.get('model_glb') || `${formData.get('id')}.glb`,
-            usdz: formData.get('model_usdz') || `${formData.get('id')}.usdz`,
-            scale: formData.get('model_scale') || '0.5 0.5 0.5',
-            position: formData.get('model_position') || '0 0 0',
-            rotation: formData.get('model_rotation') || '0 0 0'
-        },
-        audio: {
-            enabled: formData.get('audio_enabled') === 'on',
-            file: formData.get('audio_file') || 'sound.mp3'
-        },
-        info: {
-            habitat: formData.get('info_habitat') || '',
-            diet: formData.get('info_diet') || '',
-            status: formData.get('info_status') || '',
-            wikipedia: formData.get('info_wikipedia') || ''
-        },
-        detailedDescription: formData.get('detailed_description') || ''
-    };
+        // Limpiar idiomas deshabilitados antes de enviar
+        const cleanedTranslations = {};
+        for (const code in translations) {
+            if (availableLanguages[code] && availableLanguages[code].enabled) {
+                cleanedTranslations[code] = translations[code];
+            }
+        }
+        translations = cleanedTranslations;
+    }
+
+    // Actualizar el textarea con el contenido de Summernote antes de enviar
+    $('#detailed-description').val($('#detailed-description').summernote('code'));
+
+    const formData = new FormData(form);
+    const formAction = formData.get('action');
+
+    // Agregar traducciones al FormData si es edición
+    if (action === 'edit') {
+        formData.append('translations', JSON.stringify(translations));
+    }
+
+    // Añadir un indicador de carga
+    const submitButton = form.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.innerHTML = '💾 Guardando...';
 
     try {
         const endpoint = action === 'edit' ? '../api/animals/update.php' : '../api/animals/create.php';
         const response = await fetch(endpoint, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(animalData)
+            body: formData
         });
 
         const data = await response.json();
@@ -153,11 +212,15 @@ form.addEventListener('submit', async (e) => {
                 window.location.href = 'animals.php';
             }, 1500);
         } else {
-            showNotification(data.error || 'Error al guardar', 'error');
+            showNotification(data.message || 'Error al guardar', 'error');
+            submitButton.disabled = false;
+            submitButton.innerHTML = '💾 Guardar Animal';
         }
     } catch (error) {
         console.error('Error:', error);
         showNotification('Error de conexión', 'error');
+        submitButton.disabled = false;
+        submitButton.innerHTML = '💾 Guardar Animal';
     }
 });
 
@@ -208,4 +271,189 @@ if (currentMode === 'marker') {
     document.getElementById('gps-config').style.display = 'none';
 } else if (currentMode === 'gps') {
     document.getElementById('marker-config').style.display = 'none';
+}
+
+
+// --- Emoji Picker Logic ---
+const emojiList = [
+    ' حیوانات ', ' P ', '🐖', '🐄', '🐏', '🐑', '🐐', '🐪', '🐫', '🐴', '🦓', '🦒', '🐘', '🦏', '🦛', '🐭', '🐁', '🐀', '🐹', '🐰', '🐇', '🐿️', '🦔', '🦇', '🐻', '🐨', '🐼', '🦥', '🦦', '🦨', '🦘', '🦡', '🐾', '🦃', '🐔', '🐓', '🐣', '🐤', '🐥', '🐦', '🐧', '🕊️', '🦅', '🦆', '🦢', '🦉', '🦩', '🦚', '🦜', '🐸', '🐊', '🐢', '🦎', '🐍', '🐲', '🐉', '🐳', '🐋', '🐬', '🐟', '🐠', '🐡', '🦈', '🐙', '🐚', '🐌', '🦋', '🐛', '🐜', '🐝', '🐞', '🦗', '🕷️', '🕸️', '🦂', '🦟', '🦠',
+    ' plantas ', '💐', '🌸', '💮', '🏵️', '🌹', '🥀', '🌺', '🌻', '🌼', '🌷', '🌱', '🌲', '🌳', '🌴', '🌵', '🌾', '🌿', '☘️', '🍀', '🍁', '🍂', '🍃',
+    ' hongos ', '🍄'
+];
+
+const emojiInput = document.getElementById('emoji-input');
+const emojiPickerBtn = document.getElementById('emoji-picker-btn');
+const emojiPanel = document.getElementById('emoji-panel');
+
+// Populate panel
+emojiList.forEach(emoji => {
+    if (emoji.includes(' ')) { // Es un título
+        const title = document.createElement('div');
+        title.className = 'emoji-category';
+        title.textContent = emoji;
+        emojiPanel.appendChild(title);
+    } else {
+        const emojiSpan = document.createElement('span');
+        emojiSpan.className = 'emoji-item';
+        emojiSpan.textContent = emoji;
+        emojiPanel.appendChild(emojiSpan);
+    }
+});
+
+// Show/Hide panel
+emojiPickerBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    emojiPanel.style.display = emojiPanel.style.display === 'block' ? 'none' : 'block';
+});
+
+// Select emoji
+emojiPanel.addEventListener('click', (e) => {
+    if (e.target.classList.contains('emoji-item')) {
+        emojiInput.value = e.target.textContent;
+        emojiPanel.style.display = 'none';
+    }
+});
+
+// Hide panel if clicking outside
+document.addEventListener('click', (e) => {
+    if (!emojiPanel.contains(e.target) && e.target !== emojiPickerBtn) {
+        emojiPanel.style.display = 'none';
+    }
+});
+
+// ============ SISTEMA DE TRADUCCIONES ============
+
+async function loadAvailableLanguages() {
+    try {
+        const response = await fetch('../data/languages.json');
+        availableLanguages = await response.json();
+
+        const selector = document.getElementById('language-selector');
+        if (selector) {
+            selector.innerHTML = '';
+
+            const languageFlags = {
+                'es': '🇪🇸', 'en': '🇬🇧', 'pt': '🇵🇹', 'fr': '🇫🇷', 'de': '🇩🇪',
+                'it': '🇮🇹', 'zh': '🇨🇳', 'ja': '🇯🇵', 'ko': '🇰🇷', 'ru': '🇷🇺',
+                'ar': '🇸🇦', 'hi': '🇮🇳', 'nl': '🇳🇱', 'sv': '🇸🇪', 'no': '🇳🇴',
+                'da': '🇩🇰', 'fi': '🇫🇮', 'pl': '🇵🇱', 'tr': '🇹🇷', 'th': '🇹🇭',
+                'vi': '🇻🇳', 'id': '🇮🇩', 'he': '🇮🇱', 'el': '🇬🇷', 'cs': '🇨🇿',
+                'ro': '🇷🇴', 'hu': '🇭🇺', 'uk': '🇺🇦', 'ca': '🇪🇸'
+            };
+
+            for (const [code, lang] of Object.entries(availableLanguages)) {
+                if (lang.enabled) {
+                    const option = document.createElement('option');
+                    option.value = code;
+                    const flag = languageFlags[code] || '🌍';
+                    option.textContent = `${flag} ${code.toUpperCase()}`;
+                    option.title = lang.name; // Mostrar nombre completo en tooltip
+                    selector.appendChild(option);
+                }
+            }
+
+            // Listener para cambio de idioma
+            selector.addEventListener('change', handleLanguageChange);
+        }
+    } catch (error) {
+        console.error('Error cargando idiomas:', error);
+    }
+}
+
+async function loadTranslations(animalId) {
+    try {
+        const response = await fetch(`../models/${animalId}/translations.json`);
+        translations = await response.json();
+
+        // Limpiar idiomas deshabilitados
+        for (const code in translations) {
+            if (!availableLanguages[code] || !availableLanguages[code].enabled) {
+                delete translations[code];
+            }
+        }
+
+        // Agregar idiomas habilitados que faltan
+        for (const code in availableLanguages) {
+            if (availableLanguages[code].enabled && !translations[code]) {
+                translations[code] = {
+                    name: '',
+                    short_description: '',
+                    habitat: '',
+                    diet: '',
+                    status: '',
+                    detailed_description: '',
+                    wikipedia: ''
+                };
+            }
+        }
+    } catch (error) {
+        console.error('Error cargando traducciones:', error);
+        // Inicializar estructura vacía solo con idiomas habilitados
+        translations = {};
+        for (const code in availableLanguages) {
+            if (availableLanguages[code].enabled) {
+                translations[code] = {
+                    name: '',
+                    short_description: '',
+                    habitat: '',
+                    diet: '',
+                    status: '',
+                    detailed_description: '',
+                    wikipedia: ''
+                };
+            }
+        }
+    }
+}
+
+function handleLanguageChange(e) {
+    const newLang = e.target.value;
+
+    // Guardar valores actuales en el idioma actual
+    saveCurrentLanguageData();
+
+    // Cambiar al nuevo idioma
+    currentLanguage = newLang;
+
+    // Cargar valores del nuevo idioma
+    loadLanguageData(newLang);
+}
+
+function saveCurrentLanguageData() {
+    if (!translations[currentLanguage]) {
+        translations[currentLanguage] = {};
+    }
+
+    const translatableFields = document.querySelectorAll('.translatable');
+    translatableFields.forEach(field => {
+        const fieldName = field.dataset.field;
+        if (fieldName === 'detailed_description') {
+            translations[currentLanguage][fieldName] = $('#detailed-description').summernote('code');
+        } else {
+            translations[currentLanguage][fieldName] = field.value;
+        }
+    });
+}
+
+function loadLanguageData(lang) {
+    const langData = translations[lang] || {};
+
+    const translatableFields = document.querySelectorAll('.translatable');
+    translatableFields.forEach(field => {
+        const fieldName = field.dataset.field;
+        const value = langData[fieldName] || '';
+
+        if (fieldName === 'detailed_description') {
+            $('#detailed-description').summernote('code', value);
+        } else {
+            field.value = value;
+        }
+
+        // Marcar visualmente si está vacío (sin traducción)
+        if (!value && lang !== 'es') {
+            field.parentElement.classList.add('changed');
+        } else {
+            field.parentElement.classList.remove('changed');
+        }
+    });
 }
