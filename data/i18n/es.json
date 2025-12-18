@@ -8,7 +8,8 @@
   "portal": {
     "title": "FaunAR - Portal",
     "header": {
-      "logo_alt": "FaunAR"
+      "logo_alt": "FaunAR",
+      "admin_btn": "Admin"
     },
     "footer": {
       "copyright": "TecMedHub @ 2025"

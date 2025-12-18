@@ -15,11 +15,17 @@
 <body>
     <header>
         <img src="assets/images/logo_faunar.png" alt="FaunAR" style="max-width: 400px; margin-bottom: 10px;">
-        <div class="language-selector" style="position: absolute; top: 20px; right: 20px;">
+        <div class="language-selector" style="position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; align-items: center;">
             <select id="language-select" onchange="i18n.setLanguage(this.value)" style="padding: 8px 12px; border: 2px solid #2c5f2d; border-radius: 6px; font-size: 14px; background: white; cursor: pointer;">
                 <option value="es">🇨🇱 ES</option>
                 <option value="en">🇺🇸 EN</option>
             </select>
+            <a href="admin/" class="admin-btn" style="padding: 8px 16px; background: rgba(44, 95, 45, 0.1); border: 2px solid #2c5f2d; border-radius: 6px; font-size: 13px; color: #2c5f2d; text-decoration: none; transition: all 0.3s; font-weight: 600;"
+               onmouseover="this.style.background='#2c5f2d'; this.style.color='white';"
+               onmouseout="this.style.background='rgba(44, 95, 45, 0.1)'; this.style.color='#2c5f2d';"
+               title="Panel de Administración">
+                🔐 <span data-i18n="portal.header.admin_btn">Admin</span>
+            </a>
         </div>
     </header>
 
