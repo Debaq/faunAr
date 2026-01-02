@@ -1,0 +1,18 @@
+{
+  "parque-ejemplo": {
+    "id": "parque-ejemplo",
+    "name": "Parque Nacional Ejemplo",
+    "description": "Descripción del lugar",
+    "gps": {
+      "latitude": -41.0,
+      "longitude": -71.0,
+      "radius": 5000
+    },
+    "enabled": true,
+    "metadata": {
+      "region": "Región de Los Lagos",
+      "country": "Chile",
+      "created": "2025-01-15"
+    }
+  }
+}

@@ -3,8 +3,38 @@
 let currentLanguage = 'es';
 let translations = {};
 let availableLanguages = {};
+let availableCategories = {};
 
-$(document).ready(function() {
+// Cargar categorías disponibles
+async function loadAvailableCategories() {
+    try {
+        const response = await fetch('../data/categories.json');
+        availableCategories = await response.json();
+
+        const selector = document.getElementById('category-select');
+        if (selector) {
+            selector.innerHTML = '';
+
+            // Ordenar por order
+            const sortedCategories = Object.entries(availableCategories)
+                .filter(([id, cat]) => cat.enabled)
+                .sort((a, b) => a[1].order - b[1].order);
+
+            sortedCategories.forEach(([id, category]) => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = `${category.icon} ${category.name}`;
+                selector.appendChild(option);
+            });
+        }
+    } catch (error) {
+        console.error('Error cargando categorías:', error);
+    }
+}
+
+$(document).ready(async function() {
+    // Cargar categorías primero
+    await loadAvailableCategories();
     $('#detailed-description').summernote({
         placeholder: 'Escribe la descripción detallada aquí. Puedes usar HTML.',
         tabsize: 2,
@@ -33,9 +63,12 @@ $(document).ready(function() {
         }
     });
 
-    // Cargar idiomas disponibles
+    // Cargar idiomas disponibles y luego datos del animal
     if (action === 'edit') {
-        loadAvailableLanguages();
+        await loadAvailableLanguages();
+        if (animalId) {
+            await loadAnimalData(animalId);
+        }
     }
 });
 
@@ -59,41 +92,42 @@ document.querySelectorAll('input[type="file"][data-preview-id]').forEach(input =
     });
 });
 
-
-// Cargar datos si es edición
-if (action === 'edit' && animalId) {
-    loadAnimalData(animalId);
-}
-
 async function loadAnimalData(id) {
     try {
+        console.log('🐾 Cargando datos del animal:', id);
+
         // Cargar traducciones primero
         await loadTranslations(id);
 
+        console.log('📡 Obteniendo configuración del animal...');
         const response = await fetch(`../api/animals/get.php?id=${id}`);
         const data = await response.json();
 
         if (data.success) {
+            console.log('✅ Configuración del animal recibida');
             populateForm(data.config, data.detailedDescription);
 
             // Cargar datos del idioma actual (español por defecto)
+            console.log('🔄 Cargando datos del idioma actual:', currentLanguage);
             loadLanguageData(currentLanguage);
         } else {
+            console.error('❌ Error en respuesta de la API:', data);
             showNotification('Error al cargar animal', 'error');
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('❌ Error:', error);
         showNotification('Error de conexión', 'error');
     }
 }
 
 function populateForm(config, detailedDescription) {
-    // Información básica
+    // Información básica (solo campos NO traducibles)
     form.querySelector('[name="id"]').value = config.id || '';
-    form.querySelector('[name="name"]').value = config.name || '';
+    form.querySelector('[name="category"]').value = config.category || 'fauna';
+    // name - traducible, se carga en loadLanguageData()
     form.querySelector('[name="scientificName"]').value = config.scientificName || '';
     form.querySelector('[name="icon"]').value = config.icon || '';
-    form.querySelector('[name="description"]').value = config.description || '';
+    // description - traducible, se carga en loadLanguageData()
 
     // Configuración AR
     form.querySelector('[name="arMode"]').value = config.arMode || 'marker';
@@ -106,13 +140,8 @@ function populateForm(config, detailedDescription) {
         form.querySelector('[name="gps_radius"]').value = config.gps.radius || 50;
     }
 
-    // Info adicional
-    if (config.info) {
-        form.querySelector('[name="info_habitat"]').value = config.info.habitat || '';
-        form.querySelector('[name="info_diet"]').value = config.info.diet || '';
-        form.querySelector('[name="info_status"]').value = config.info.status || '';
-        form.querySelector('[name="info_wikipedia"]').value = config.info.wikipedia || '';
-    }
+    // Info adicional - todos los campos son traducibles, se cargan en loadLanguageData()
+    // habitat, diet, status, wikipedia - se cargan desde translations.json
 
     // Video URL (campo global, no traducible)
     if (config.video_url) {
@@ -275,30 +304,34 @@ if (currentMode === 'marker') {
 
 
 // --- Emoji Picker Logic ---
-const emojiList = [
-    ' حیوانات ', ' P ', '🐖', '🐄', '🐏', '🐑', '🐐', '🐪', '🐫', '🐴', '🦓', '🦒', '🐘', '🦏', '🦛', '🐭', '🐁', '🐀', '🐹', '🐰', '🐇', '🐿️', '🦔', '🦇', '🐻', '🐨', '🐼', '🦥', '🦦', '🦨', '🦘', '🦡', '🐾', '🦃', '🐔', '🐓', '🐣', '🐤', '🐥', '🐦', '🐧', '🕊️', '🦅', '🦆', '🦢', '🦉', '🦩', '🦚', '🦜', '🐸', '🐊', '🐢', '🦎', '🐍', '🐲', '🐉', '🐳', '🐋', '🐬', '🐟', '🐠', '🐡', '🦈', '🐙', '🐚', '🐌', '🦋', '🐛', '🐜', '🐝', '🐞', '🦗', '🕷️', '🕸️', '🦂', '🦟', '🦠',
-    ' plantas ', '💐', '🌸', '💮', '🏵️', '🌹', '🥀', '🌺', '🌻', '🌼', '🌷', '🌱', '🌲', '🌳', '🌴', '🌵', '🌾', '🌿', '☘️', '🍀', '🍁', '🍂', '🍃',
-    ' hongos ', '🍄'
-];
+const emojiCategories = {
+    'Animales': ['🐖', '🐄', '🐏', '🐑', '🐐', '🐪', '🐫', '🐴', '🦓', '🦒', '🐘', '🦏', '🦛', '🐭', '🐁', '🐀', '🐹', '🐰', '🐇', '🐿️', '🦔', '🦇', '🐻', '🐨', '🐼', '🦥', '🦦', '🦨', '🦘', '🦡', '🐾'],
+    'Aves': ['🦃', '🐔', '🐓', '🐣', '🐤', '🐥', '🐦', '🐧', '🕊️', '🦅', '🦆', '🦢', '🦉', '🦩', '🦚', '🦜'],
+    'Reptiles y Anfibios': ['🐸', '🐊', '🐢', '🦎', '🐍', '🐲', '🐉'],
+    'Peces': ['🐳', '🐋', '🐬', '🐟', '🐠', '🐡', '🦈', '🐙', '🐚'],
+    'Insectos': ['🐌', '🦋', '🐛', '🐜', '🐝', '🐞', '🦗', '🕷️', '🕸️', '🦂', '🦟', '🦠'],
+    'Plantas': ['💐', '🌸', '💮', '🏵️', '🌹', '🥀', '🌺', '🌻', '🌼', '🌷', '🌱', '🌲', '🌳', '🌴', '🌵', '🌾', '🌿', '☘️', '🍀', '🍁', '🍂', '🍃'],
+    'Hongos': ['🍄']
+};
 
 const emojiInput = document.getElementById('emoji-input');
 const emojiPickerBtn = document.getElementById('emoji-picker-btn');
 const emojiPanel = document.getElementById('emoji-panel');
 
 // Populate panel
-emojiList.forEach(emoji => {
-    if (emoji.includes(' ')) { // Es un título
-        const title = document.createElement('div');
-        title.className = 'emoji-category';
-        title.textContent = emoji;
-        emojiPanel.appendChild(title);
-    } else {
+for (const category in emojiCategories) {
+    const title = document.createElement('div');
+    title.className = 'emoji-category';
+    title.textContent = category;
+    emojiPanel.appendChild(title);
+
+    emojiCategories[category].forEach(emoji => {
         const emojiSpan = document.createElement('span');
         emojiSpan.className = 'emoji-item';
         emojiSpan.textContent = emoji;
         emojiPanel.appendChild(emojiSpan);
-    }
-});
+    });
+}
 
 // Show/Hide panel
 emojiPickerBtn.addEventListener('click', (e) => {
@@ -325,8 +358,13 @@ document.addEventListener('click', (e) => {
 
 async function loadAvailableLanguages() {
     try {
+        console.log('🌍 Cargando idiomas disponibles...');
         const response = await fetch('../data/languages.json');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         availableLanguages = await response.json();
+        console.log('✅ Idiomas disponibles cargados:', availableLanguages);
 
         const selector = document.getElementById('language-selector');
         if (selector) {
@@ -354,16 +392,21 @@ async function loadAvailableLanguages() {
 
             // Listener para cambio de idioma
             selector.addEventListener('change', handleLanguageChange);
+            console.log('✅ Selector de idioma configurado');
         }
     } catch (error) {
-        console.error('Error cargando idiomas:', error);
+        console.error('❌ Error cargando idiomas:', error);
     }
 }
 
 async function loadTranslations(animalId) {
     try {
         const response = await fetch(`../models/${animalId}/translations.json`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         translations = await response.json();
+        console.log('✅ Traducciones cargadas:', translations);
 
         // Limpiar idiomas deshabilitados
         for (const code in translations) {
@@ -386,8 +429,9 @@ async function loadTranslations(animalId) {
                 };
             }
         }
+        console.log('✅ Traducciones después de procesar:', translations);
     } catch (error) {
-        console.error('Error cargando traducciones:', error);
+        console.error('❌ Error cargando traducciones:', error);
         // Inicializar estructura vacía solo con idiomas habilitados
         translations = {};
         for (const code in availableLanguages) {
@@ -403,6 +447,7 @@ async function loadTranslations(animalId) {
                 };
             }
         }
+        console.log('⚠️ Traducciones inicializadas vacías:', translations);
     }
 }
 
@@ -436,15 +481,30 @@ function saveCurrentLanguageData() {
 }
 
 function loadLanguageData(lang) {
+    console.log('🌐 Cargando datos del idioma:', lang);
     const langData = translations[lang] || {};
+    console.log('📄 Datos del idioma:', langData);
 
     const translatableFields = document.querySelectorAll('.translatable');
+    console.log('🔍 Campos traducibles encontrados:', translatableFields.length);
+
     translatableFields.forEach(field => {
         const fieldName = field.dataset.field;
         const value = langData[fieldName] || '';
+        console.log(`  - Campo ${fieldName}:`, value ? `"${value.substring(0, 50)}..."` : '(vacío)');
 
         if (fieldName === 'detailed_description') {
-            $('#detailed-description').summernote('code', value);
+            // Verificar si Summernote está inicializado
+            if ($('#detailed-description').summernote) {
+                try {
+                    $('#detailed-description').summernote('code', value);
+                    console.log('    ✅ Summernote actualizado');
+                } catch (e) {
+                    console.error('    ❌ Error al actualizar Summernote:', e);
+                }
+            } else {
+                console.warn('    ⚠️ Summernote no está inicializado');
+            }
         } else {
             field.value = value;
         }

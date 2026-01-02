@@ -2,6 +2,27 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
+function getDefaultCategory() {
+    $categoriesFile = __DIR__ . '/../../data/categories.json';
+    if (file_exists($categoriesFile)) {
+        $categories = json_decode(file_get_contents($categoriesFile), true);
+
+        // Filtrar habilitadas y ordenar
+        $enabledCategories = array_filter($categories, function($cat) {
+            return isset($cat['enabled']) && $cat['enabled'];
+        });
+
+        uasort($enabledCategories, function($a, $b) {
+            return ($a['order'] ?? 999) - ($b['order'] ?? 999);
+        });
+
+        // Retornar la primera categoría o 'fauna' por defecto
+        return !empty($enabledCategories) ? array_key_first($enabledCategories) : 'fauna';
+    }
+
+    return 'fauna';
+}
+
 $modelsDir = __DIR__ . '/../../models/';
 $animals = [];
 
@@ -29,6 +50,7 @@ if (is_dir($modelsDir)) {
 
                 $animals[] = [
                     'id' => $config['id'],
+                    'category' => $config['category'] ?? getDefaultCategory(),
                     'name' => $config['name'],
                     'scientificName' => $config['scientificName'],
                     'thumbnail' => $config['thumbnail'] ?? null,

@@ -1,5 +1,6 @@
 {
   "id": "puma",
+  "category": "fauna",
   "name": "Puma",
   "scientificName": "Puma concolor",
   "description": "El puma es un gran felino nativo de América, con una amplia distribución desde Canadá hasta el sur de Chile y Argentina. Es un cazador solitario y adaptable que habita en diversos ecosistemas, incluyendo la estepa patagónica y los bosques andinos.",
@@ -34,5 +35,6 @@
     "diet": "Carnívoro",
     "status": "Preocupación menor",
     "wikipedia": "https://es.wikipedia.org/wiki/Puma_concolor"
-  }
+  },
+  "image": "imagen_puma.png"
 }

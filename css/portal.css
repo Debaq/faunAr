@@ -18,8 +18,11 @@ body {
 }
 
 header {
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     padding: 40px 20px;
+    position: relative;
 }
 
 header h1 {
@@ -243,3 +246,61 @@ footer {
         max-width: calc(100% - 40px);
     }
 }
+
+
+/* Category and Search */
+.category-buttons {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.category-buttons .btn {
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+}
+
+.category-buttons .btn.btn-secondary[disabled] {
+     background: rgba(255,255,255,0.2);
+     color: rgba(255,255,255,0.5);
+     cursor: not-allowed;
+     border-color: rgba(255,255,255,0.3);
+}
+
+.search-filter-bar {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 20px;
+}
+
+.search-filter-bar input,
+.search-filter-bar select {
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.search-filter-bar input {
+    flex: 1;
+}
+
+.search-filter-bar input::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.search-filter-bar select {
+    flex: 0 0 150px;
+}
+
+#projects-container {
+    padding-top: 0;
+}
+

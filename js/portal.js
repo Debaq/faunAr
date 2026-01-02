@@ -1,8 +1,55 @@
+// Variable global para almacenar todos los modelos y categorías
+let allModelsData = [];
+let availableCategories = {};
+let currentCategory = null;
+
+// Cargar categorías disponibles
+async function loadCategories() {
+    try {
+        const response = await fetch('data/categories.json');
+        availableCategories = await response.json();
+
+        // Ordenar por order y obtener la primera categoría habilitada
+        const sortedCategories = Object.entries(availableCategories)
+            .filter(([id, cat]) => cat.enabled)
+            .sort((a, b) => a[1].order - b[1].order);
+
+        // Establecer la primera categoría como predeterminada
+        if (sortedCategories.length > 0 && !currentCategory) {
+            currentCategory = sortedCategories[0][0];
+        }
+
+        // Crear botones de categoría
+        const buttonsContainer = document.getElementById('category-buttons');
+        buttonsContainer.innerHTML = '';
+
+        sortedCategories.forEach(([id, category]) => {
+            const button = document.createElement('button');
+            button.className = id === currentCategory ? 'btn btn-primary' : 'btn btn-secondary';
+            button.dataset.category = id;
+            button.textContent = `${category.icon} ${category.name}`;
+            buttonsContainer.appendChild(button);
+        });
+
+        return sortedCategories.length > 0;
+    } catch (error) {
+        console.error('Error cargando categorías:', error);
+        return false;
+    }
+}
+
 // Escanear carpetas de modelos y cargar configuraciones
 async function loadProjects() {
     const container = document.getElementById('projects-container');
 
     try {
+        // Cargar categorías primero
+        const hasCategories = await loadCategories();
+
+        if (!hasCategories) {
+            container.innerHTML = '<p style="text-align: center; padding: 2rem;">No hay categorías configuradas</p>';
+            return;
+        }
         // Obtener idioma actual
         const currentLang = window.i18n ? window.i18n.getCurrentLanguage() : 'es';
 
@@ -14,6 +61,9 @@ async function loadProjects() {
             container.innerHTML = '<p style="text-align: center; padding: 2rem;">No se encontraron modelos disponibles</p>';
             return;
         }
+
+        // Limpiar array de modelos
+        allModelsData = [];
 
         // Cargar configuración de cada modelo
         for (const folder of modelsData.models) {
@@ -29,16 +79,68 @@ async function loadProjects() {
                 // Obtener traducción del idioma actual o fallback a español
                 const translation = translations[currentLang] || translations['es'] || {};
 
-                const card = createProjectCard(config, folder, translation);
-                container.appendChild(card);
+                // Obtener la primera categoría habilitada como predeterminada
+                const defaultCategory = Object.entries(availableCategories)
+                    .filter(([id, cat]) => cat.enabled)
+                    .sort((a, b) => a[1].order - b[1].order)[0]?.[0] || 'fauna';
+
+                // Almacenar modelo con su categoría
+                allModelsData.push({
+                    config,
+                    folder,
+                    translation,
+                    category: config.category || defaultCategory
+                });
             } catch (error) {
                 console.error(`Error cargando ${folder}:`, error);
             }
         }
+
+        // Renderizar modelos de la categoría actual
+        renderModels();
     } catch (error) {
         console.error('Error obteniendo lista de modelos:', error);
         container.innerHTML = '<p style="text-align: center; padding: 2rem; color: #e74c3c;">Error cargando modelos</p>';
     }
+}
+
+// Renderizar modelos (incluye filtrado)
+function renderModels() {
+    const container = document.getElementById('projects-container');
+    container.innerHTML = '';
+
+    const searchQuery = document.getElementById('search-input').value.toLowerCase();
+    const filterValue = document.getElementById('filter-select').value;
+
+    // 1. Filtrar por categoría
+    let filteredModels = allModelsData.filter(model => model.category === currentCategory);
+
+    // 2. Filtrar por búsqueda
+    if (searchQuery) {
+        filteredModels = filteredModels.filter(model => {
+            const name = (model.translation.name || model.config.name).toLowerCase();
+            const scientificName = (model.config.scientificName || '').toLowerCase();
+            return name.includes(searchQuery) || scientificName.includes(searchQuery);
+        });
+    }
+
+    // 3. Filtrar por modo AR
+    if (filterValue !== 'all') {
+        filteredModels = filteredModels.filter(model => {
+            const arMode = model.config.arMode || 'marker'; // Default to marker if not specified
+            return arMode === filterValue;
+        });
+    }
+
+    if (filteredModels.length === 0) {
+        container.innerHTML = `<p style="text-align: center; padding: 2rem; color: #7f8c8d;">No se encontraron modelos con los filtros actuales.</p>`;
+        return;
+    }
+
+    filteredModels.forEach(model => {
+        const card = createProjectCard(model.config, model.folder, model.translation);
+        container.appendChild(card);
+    });
 }
 
 function createProjectCard(config, folder, translation = {}) {
@@ -310,5 +412,60 @@ window.addEventListener('languageChanged', () => {
     loadProjects(); // Recargar con nuevo idioma
 });
 
-// Cargar al inicio
-document.addEventListener('DOMContentLoaded', loadProjects);
+// Manejar cambio de categoría y filtros
+document.addEventListener('DOMContentLoaded', () => {
+    loadProjects();
+
+    // --- Populate Filter Select ---
+    const filterSelect = document.getElementById('filter-select');
+    // Remove the default "Todos" option before populating
+    filterSelect.innerHTML = ''; 
+    const arModes = {
+        'all': 'Todos los modos',
+        'marker': 'Solo Marcador',
+        'gps': 'Solo GPS',
+        'hybrid': 'Híbrido'
+    };
+    for (const [value, text] of Object.entries(arModes)) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = text;
+        option.style.color = 'black';
+        filterSelect.appendChild(option);
+    }
+
+    // --- Event Listeners ---
+
+    // Category buttons - using event delegation
+    const categoryButtonsContainer = document.getElementById('category-buttons');
+    categoryButtonsContainer.addEventListener('click', (e) => {
+        const button = e.target.closest('button');
+        if (!button) return; // No se hizo clic en un botón
+
+        if (button.disabled) return;
+        
+        currentCategory = button.dataset.category;
+
+        // Actualizar estilos de los botones
+        categoryButtonsContainer.querySelectorAll('button').forEach(btn => {
+            if (!btn.disabled) {
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-secondary');
+            }
+        });
+        button.classList.remove('btn-secondary');
+        button.classList.add('btn-primary');
+
+        renderModels();
+    });
+
+    // Search input
+    document.getElementById('search-input').addEventListener('input', () => {
+        renderModels();
+    });
+
+    // Filter select
+    filterSelect.addEventListener('change', () => {
+        renderModels();
+    });
+});

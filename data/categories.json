@@ -1,0 +1,26 @@
+{
+  "fauna": {
+    "name": "Fauna",
+    "icon": "🐾",
+    "enabled": true,
+    "order": 0
+  },
+  "megafauna": {
+    "name": "Megafauna",
+    "icon": "🦣",
+    "enabled": true,
+    "order": 1
+  },
+  "dinosaurios": {
+    "name": "Dinosaurios",
+    "icon": "🦖",
+    "enabled": true,
+    "order": 2
+  },
+  "flora": {
+    "name": "Flora",
+    "icon": "🌿",
+    "enabled": true,
+    "order": 3
+  }
+}

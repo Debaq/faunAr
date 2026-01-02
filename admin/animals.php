@@ -20,6 +20,10 @@ $animalId = $_GET['id'] ?? '';
             <option value="gps">Solo GPS</option>
             <option value="hybrid">Híbrido</option>
         </select>
+        <select id="filter-category">
+            <option value="">Todas las categorías</option>
+            <!-- Las categorías se cargarán aquí -->
+        </select>
     </div>
 
     <table class="animals-table">
@@ -29,6 +33,7 @@ $animalId = $_GET['id'] ?? '';
                 <th>ID</th>
                 <th>Nombre</th>
                 <th>Nombre Científico</th>
+                <th>Categoría</th>
                 <th>Modo AR</th>
                 <th>Archivos</th>
                 <th>Acciones</th>
@@ -36,13 +41,48 @@ $animalId = $_GET['id'] ?? '';
         </thead>
         <tbody id="animals-tbody">
             <tr>
-                <td colspan="7" class="loading">Cargando animales...</td>
+                <td colspan="8" class="loading">Cargando animales...</td>
             </tr>
         </tbody>
     </table>
 
     <script>
     let allAnimals = [];
+    let allCategories = {};
+
+    async function loadData() {
+        try {
+            await loadCategories();
+            await loadAnimals();
+        } catch (error) {
+            console.error('Error al cargar datos:', error);
+            document.getElementById('animals-tbody').innerHTML =
+                '<tr><td colspan="8" style="text-align: center; color: #e74c3c;">Error al cargar datos</td></tr>';
+        }
+    }
+
+    async function loadCategories() {
+        try {
+            const response = await fetch('../data/categories.json');
+            allCategories = await response.json();
+            populateCategoryFilter();
+        } catch (error) {
+            console.error('Error cargando categorías:', error);
+            throw error; // Re-lanzar para que loadData lo maneje
+        }
+    }
+
+    function populateCategoryFilter() {
+        const filterCategory = document.getElementById('filter-category');
+        for (const key in allCategories) {
+            if (allCategories.hasOwnProperty(key)) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = allCategories[key].name;
+                filterCategory.appendChild(option);
+            }
+        }
+    }
 
     async function loadAnimals() {
         try {
@@ -51,12 +91,15 @@ $animalId = $_GET['id'] ?? '';
 
             if (data.success) {
                 allAnimals = data.animals;
-                renderAnimals(allAnimals);
+                applyFilters();
+            } else {
+                 document.getElementById('animals-tbody').innerHTML =
+                '<tr><td colspan="8" style="text-align: center; color: #e74c3c;">Error al cargar animales</td></tr>';
             }
         } catch (error) {
             console.error('Error cargando animales:', error);
             document.getElementById('animals-tbody').innerHTML =
-                '<tr><td colspan="7" style="text-align: center; color: #e74c3c;">Error al cargar animales</td></tr>';
+                '<tr><td colspan="8" style="text-align: center; color: #e74c3c;">Error al cargar animales</td></tr>';
         }
     }
 
@@ -65,7 +108,7 @@ $animalId = $_GET['id'] ?? '';
         tbody.innerHTML = '';
 
         if (animals.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: #7f8c8d;">No hay animales registrados</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #7f8c8d;">No hay animales que coincidan con los filtros</td></tr>';
             return;
         }
 
@@ -82,6 +125,10 @@ $animalId = $_GET['id'] ?? '';
                 'hybrid': '#f39c12'
             };
 
+            const categoryName = allCategories[animal.category] ? allCategories[animal.category].name : 'Sin categoría';
+            const categoryIcon = allCategories[animal.category] ? allCategories[animal.category].icon : '';
+
+
             row.innerHTML = `
                 <td>
                     <img src="${thumbnailUrl}"
@@ -95,6 +142,7 @@ $animalId = $_GET['id'] ?? '';
                     <div style="font-size: 20px;">${animal.icon}</div>
                 </td>
                 <td style="font-style: italic; color: #7f8c8d;">${animal.scientificName}</td>
+                <td>${categoryIcon} ${categoryName}</td>
                 <td>
                     <span style="display: inline-block; padding: 4px 8px; background: ${modeColors[animal.arMode] || '#7f8c8d'}; color: white; border-radius: 4px; font-size: 12px; text-transform: uppercase;">
                         ${animal.arMode}
@@ -109,6 +157,33 @@ $animalId = $_GET['id'] ?? '';
             tbody.appendChild(row);
         });
     }
+
+    function applyFilters() {
+        const search = document.getElementById('search').value.toLowerCase();
+        const mode = document.getElementById('filter-mode').value;
+        const category = document.getElementById('filter-category').value;
+
+        let filtered = allAnimals;
+
+        if (search) {
+            filtered = filtered.filter(a =>
+                a.id.toLowerCase().includes(search) ||
+                a.name.toLowerCase().includes(search) ||
+                (a.scientificName && a.scientificName.toLowerCase().includes(search))
+            );
+        }
+
+        if (mode) {
+            filtered = filtered.filter(a => a.arMode === mode);
+        }
+
+        if (category) {
+            filtered = filtered.filter(a => a.category === category);
+        }
+
+        renderAnimals(filtered);
+    }
+
 
     async function deleteAnimal(id, name) {
         if (!confirm(`¿Estás seguro de eliminar "${name}"?\n\nEsta acción no se puede deshacer.`)) {
@@ -136,25 +211,12 @@ $animalId = $_GET['id'] ?? '';
         }
     }
 
-    // Búsqueda
-    document.getElementById('search').addEventListener('input', (e) => {
-        const search = e.target.value.toLowerCase();
-        const filtered = allAnimals.filter(a =>
-            a.id.toLowerCase().includes(search) ||
-            a.name.toLowerCase().includes(search) ||
-            a.scientificName.toLowerCase().includes(search)
-        );
-        renderAnimals(filtered);
-    });
+    // Event Listeners
+    document.getElementById('search').addEventListener('input', applyFilters);
+    document.getElementById('filter-mode').addEventListener('change', applyFilters);
+    document.getElementById('filter-category').addEventListener('change', applyFilters);
 
-    // Filtro por modo
-    document.getElementById('filter-mode').addEventListener('change', (e) => {
-        const mode = e.target.value;
-        const filtered = mode ? allAnimals.filter(a => a.arMode === mode) : allAnimals;
-        renderAnimals(filtered);
-    });
-
-    loadAnimals();
+    loadData();
     </script>
 
 <?php elseif ($action === 'create' || $action === 'edit'): ?>
@@ -188,6 +250,12 @@ $animalId = $_GET['id'] ?? '';
                     <label>ID* <small>(solo minúsculas, sin espacios)</small></label>
                     <input type="text" name="id" pattern="[a-z]+" required
                            <?= $action === 'edit' ? 'readonly' : '' ?>>
+                </div>
+                <div class="form-group">
+                    <label>Categoría*</label>
+                    <select name="category" id="category-select" required>
+                        <!-- Opciones cargadas dinámicamente -->
+                    </select>
                 </div>
                 <div class="form-group translatable-field">
                     <label><span class="translatable-indicator">★</span> Nombre*</label>

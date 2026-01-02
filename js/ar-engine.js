@@ -7,9 +7,10 @@ let isModelCaptured = false;
 let markerAnchor = null;
 let captured3DModel = null;
 
-// Obtener parámetro de modelo desde URL
+// Obtener parámetros desde URL
 const urlParams = new URLSearchParams(window.location.search);
-const modelId = urlParams.get('model');
+const modelId = urlParams.get('model'); // Sistema antiguo (compatibilidad)
+const qrCode = urlParams.get('qr');     // Sistema nuevo (instancias)
 
 // Función para solicitar permisos desde el botón del usuario
 window.requestPermissionsFromUser = async function() {
@@ -65,8 +66,9 @@ window.manualStartAR = async function() {
 };
 
 async function initAR() {
-    if (!modelId) {
-        alert('No se especificó modelo');
+    // Validar que se proporcione QR o modelo
+    if (!qrCode && !modelId) {
+        alert('No se especificó código QR ni modelo');
         document.getElementById('loading').style.display = 'none';
         return;
     }
@@ -106,7 +108,26 @@ async function continueInitAR() {
 
     try {
         updateLoadingStatus('Cargando configuración...');
-        currentConfig = await ConfigLoader.load(modelId);
+
+        // NUEVO SISTEMA: Cargar por código QR
+        if (qrCode) {
+            console.log('🔍 Sistema de instancias: Cargando por QR', qrCode);
+            currentConfig = await ConfigLoader.loadByQR(qrCode);
+
+            if (!currentConfig) {
+                alert(`Código QR "${qrCode}" no válido o instancia deshabilitada`);
+                clearTimeout(safetyTimeout);
+                document.getElementById('loading').style.display = 'none';
+                return;
+            }
+
+            console.log('✅ Config cargado por QR:', currentConfig);
+        }
+        // SISTEMA ANTIGUO: Cargar por ID de modelo (compatibilidad)
+        else if (modelId) {
+            console.log('⚠️ Sistema legacy: Cargando por modelId', modelId);
+            currentConfig = await ConfigLoader.load(modelId);
+        }
 
         if (!currentConfig) {
             alert('Error cargando configuración');
@@ -314,7 +335,7 @@ function showGPSModel() {
     const entity = document.createElement('a-entity');
     entity.setAttribute('gps-entity-place',
         `latitude: ${currentConfig.gps.latitude}; longitude: ${currentConfig.gps.longitude}`);
-    entity.setAttribute('gltf-model', `models/${modelId}/${currentConfig.model.glb}`);
+    entity.setAttribute('gltf-model', `models/${currentConfig.id}/${currentConfig.model.glb}`);
     entity.setAttribute('scale', currentConfig.model.scale);
     entity.setAttribute('rotation', currentConfig.model.rotation);
 
@@ -332,7 +353,7 @@ function showGPSModel() {
 
     // Reproducir sonido si está configurado
     if (currentConfig.audio?.enabled) {
-        const audioGPS = new Audio(`models/${modelId}/${currentConfig.audio.file}`);
+        const audioGPS = new Audio(`models/${currentConfig.id}/${currentConfig.audio.file}`);
         audioGPS.loop = true;
         audioGPS.volume = 0.7;
         audioGPS.play()
@@ -370,13 +391,13 @@ async function initMarker() {
     oldAnchors.forEach(anchor => anchor.remove());
 
     // Configurar MindAR en la escena
-    let mindFile = `models/${modelId}/${currentConfig.marker.file}`;
+    let mindFile = `models/${currentConfig.id}/${currentConfig.marker.file}`;
     if (currentConfig.marker.file.startsWith('http')) {
         mindFile = currentConfig.marker.file;
     }
 
     console.log('📁 Archivo MindAR:', mindFile);
-    console.log('🎨 Modelo 3D:', `models/${modelId}/${currentConfig.model.glb}`);
+    console.log('🎨 Modelo 3D:', `models/${currentConfig.id}/${currentConfig.model.glb}`);
 
     try {
         scene.setAttribute('mindar-image', `imageTargetSrc: ${mindFile}; autoStart: true; uiLoading: no; uiScanning: no; uiError: no;`);
@@ -436,7 +457,7 @@ async function initMarker() {
 
     // Crear modelo
     const modelEntity = document.createElement('a-entity');
-    const modelPath = `models/${modelId}/${currentConfig.model.glb}`;
+    const modelPath = `models/${currentConfig.id}/${currentConfig.model.glb}`;
     console.log('📦 Cargando modelo desde:', modelPath);
 
     modelEntity.setAttribute('gltf-model', modelPath);
@@ -463,7 +484,7 @@ async function initMarker() {
 
     // Reproducir sonido si está configurado
     if (currentConfig.audio?.enabled) {
-        globalAudioInstance = new Audio(`models/${modelId}/${currentConfig.audio.file}`);
+        globalAudioInstance = new Audio(`models/${currentConfig.id}/${currentConfig.audio.file}`);
         globalAudioInstance.loop = true;
         globalAudioInstance.volume = 0.7;
         console.log('✓ Audio cargado:', currentConfig.audio.file);
@@ -478,8 +499,8 @@ async function initMarker() {
         document.getElementById('loading').style.display = 'none';
 
         // Desbloquear animal en el diario de campo
-        if (modelId) {
-            unlockAnimal(modelId);
+        if (currentConfig && currentConfig.id) {
+            unlockAnimal(currentConfig.id);
         }
 
         // Si el modelo está capturado, no mostrar el del marcador
@@ -557,7 +578,7 @@ async function continueMarkerSetup() {
 
     // Crear modelo
     const modelEntity = document.createElement('a-entity');
-    const modelPath = `models/${modelId}/${currentConfig.model.glb}`;
+    const modelPath = `models/${currentConfig.id}/${currentConfig.model.glb}`;
     console.log('📦 Cargando modelo desde:', modelPath);
 
     modelEntity.setAttribute('gltf-model', modelPath);
@@ -588,8 +609,8 @@ async function continueMarkerSetup() {
         document.getElementById('loading').style.display = 'none';
 
         // Desbloquear animal en el diario de campo
-        if (modelId) {
-            unlockAnimal(modelId);
+        if (currentConfig && currentConfig.id) {
+            unlockAnimal(currentConfig.id);
         }
 
         // Si el modelo está capturado, no mostrar el del marcador
@@ -1107,7 +1128,7 @@ function createCaptured3DModel() {
     } else {
         // Modelo 3D (GLB/GLTF)
         entity = document.createElement('a-entity');
-        const modelPath = `models/${modelId}/${currentConfig.model.glb}`;
+        const modelPath = `models/${currentConfig.id}/${currentConfig.model.glb}`;
         entity.setAttribute('gltf-model', modelPath);
 
         if (currentConfig.model.glb.includes('glb') || currentConfig.model.glb.includes('gltf')) {
@@ -1253,8 +1274,9 @@ window.capturePhoto = function() {
             id: Date.now(),
             data: dataURL,
             timestamp: new Date().toISOString(),
-            modelId: modelId,
-            modelName: currentConfig?.name || 'Desconocido'
+            modelId: currentConfig?.id || 'unknown',
+            modelName: currentConfig?.name || 'Desconocido',
+            qrCode: qrCode || null
         };
 
         capturedPhotos.unshift(photo);

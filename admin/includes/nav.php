@@ -12,7 +12,12 @@
                 </li>
                 <li>
                     <a href="animals.php" class="<?= $currentPage === 'animals' ? 'active' : '' ?>">
-                        🦁 Animales
+                        🦁 Animales/Figuras
+                    </a>
+                </li>
+                <li>
+                    <a href="variants.php" class="<?= $currentPage === 'variants' ? 'active' : '' ?>">
+                        🎨 Variantes
                     </a>
                 </li>
                 <li>
@@ -21,8 +26,13 @@
                     </a>
                 </li>
                 <li>
-                    <a href="places.php" class="<?= $currentPage === 'places' ? 'active' : '' ?>">
-                        📍 Lugares GPS
+                    <a href="locations.php" class="<?= $currentPage === 'locations' ? 'active' : '' ?>">
+                        🗺️ Lugares/Sectores
+                    </a>
+                </li>
+                <li>
+                    <a href="instances.php" class="<?= $currentPage === 'instances' ? 'active' : '' ?>">
+                        📦 Instancias
                     </a>
                 </li>
                 <li>
@@ -42,6 +52,12 @@
                     </a>
                 </li>
             </ul>
+
+            <div style="padding: 0 20px 15px;">
+                <a href="../" target="_blank" class="btn btn-secondary" style="width: 100%; text-align: center;">
+                    🌐 Ir al Portal
+                </a>
+            </div>
 
             <div class="sidebar-footer">
                 <div class="user-info">

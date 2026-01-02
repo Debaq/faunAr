@@ -9,6 +9,27 @@ function send_json_error($message, $code = 400) {
     exit();
 }
 
+function getDefaultCategory() {
+    $categoriesFile = __DIR__ . '/../../data/categories.json';
+    if (file_exists($categoriesFile)) {
+        $categories = json_decode(file_get_contents($categoriesFile), true);
+
+        // Filtrar habilitadas y ordenar
+        $enabledCategories = array_filter($categories, function($cat) {
+            return isset($cat['enabled']) && $cat['enabled'];
+        });
+
+        uasort($enabledCategories, function($a, $b) {
+            return ($a['order'] ?? 999) - ($b['order'] ?? 999);
+        });
+
+        // Retornar la primera categoría o 'fauna' por defecto
+        return !empty($enabledCategories) ? array_key_first($enabledCategories) : 'fauna';
+    }
+
+    return 'fauna';
+}
+
 function handle_file_upload($file_key, $animal_id, &$config, $config_path) {
     if (isset($_FILES[$file_key]) && $_FILES[$file_key]['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES[$file_key];
@@ -77,6 +98,7 @@ if (!file_exists($config_path)) {
 $config = json_decode(file_get_contents($config_path), true);
 
 // 1. Update config from POST data
+$config['category'] = $_POST['category'] ?? $config['category'] ?? getDefaultCategory();
 $config['name'] = $_POST['name'] ?? $config['name'];
 $config['scientificName'] = $_POST['scientificName'] ?? $config['scientificName'];
 $config['description'] = $_POST['description'] ?? $config['description'];

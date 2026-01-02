@@ -1,0 +1,24 @@
+{
+  "instances": [
+    {
+      "id": "instance-ejemplo-001",
+      "qrCode": "QR_EJ_001",
+      "animalId": "pudu",
+      "placeId": "parque-ejemplo",
+      "variant": "default",
+      "gps": {
+        "latitude": -41.001,
+        "longitude": -71.001,
+        "radius": 50
+      },
+      "marker": {
+        "file": "pudu.mind"
+      },
+      "enabled": true,
+      "metadata": {
+        "notes": "Instancia de ejemplo",
+        "created": "2025-01-15"
+      }
+    }
+  ]
+}

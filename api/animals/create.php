@@ -9,6 +9,27 @@ function send_json_error($message, $code = 400) {
     exit();
 }
 
+function getDefaultCategory() {
+    $categoriesFile = __DIR__ . '/../../data/categories.json';
+    if (file_exists($categoriesFile)) {
+        $categories = json_decode(file_get_contents($categoriesFile), true);
+
+        // Filtrar habilitadas y ordenar
+        $enabledCategories = array_filter($categories, function($cat) {
+            return isset($cat['enabled']) && $cat['enabled'];
+        });
+
+        uasort($enabledCategories, function($a, $b) {
+            return ($a['order'] ?? 999) - ($b['order'] ?? 999);
+        });
+
+        // Retornar la primera categoría o 'fauna' por defecto
+        return !empty($enabledCategories) ? array_key_first($enabledCategories) : 'fauna';
+    }
+
+    return 'fauna';
+}
+
 function handle_file_upload($file_key, $animal_id, &$config) {
     if (isset($_FILES[$file_key]) && $_FILES[$file_key]['error'] === UPLOAD_ERR_OK) {
         $file = $_FILES[$file_key];
@@ -91,6 +112,7 @@ if (!mkdir($model_path, 0755, true)) {
 // 2. Build initial config from POST
 $config = [
     'id' => $id,
+    'category' => $_POST['category'] ?? getDefaultCategory(),
     'name' => $name,
     'scientificName' => $_POST['scientificName'] ?? '',
     'description' => $_POST['description'] ?? '',

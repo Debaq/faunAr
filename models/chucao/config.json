@@ -1,5 +1,6 @@
 {
   "id": "chucao",
+  "category": "fauna",
   "name": "Chucao",
   "scientificName": "Scelorchilus rubecula",
   "description": "El chucao es un ave endémica de los bosques templados del sur de Chile y Argentina. Es conocido por su canto melodioso y su plumaje rojizo.",
@@ -33,5 +34,6 @@
     "diet": "Insectívoro",
     "status": "Preocupación menor",
     "wikipedia": "https://es.wikipedia.org/wiki/Scelorchilus_rubecula"
-  }
+  },
+  "image": "imagen_chucao.png"
 }
