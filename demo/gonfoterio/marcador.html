@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Gonfoterio — Marcador</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meshoptimizer@0.18.1/meshopt_decoder.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
+<script>
+  (function () {
+    var OrigGLTFLoader = THREE.GLTFLoader;
+    THREE.GLTFLoader = function (manager) {
+      var loader = new OrigGLTFLoader(manager);
+      loader.setMeshoptDecoder(MeshoptDecoder);
+      return loader;
+    };
+    THREE.GLTFLoader.prototype = OrigGLTFLoader.prototype;
+  })();
+</script>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+
+  a#volver {
+    position: fixed;
+    top: 12px; left: 12px;
+    z-index: 1000;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: sans-serif;
+  }
+
+  #ayuda {
+    position: fixed;
+    bottom: 16px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 12px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 280px;
+    transition: opacity 0.15s ease;
+  }
+  #ayuda.oculto { opacity: 0; pointer-events: none; }
+
+  #gonfoterioInfo {
+    position: fixed;
+    z-index: 999;
+    bottom: 16px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 10px 14px;
+    border-radius: 8px;
+    max-width: 280px;
+    text-align: left;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  #gonfoterioInfo.visible { opacity: 1; }
+  #gonfoterioInfo strong { color: #ffcf6b; }
+
+  a#btnHuellas {
+    position: fixed;
+    top: 12px; right: 12px;
+    z-index: 1000;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: sans-serif;
+    border: none;
+  }
+
+  #modalHuellas {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #modalHuellas[hidden] { display: none; }
+
+  #modalHuellas .tarjeta {
+    background: #1c1c1c;
+    color: #fff;
+    font-family: sans-serif;
+    border-radius: 12px;
+    max-width: 420px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 16px;
+    position: relative;
+  }
+  #modalHuellas img {
+    width: 100%;
+    border-radius: 8px;
+    display: block;
+    margin-bottom: 12px;
+  }
+  #modalHuellas .tituloFila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  #modalHuellas h3 {
+    margin: 0;
+    color: #ffcf6b;
+    font-size: 17px;
+  }
+  #modalHuellas p {
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 0 0 10px;
+  }
+  #cerrarModal {
+    position: absolute;
+    top: 10px; right: 10px;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 28px; height: 28px;
+    font-size: 14px;
+    line-height: 28px;
+    text-align: center;
+    padding: 0;
+  }
+  #btnAudio {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: #4a8;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-family: sans-serif;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  #devToggle {
+    position: fixed;
+    bottom: 12px; right: 12px;
+    z-index: 1001;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    color: #fff;
+    border: none;
+    font-size: 13px;
+    line-height: 26px;
+    text-align: center;
+    padding: 0;
+    opacity: 0.5;
+  }
+
+  #panelDev {
+    position: fixed;
+    top: 12px; right: 12px;
+    z-index: 1000;
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    font-family: monospace;
+    font-size: 11px;
+    padding: 10px;
+    border-radius: 8px;
+    width: 200px;
+  }
+  #panelDev[hidden] { display: none; }
+  #panelDev h4 { margin: 0 0 6px; font-size: 11px; color: #9f9; }
+  #panelDev label { display: block; margin-top: 6px; }
+  #panelDev input[type=range] { width: 100%; }
+  #panelDev pre {
+    white-space: pre-wrap;
+    background: rgba(255,255,255,0.08);
+    padding: 6px;
+    border-radius: 4px;
+    margin-top: 8px;
+    font-size: 10px;
+  }
+</style>
+</head>
+<body style="margin:0; overflow: hidden;">
+
+<a id="volver" href="./">← Volver</a>
+<div id="ayuda">Apunta la cámara al marcador</div>
+
+<div id="gonfoterioInfo">
+  <strong>Gonfoterio</strong><br>
+  Pariente sudamericano de los elefantes. Medía cerca de 3 metros y pesaba varias toneladas. Recorrió los bosques del sur de Chile durante la Edad de Hielo y se extinguió hace unos 10 mil años. Aquí, en Puerto Montt, dejó sus huellas.
+</div>
+
+<a id="btnHuellas" href="#">Huellas Pelluhuín</a>
+
+<div id="modalHuellas" hidden>
+  <div class="tarjeta">
+    <button id="cerrarModal" title="Cerrar">✕</button>
+    <img src="./imagen_pisadas.jpeg" alt="Huellas de gonfoterio en Pelluco">
+    <div class="tituloFila">
+      <h3>El paso del gigante</h3>
+      <button id="btnAudio">▶ Escuchar</button>
+    </div>
+    <p>Hace unos cincuenta mil años, donde hoy rompe el mar frente a Puerto Montt, no había playa. Había un bosque.</p>
+    <p>Alerces, cipreses y coihues crecían junto a la orilla de un antiguo lago, durante un respiro cálido en plena Edad de Hielo. Y por ese barro blando caminó un gigante: el gonfoterio, pariente sudamericano de los elefantes, con sus colmillos curvos y su andar lento.</p>
+    <p>Cada pisada quedó marcada en el lodo. El barro se secó, el glaciar avanzó, el paisaje cambió por completo… y las huellas siguieron ahí, esperando.</p>
+    <p>Recién en 2015, en el sector de Punta Pelluco, el antropólogo Ricardo Álvarez notó unas oquedades extrañas en la playa. Junto a la paleontóloga Karen Moreno, de la Universidad Austral de Chile, comenzó una investigación que terminaría cambiando la historia de la megafauna en el país. Eran huellas de gonfoterios y de guanacos, con al menos 44.300 años de antigüedad: el registro más antiguo de estos animales en Chile.</p>
+    <p>Hoy ese suelo es un Santuario de la Naturaleza. Y sobre él todavía se puede caminar, con cuidado, siguiendo los pasos de un animal que se extinguió mucho antes de que existiera la palabra "Chile".</p>
+    <audio id="audioHuellas" src="./audio.mp3" preload="none"></audio>
+  </div>
+</div>
+
+<button id="devToggle" title="Herramientas dev">⚙</button>
+<div id="panelDev" hidden>
+  <h4>Calibración (dev)</h4>
+  <label>Rot X <span id="vRotX">0</span>°
+    <input type="range" id="rotX" min="-180" max="180" step="1" value="0"></label>
+  <label>Rot Y <span id="vRotY">0</span>°
+    <input type="range" id="rotY" min="-180" max="180" step="1" value="0"></label>
+  <label>Rot Z <span id="vRotZ">0</span>°
+    <input type="range" id="rotZ" min="-180" max="180" step="1" value="0"></label>
+  <label>Offset X <span id="vOffX">0</span>
+    <input type="range" id="offX" min="-2" max="2" step="0.05" value="0"></label>
+  <label>Offset Y <span id="vOffY">0</span>
+    <input type="range" id="offY" min="-2" max="2" step="0.05" value="0"></label>
+  <label>Offset Z <span id="vOffZ">0</span>
+    <input type="range" id="offZ" min="-2" max="2" step="0.05" value="0"></label>
+  <label>Escala x<span id="vScaleMult">1</span>
+    <input type="range" id="scaleMult" min="0.1" max="5" step="0.05" value="1"></label>
+  <label>Luz ambiente <span id="vLuzAmbiente">0.3</span>
+    <input type="range" id="luzAmbiente" min="0" max="3" step="0.1" value="0.3"></label>
+  <label>Luz directa <span id="vLuzDirecta">2.5</span>
+    <input type="range" id="luzDirecta" min="0" max="6" step="0.1" value="2.5"></label>
+  <label>Exposición <span id="vExposicion">1.68</span>
+    <input type="range" id="exposicion" min="0" max="4" step="0.05" value="1.68"></label>
+  <pre id="valoresDev"></pre>
+  <pre id="debugTarget"></pre>
+</div>
+
+<a-scene
+  embedded
+  arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; sourceWidth: 1280; sourceHeight: 720; canvasWidth: 1280; canvasHeight: 720;"
+  color-space="sRGB"
+  renderer="colorManagement: true, physicallyCorrectLights: true, toneMapping: linear, exposure: 1.68"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false">
+
+  <a-assets>
+    <a-asset-item id="gonfoterioModel" src="./mamut_walkcycle_color.draco.glb"></a-asset-item>
+  </a-assets>
+
+  <a-entity id="luzAmbienteEntity" light="type: ambient; color: #fff; intensity: 0.3"></a-entity>
+  <a-entity id="luzDirectaEntity" light="type: directional; color: #fff; intensity: 2.5" position="0.5 1 1"></a-entity>
+
+  <a-marker
+    id="gonfoterioTarget"
+    type="pattern"
+    url="./pattern-rect1.patt"
+    smooth="true"
+    smooth-count="10"
+    smooth-tolerance="0.01"
+    smooth-threshold="5">
+    <a-entity
+      id="gonfoterioModelEntity"
+      gltf-model="#gonfoterioModel"
+      animation-mixer="clip: metarigAction; loop: repeat; timeScale: 0.5"
+      rotation="12 -25 0"
+      position="-0.55 -0.50 -1.05"
+      scale="1.3 1.3 1.3"
+    ></a-entity>
+  </a-marker>
+
+  <a-entity camera></a-entity>
+</a-scene>
+
+<script>
+(function () {
+  // Base tal como estaba fijo en el HTML antes del panel dev.
+  var BASE_ROT = { x: 12, y: -25, z: 0 };
+  var BASE_POS = { x: -0.55, y: -0.50, z: -1.05 };
+  var BASE_SCALE = 1.3;
+
+  var ROT_OFFSET = { x: 0, y: 0, z: 0 };
+  var POS_OFFSET = { x: 0, y: 0, z: 0 };
+  var SCALE_MULT = 1;
+
+  var LUZ_AMBIENTE = 0.3;
+  var LUZ_DIRECTA = 2.5;
+  var EXPOSICION = 1.68;
+
+  var targetFound = false;
+  var lastEventTime = null;
+
+  function applyTransform() {
+    var model = document.getElementById('gonfoterioModelEntity');
+    if (!model || !model.object3D) return;
+    model.object3D.rotation.set(
+      THREE.MathUtils.degToRad(BASE_ROT.x + ROT_OFFSET.x),
+      THREE.MathUtils.degToRad(BASE_ROT.y + ROT_OFFSET.y),
+      THREE.MathUtils.degToRad(BASE_ROT.z + ROT_OFFSET.z)
+    );
+    model.object3D.position.set(
+      BASE_POS.x + POS_OFFSET.x,
+      BASE_POS.y + POS_OFFSET.y,
+      BASE_POS.z + POS_OFFSET.z
+    );
+    var scale = BASE_SCALE * SCALE_MULT;
+    model.object3D.scale.set(scale, scale, scale);
+    updateValoresDev();
+  }
+
+  function setSlider(id, value) {
+    var input = document.getElementById(id);
+    var label = document.getElementById('v' + id.charAt(0).toUpperCase() + id.slice(1));
+    if (input) input.value = value;
+    if (label) label.textContent = value;
+  }
+
+  function setupDevPanel() {
+    var toggle = document.getElementById('devToggle');
+    var panel = document.getElementById('panelDev');
+    toggle.addEventListener('click', function () {
+      panel.hidden = !panel.hidden;
+    });
+
+    var rotKeys = { rotX: 'x', rotY: 'y', rotZ: 'z' };
+    var posKeys = { offX: 'x', offY: 'y', offZ: 'z' };
+    Object.keys(rotKeys).forEach(function (id) {
+      document.getElementById(id).addEventListener('input', function () {
+        ROT_OFFSET[rotKeys[id]] = parseFloat(this.value);
+        document.getElementById('v' + id.charAt(0).toUpperCase() + id.slice(1)).textContent = this.value;
+        applyTransform();
+      });
+    });
+    Object.keys(posKeys).forEach(function (id) {
+      document.getElementById(id).addEventListener('input', function () {
+        POS_OFFSET[posKeys[id]] = parseFloat(this.value);
+        document.getElementById('v' + id.charAt(0).toUpperCase() + id.slice(1)).textContent = this.value;
+        applyTransform();
+      });
+    });
+    document.getElementById('scaleMult').addEventListener('input', function () {
+      SCALE_MULT = parseFloat(this.value);
+      document.getElementById('vScaleMult').textContent = this.value;
+      applyTransform();
+    });
+
+    document.getElementById('luzAmbiente').addEventListener('input', function () {
+      LUZ_AMBIENTE = parseFloat(this.value);
+      document.getElementById('vLuzAmbiente').textContent = this.value;
+      applyLuces();
+    });
+    document.getElementById('luzDirecta').addEventListener('input', function () {
+      LUZ_DIRECTA = parseFloat(this.value);
+      document.getElementById('vLuzDirecta').textContent = this.value;
+      applyLuces();
+    });
+    document.getElementById('exposicion').addEventListener('input', function () {
+      EXPOSICION = parseFloat(this.value);
+      document.getElementById('vExposicion').textContent = this.value;
+      applyLuces();
+    });
+
+    setSlider('rotX', ROT_OFFSET.x);
+    setSlider('rotY', ROT_OFFSET.y);
+    setSlider('rotZ', ROT_OFFSET.z);
+    setSlider('offX', POS_OFFSET.x);
+    setSlider('offY', POS_OFFSET.y);
+    setSlider('offZ', POS_OFFSET.z);
+    setSlider('scaleMult', SCALE_MULT);
+    setSlider('luzAmbiente', LUZ_AMBIENTE);
+    setSlider('luzDirecta', LUZ_DIRECTA);
+    setSlider('exposicion', EXPOSICION);
+  }
+
+  function applyLuces() {
+    var ambiente = document.getElementById('luzAmbienteEntity');
+    var directa = document.getElementById('luzDirectaEntity');
+    if (ambiente) ambiente.setAttribute('light', 'intensity', LUZ_AMBIENTE);
+    if (directa) directa.setAttribute('light', 'intensity', LUZ_DIRECTA);
+    var scene = document.querySelector('a-scene');
+    if (scene && scene.renderer) scene.renderer.toneMappingExposure = EXPOSICION;
+    updateValoresDev();
+  }
+
+  function updateValoresDev() {
+    var el = document.getElementById('valoresDev');
+    if (!el) return;
+    el.textContent =
+      'ROT final: {x:' + (BASE_ROT.x + ROT_OFFSET.x) + ', y:' + (BASE_ROT.y + ROT_OFFSET.y) + ', z:' + (BASE_ROT.z + ROT_OFFSET.z) + '}\n' +
+      'POS final: {x:' + (BASE_POS.x + POS_OFFSET.x).toFixed(2) + ', y:' + (BASE_POS.y + POS_OFFSET.y).toFixed(2) + ', z:' + (BASE_POS.z + POS_OFFSET.z).toFixed(2) + '}\n' +
+      'SCALE final: ' + (BASE_SCALE * SCALE_MULT).toFixed(2) + '\n' +
+      'Luz ambiente: ' + LUZ_AMBIENTE.toFixed(2) + '\n' +
+      'Luz directa: ' + LUZ_DIRECTA.toFixed(2) + '\n' +
+      'Exposición: ' + EXPOSICION.toFixed(2);
+  }
+
+  function updateDebugTarget() {
+    var el = document.getElementById('debugTarget');
+    if (!el) return;
+    var model = document.getElementById('gonfoterioModelEntity');
+    var childCount = (model && model.object3D) ? model.object3D.children.length : '-';
+    el.textContent =
+      'targetFound: ' + targetFound + '\n' +
+      'ultimo evento: ' + (lastEventTime ? Math.round(performance.now() - lastEventTime) + 'ms' : '-') + '\n' +
+      'modelChildren: ' + childCount;
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var target = document.getElementById('gonfoterioTarget');
+    var ayuda = document.getElementById('ayuda');
+    var info = document.getElementById('gonfoterioInfo');
+    target.addEventListener('markerFound', function () {
+      targetFound = true;
+      lastEventTime = performance.now();
+      if (ayuda) ayuda.classList.add('oculto');
+      if (info) info.classList.add('visible');
+      updateDebugTarget();
+    });
+    target.addEventListener('markerLost', function () {
+      targetFound = false;
+      lastEventTime = performance.now();
+      if (ayuda) ayuda.classList.remove('oculto');
+      if (info) info.classList.remove('visible');
+      updateDebugTarget();
+    });
+
+    setupDevPanel();
+    setupModalHuellas();
+    applyTransform();
+    applyLuces();
+    fixAndroidZoom();
+    setInterval(updateDebugTarget, 300);
+  });
+
+  // Bug conocido de Chrome Android: en celulares con multi-lente la cámara
+  // arranca con zoom digital > 1 por defecto, aunque no se pidió zoom.
+  // Forzamos zoom: 1 en el track apenas el video de AR.js está listo.
+  function fixAndroidZoom() {
+    var intentos = 0;
+    var maxIntentos = 40; // ~10s a 250ms
+    var timer = setInterval(function () {
+      intentos++;
+      var video = document.querySelector('video');
+      var stream = video && video.srcObject;
+      var track = stream && stream.getVideoTracks && stream.getVideoTracks()[0];
+      if (track) {
+        clearInterval(timer);
+        try {
+          var capabilities = track.getCapabilities ? track.getCapabilities() : {};
+          if (capabilities.zoom) {
+            var zoomMin = capabilities.zoom.min || 1;
+            track.applyConstraints({ advanced: [{ zoom: zoomMin }] }).catch(function () {});
+          }
+        } catch (e) {
+          // Si el navegador no soporta control de zoom, no hacemos nada.
+        }
+      } else if (intentos >= maxIntentos) {
+        clearInterval(timer);
+      }
+    }, 250);
+  }
+
+  function setupModalHuellas() {
+    var btnAbrir = document.getElementById('btnHuellas');
+    var modal = document.getElementById('modalHuellas');
+    var btnCerrar = document.getElementById('cerrarModal');
+    var btnAudio = document.getElementById('btnAudio');
+    var audio = document.getElementById('audioHuellas');
+
+    function abrir(e) {
+      e.preventDefault();
+      modal.hidden = false;
+    }
+    function cerrar() {
+      modal.hidden = true;
+      audio.pause();
+      audio.currentTime = 0;
+      btnAudio.textContent = '▶ Escuchar';
+    }
+    function toggleAudio() {
+      if (audio.paused) {
+        audio.play();
+        btnAudio.textContent = '⏸ Pausar';
+      } else {
+        audio.pause();
+        btnAudio.textContent = '▶ Escuchar';
+      }
+    }
+
+    btnAbrir.addEventListener('click', abrir);
+    btnCerrar.addEventListener('click', cerrar);
+    btnAudio.addEventListener('click', toggleAudio);
+    audio.addEventListener('ended', function () {
+      btnAudio.textContent = '▶ Escuchar';
+    });
+  }
+})();
+</script>
+
+</body>
+</html>

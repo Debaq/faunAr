@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/meshoptimizer@0.18.1/meshopt_decoder.js"></script>
+    <script>
+      (function () {
+        var OrigGLTFLoader = THREE.GLTFLoader;
+        THREE.GLTFLoader = function (manager) {
+          var loader = new OrigGLTFLoader(manager);
+          loader.setMeshoptDecoder(MeshoptDecoder);
+          return loader;
+        };
+        THREE.GLTFLoader.prototype = OrigGLTFLoader.prototype;
+      })();
+    </script>
+    <style>
+      html, body { margin: 0; padding: 0; height: 100%; }
+
+      a#volver {
+        position: fixed;
+        top: 12px; left: 12px;
+        z-index: 1000;
+        background: rgba(0,0,0,0.5);
+        color: #fff;
+        text-decoration: none;
+        font-size: 13px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-family: sans-serif;
+      }
+
+      #devToggle {
+        position: fixed;
+        bottom: 12px; right: 12px;
+        z-index: 1001;
+        width: 26px; height: 26px;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.4);
+        color: #fff;
+        border: none;
+        font-size: 13px;
+        line-height: 26px;
+        text-align: center;
+        padding: 0;
+        opacity: 0.5;
+      }
+
+      #panelDev {
+        position: fixed;
+        top: 12px; right: 12px;
+        z-index: 1000;
+        background: rgba(0,0,0,0.75);
+        color: #fff;
+        font-family: monospace;
+        font-size: 11px;
+        padding: 10px;
+        border-radius: 8px;
+        width: 200px;
+      }
+      #panelDev[hidden] { display: none; }
+      #panelDev h4 { margin: 0 0 6px; font-size: 11px; color: #9f9; }
+      #panelDev label { display: block; margin-top: 6px; }
+      #panelDev input[type=range] { width: 100%; }
+      #panelDev pre {
+        white-space: pre-wrap;
+        background: rgba(255,255,255,0.08);
+        padding: 6px;
+        border-radius: 4px;
+        margin-top: 8px;
+        font-size: 10px;
+      }
+
+      #chileInfo {
+        position: fixed;
+        z-index: 999;
+        bottom: 16px; left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0,0,0,0.75);
+        color: #fff;
+        font-family: sans-serif;
+        font-size: 12px;
+        line-height: 1.4;
+        padding: 10px 14px;
+        border-radius: 8px;
+        max-width: 280px;
+        text-align: left;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s ease;
+      }
+      #chileInfo.visible { opacity: 1; }
+      #chileInfo strong { color: #ffcf6b; }
+
+      #ayuda {
+        position: fixed;
+        bottom: 16px; left: 50%;
+        transform: translateX(-50%);
+        z-index: 999;
+        background: rgba(0,0,0,0.6);
+        color: #fff;
+        font-family: sans-serif;
+        font-size: 12px;
+        padding: 8px 14px;
+        border-radius: 8px;
+        text-align: center;
+        max-width: 280px;
+        transition: opacity 0.15s ease;
+      }
+      #ayuda.oculto { opacity: 0; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <a id="volver" href="../">← Volver</a>
+
+    <div id="ayuda">Apunta la cámara a la imagen para escanearla</div>
+
+    <div id="chileInfo">
+      <strong>Chilesaurio</strong> (Chilesaurus diegosuarezi)<br>
+      Dinosaurio herbívoro descubierto en 2004 en la región de Aysén, Patagonia chilena, y descrito científicamente en 2015. Su nombre honra a Diego Suárez, quien lo halló siendo niño.<br>
+      <strong>Artista:</strong> Mauricio Álvarez.
+    </div>
+
+    <button id="devToggle" title="Herramientas dev">⚙</button>
+    <div id="panelDev" hidden>
+      <h4>Calibración (dev)</h4>
+      <label>Rot X <span id="vRotX">0</span>°
+        <input type="range" id="rotX" min="-180" max="180" step="1" value="0"></label>
+      <label>Rot Y <span id="vRotY">0</span>°
+        <input type="range" id="rotY" min="-180" max="180" step="1" value="0"></label>
+      <label>Rot Z <span id="vRotZ">0</span>°
+        <input type="range" id="rotZ" min="-180" max="180" step="1" value="0"></label>
+      <label>Offset X <span id="vOffX">0</span>
+        <input type="range" id="offX" min="-2" max="2" step="0.05" value="0"></label>
+      <label>Offset Y <span id="vOffY">0</span>
+        <input type="range" id="offY" min="-2" max="2" step="0.05" value="0"></label>
+      <label>Offset Z <span id="vOffZ">0</span>
+        <input type="range" id="offZ" min="-2" max="2" step="0.05" value="0"></label>
+      <label>Escala x<span id="vScaleMult">1</span>
+        <input type="range" id="scaleMult" min="0.1" max="5" step="0.05" value="1"></label>
+      <pre id="valoresDev"></pre>
+      <pre id="debugTarget"></pre>
+    </div>
+
+    <a-scene
+      mindar-image="imageTargetSrc: ./assets/targets.mind;"
+      color-space="sRGB"
+      renderer="colorManagement: true, physicallyCorrectLights"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false">
+
+      <a-assets>
+        <a-asset-item id="avatarModel" src="./assets/modelo.draco.glb"></a-asset-item>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <a-entity id="chileTarget" mindar-image-target="targetIndex: 0">
+        <a-entity
+          id="chileModel"
+          gltf-model="#avatarModel"
+          rotation="0 0 0"
+          position="0 -1 0"
+          scale="1.7 1.7 1.7"
+        >
+        </a-entity>
+      </a-entity>
+    </a-scene>
+
+    <script>
+    (function () {
+      // Base tal como estaba fijo en el HTML antes del panel dev.
+      var BASE_ROT = { x: 0, y: 0, z: 0 };
+      var BASE_POS = { x: 0, y: -1, z: 0 };
+      var BASE_SCALE = 1.7;
+
+      var ROT_OFFSET = { x: 0, y: 0, z: 0 };
+      var POS_OFFSET = { x: 0, y: 0, z: 0 };
+      var SCALE_MULT = 1;
+
+      var targetFound = false;
+      var lastEventTime = null;
+
+      function applyTransform() {
+        var model = document.getElementById('chileModel');
+        if (!model || !model.object3D) return;
+        model.object3D.rotation.set(
+          THREE.MathUtils.degToRad(BASE_ROT.x + ROT_OFFSET.x),
+          THREE.MathUtils.degToRad(BASE_ROT.y + ROT_OFFSET.y),
+          THREE.MathUtils.degToRad(BASE_ROT.z + ROT_OFFSET.z)
+        );
+        model.object3D.position.set(
+          BASE_POS.x + POS_OFFSET.x,
+          BASE_POS.y + POS_OFFSET.y,
+          BASE_POS.z + POS_OFFSET.z
+        );
+        var scale = BASE_SCALE * SCALE_MULT;
+        model.object3D.scale.set(scale, scale, scale);
+        updateValoresDev();
+      }
+
+      function setSlider(id, value) {
+        var input = document.getElementById(id);
+        var label = document.getElementById('v' + id.charAt(0).toUpperCase() + id.slice(1));
+        if (input) input.value = value;
+        if (label) label.textContent = value;
+      }
+
+      function setupDevPanel() {
+        var toggle = document.getElementById('devToggle');
+        var panel = document.getElementById('panelDev');
+        toggle.addEventListener('click', function () {
+          panel.hidden = !panel.hidden;
+        });
+
+        var rotKeys = { rotX: 'x', rotY: 'y', rotZ: 'z' };
+        var posKeys = { offX: 'x', offY: 'y', offZ: 'z' };
+        Object.keys(rotKeys).forEach(function (id) {
+          document.getElementById(id).addEventListener('input', function () {
+            ROT_OFFSET[rotKeys[id]] = parseFloat(this.value);
+            document.getElementById('v' + id.charAt(0).toUpperCase() + id.slice(1)).textContent = this.value;
+            applyTransform();
+          });
+        });
+        Object.keys(posKeys).forEach(function (id) {
+          document.getElementById(id).addEventListener('input', function () {
+            POS_OFFSET[posKeys[id]] = parseFloat(this.value);
+            document.getElementById('v' + id.charAt(0).toUpperCase() + id.slice(1)).textContent = this.value;
+            applyTransform();
+          });
+        });
+        document.getElementById('scaleMult').addEventListener('input', function () {
+          SCALE_MULT = parseFloat(this.value);
+          document.getElementById('vScaleMult').textContent = this.value;
+          applyTransform();
+        });
+
+        setSlider('rotX', ROT_OFFSET.x);
+        setSlider('rotY', ROT_OFFSET.y);
+        setSlider('rotZ', ROT_OFFSET.z);
+        setSlider('offX', POS_OFFSET.x);
+        setSlider('offY', POS_OFFSET.y);
+        setSlider('offZ', POS_OFFSET.z);
+        setSlider('scaleMult', SCALE_MULT);
+      }
+
+      function updateValoresDev() {
+        var el = document.getElementById('valoresDev');
+        if (!el) return;
+        el.textContent =
+          'ROT final: {x:' + (BASE_ROT.x + ROT_OFFSET.x) + ', y:' + (BASE_ROT.y + ROT_OFFSET.y) + ', z:' + (BASE_ROT.z + ROT_OFFSET.z) + '}\n' +
+          'POS final: {x:' + (BASE_POS.x + POS_OFFSET.x).toFixed(2) + ', y:' + (BASE_POS.y + POS_OFFSET.y).toFixed(2) + ', z:' + (BASE_POS.z + POS_OFFSET.z).toFixed(2) + '}\n' +
+          'SCALE final: ' + (BASE_SCALE * SCALE_MULT).toFixed(2);
+      }
+
+      function updateDebugTarget() {
+        var el = document.getElementById('debugTarget');
+        if (!el) return;
+        var model = document.getElementById('chileModel');
+        var childCount = (model && model.object3D) ? model.object3D.children.length : '-';
+        el.textContent =
+          'targetFound: ' + targetFound + '\n' +
+          'ultimo evento: ' + (lastEventTime ? Math.round(performance.now() - lastEventTime) + 'ms' : '-') + '\n' +
+          'modelChildren: ' + childCount;
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        var target = document.getElementById('chileTarget');
+        var info = document.getElementById('chileInfo');
+        var ayuda = document.getElementById('ayuda');
+        target.addEventListener('targetFound', function () {
+          targetFound = true;
+          lastEventTime = performance.now();
+          if (info) info.classList.add('visible');
+          if (ayuda) ayuda.classList.add('oculto');
+          updateDebugTarget();
+        });
+        target.addEventListener('targetLost', function () {
+          targetFound = false;
+          lastEventTime = performance.now();
+          if (info) info.classList.remove('visible');
+          if (ayuda) ayuda.classList.remove('oculto');
+          updateDebugTarget();
+        });
+
+        setupDevPanel();
+        applyTransform();
+        setInterval(updateDebugTarget, 300);
+      });
+    })();
+    </script>
+  </body>
+</html>

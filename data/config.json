@@ -1,23 +1,32 @@
 {
-  "site": {
-    "title": "FaunAR",
-    "description": "Portal de Realidad Aumentada de Fauna Nativa de Chile",
-    "baseUrl": "http://localhost",
-    "defaultLanguage": "es",
-    "availableLanguages": ["es", "en"]
-  },
-  "ar": {
-    "defaultMode": "marker",
-    "gpsRadius": 50,
-    "modelScale": "1 1 1"
-  },
-  "media": {
-    "maxUploadSize": {
-      "glb": 52428800,
-      "usdz": 104857600,
-      "audio": 10485760,
-      "image": 2097152,
-      "mind": 5242880
+    "site": {
+        "title": "FaunAR",
+        "description": "Portal de Realidad Aumentada de Fauna Nativa de Chile",
+        "baseUrl": "https:\/\/tmeduca.org\/faunA",
+        "defaultLanguage": "es",
+        "availableLanguages": [
+            "es",
+            "en"
+        ],
+        "footer_text": "TecMedHub @ 2025"
+    },
+    "ar": {
+        "defaultMode": "marker",
+        "gpsRadius": 50,
+        "modelScale": "1 1 1"
+    },
+    "media": {
+        "maxUploadSize": {
+            "glb": 52428800,
+            "usdz": 104857600,
+            "audio": 10485760,
+            "image": 2097152,
+            "mind": 5242880
+        }
+    },
+    "theme": {
+        "primary_gradient_start": "#2d5016",
+        "primary_gradient_end": "#1a2f0a",
+        "accent_color": "#4caf50"
     }
-  }
 }

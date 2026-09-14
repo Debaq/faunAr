@@ -1,0 +1,40 @@
+{
+    "id": "cisne",
+    "name": "Cisne de cuello negro",
+    "scientificName": "Cygnus melancoryphus",
+    "description": "Inconfundible por su cuerpo blanco y cuello negro, esta ave acuática es un emblema de los humedales. Destaca por la carúncula roja en su pico y su costumbre de llevar a las crías en el lomo.",
+    "icon": "🦢",
+    "arMode": "hybrid",
+    "image": "imagen_cisne.png",
+    "thumbnail": "thumbnail.png",
+    "silhouette": "silueta_cisne.svg",
+    "gps": {
+        "enabled": true,
+        "latitude": -33.3986,
+        "longitude": -70.6053,
+        "radius": 50
+    },
+    "marker": {
+        "enabled": true,
+        "type": "mind",
+        "file": "cisne.mind"
+    },
+    "audio": {
+        "enabled": false,
+        "file": "sound.mp3"
+    },
+    "model": {
+        "glb": "cisne.glb",
+        "usdz": "cisne.usdz",
+        "scale": "0.5 0.5 0.5",
+        "position": "0 0 0",
+        "rotation": "0 0 0"
+    },
+    "info": {
+        "habitat": "Lagos, lagunas de agua dulce o salobre, humedales, desembocaduras de ríos y zonas costeras protegidas.",
+        "diet": "Mayormente herbívoro (algas y plantas acuáticas que alcanza sumergiendo el cuello), complementado con pequeños invertebrados e insectos.",
+        "status": "Preocupación menor",
+        "wikipedia": "https:\/\/es.wikipedia.org\/wiki\/Cygnus_melancoryphus"
+    },
+    "video_url": ""
+}

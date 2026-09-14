@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>El Nudo</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/meshoptimizer@0.18.1/meshopt_decoder.js"></script>
+<script>
+  if (window.MeshoptDecoder && window.THREE && THREE.GLTFLoader) {
+    var OriginalGLTFLoader = THREE.GLTFLoader;
+    THREE.GLTFLoader = class extends OriginalGLTFLoader {
+      constructor(manager) {
+        super(manager);
+        this.setMeshoptDecoder(MeshoptDecoder);
+      }
+    };
+  }
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+
+  a#volver {
+    position: fixed;
+    top: 12px; left: 12px;
+    z-index: 1000;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: sans-serif;
+  }
+
+  #ayuda {
+    position: fixed;
+    bottom: 16px; left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 12px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 280px;
+  }
+
+  #devToggle {
+    position: fixed;
+    bottom: 12px; right: 12px;
+    z-index: 1001;
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.4);
+    color: #fff;
+    border: none;
+    font-size: 13px;
+    line-height: 26px;
+    text-align: center;
+    padding: 0;
+    opacity: 0.5;
+  }
+
+  #panelDev {
+    position: fixed;
+    top: 12px; right: 12px;
+    z-index: 1000;
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    font-family: monospace;
+    font-size: 11px;
+    padding: 10px;
+    border-radius: 8px;
+    width: 200px;
+  }
+  #panelDev[hidden] { display: none; }
+  #panelDev h4 { margin: 0 0 6px; font-size: 11px; color: #9f9; }
+  #panelDev label { display: block; margin-top: 6px; }
+  #panelDev input[type=range] { width: 100%; }
+  #panelDev .modoBtns { display: flex; gap: 4px; }
+  #panelDev .modoBtns button {
+    flex: 1;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 4px;
+    font-size: 10px;
+    padding: 4px 2px;
+  }
+  #panelDev .modoBtns button.activo { background: #4a8; border-color: #4a8; }
+  #panelDev pre {
+    white-space: pre-wrap;
+    background: rgba(255,255,255,0.08);
+    padding: 6px;
+    border-radius: 4px;
+    margin-top: 8px;
+    font-size: 10px;
+  }
+
+  #nudoInfo {
+    position: fixed;
+    z-index: 999;
+    left: 0; top: 0;
+    transform: translate(-50%, -130%);
+    background: rgba(0,0,0,0.75);
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 12px;
+    line-height: 1.4;
+    padding: 10px 12px;
+    border-radius: 8px;
+    max-width: 240px;
+    text-align: left;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+  }
+  #nudoInfo.visible { opacity: 1; }
+  #nudoInfo strong { color: #ffcf6b; }
+</style>
+</head>
+<body style="margin:0; overflow: hidden;">
+
+<a id="volver" href="../">← Volver</a>
+<div id="ayuda">Muestra tu palma para sostener el nudo</div>
+
+<video id="camVideo" autoplay playsinline muted style="position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;background:#000;"></video>
+
+<button id="devToggle" title="Herramientas dev">⚙</button>
+<div id="panelDev" hidden>
+  <h4>Calibración (dev)</h4>
+  <div class="modoBtns">
+    <button id="modoMano" type="button">Con mano</button>
+    <button id="modoMarcador" type="button">Sin mano</button>
+  </div>
+  <label>Rot X <span id="vRotX">0</span>°
+    <input type="range" id="rotX" min="-180" max="180" step="1" value="0"></label>
+  <label>Rot Y <span id="vRotY">0</span>°
+    <input type="range" id="rotY" min="-180" max="180" step="1" value="0"></label>
+  <label>Rot Z <span id="vRotZ">0</span>°
+    <input type="range" id="rotZ" min="-180" max="180" step="1" value="0"></label>
+  <label>Offset X <span id="vOffX">0</span>
+    <input type="range" id="offX" min="-0.3" max="0.3" step="0.01" value="0"></label>
+  <label>Offset Y <span id="vOffY">0</span>
+    <input type="range" id="offY" min="-0.3" max="0.3" step="0.01" value="0"></label>
+  <label>Offset Z <span id="vOffZ">0</span>
+    <input type="range" id="offZ" min="-0.3" max="0.3" step="0.01" value="0"></label>
+  <label>Escala x<span id="vScaleMult">1</span>
+    <input type="range" id="scaleMult" min="0.1" max="5" step="0.05" value="1"></label>
+  <pre id="valoresDev"></pre>
+  <pre id="debugMano"></pre>
+</div>
+
+<div id="nudoInfo">
+  <strong>Nudo de Monte Verde</strong><br>
+  Uno de los vestigios de tecnología en cordelería más antiguos del mundo, con una antigüedad estimada en 14.500 años, hallado en el sitio arqueológico de Monte Verde, en la comuna de Puerto Montt.
+</div>
+
+<a-scene embedded color-space="sRGB" renderer="alpha: true; colorManagement: true; physicallyCorrectLights: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+
+  <a-assets>
+    <a-asset-item id="nudoModel" src="./NUDO.draco.glb"></a-asset-item>
+  </a-assets>
+
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+  <a-entity id="nudoMarker" position="0 0 -1">
+    <a-entity
+      gltf-model="#nudoModel"
+      scale="0.5 0.5 0.5"
+      animation="property: rotation; to: 0 360 0; loop: true; dur: 12000; easing: linear"
+    ></a-entity>
+  </a-entity>
+
+  <a-entity
+    id="nudoHand"
+    gltf-model="#nudoModel"
+    visible="false"
+  ></a-entity>
+</a-scene>
+
+<script>
+(function () {
+  // Ajustar tras probar en celular real (README pendiente #3).
+  var REF_HANDSPAN = 0.16;   // span normalizado wrist->mcp9 de referencia
+  var HAND_DEPTH_REF = 0.35; // profundidad cuando span == REF_HANDSPAN (referencia pa estimar depth dinámico)
+  var HAND_DEPTH_MIN = 0.15, HAND_DEPTH_MAX = 0.9; // límites del depth estimado, evita que se dispare con mano muy chica/grande
+  var HAND_TIMEOUT = 400;    // ms sin detección antes de volver al marcador
+  var SMOOTH = 0.35;         // suavizado exponencial de la palma
+  var BASE_SCALE = 0.5;      // escala del nudo cuando span == REF_HANDSPAN — ajustar mirando el resultado real (subido de 0.05, sospecha de que quedaba invisible)
+
+  // Calibrados a mano con el panel dev (sesión 2026-08-30) — cómo debe quedar posicionado/orientado en la palma.
+  var HAND_ROT_OFFSET = { x: 46, y: 22, z: 0 };
+  var HAND_POS_OFFSET = { x: -0.05, y: -0.02, z: -0.03 };
+  var HAND_SCALE_MULT = 0.2;
+
+  // Offset del nudo cuando NO hay mano detectada (encima de la base position 0 0 -1 / scale 0.5 del marcador).
+  var MARKER_ROT_OFFSET = { x: 43, y: 0, z: 0 };
+  var MARKER_POS_OFFSET = { x: 0, y: 0, z: 0 };
+  var MARKER_SCALE_MULT = 1;
+
+  var devMode = 'marker'; // 'hand' | 'marker' — a cuál set de offsets editan los sliders del panel dev
+
+  var smoothX = null, smoothY = null, smoothSpan = null, smoothHandQuat = null;
+  var lastHandTime = 0;
+  var handDetectCount = 0, handSendCount = 0, lastHandError = null;
+  var lastHandActive = false, lastHandPoint = null, lastHandScale = null, lastHandDepth = null;
+  var lastVec = null, lastCamPos = null, lastProjDet = null;
+
+  // Gesto de pinza (índice + pulgar) — ajustar PINCH_THRESHOLD en celular real.
+  var PINCH_THRESHOLD = 0.06;  // distancia normalizada thumb tip(4) <-> index tip(8)
+  var PINCH_TIMEOUT = 200;     // ms de gracia antes de ocultar el label al soltar
+  var smoothPinchX = null, smoothPinchY = null;
+  var lastPinchTime = 0;
+  var videoEl = null;
+
+  // Herramientas dev (botón ⚙, panel oculto por default) — quedan pa recalibrar en el futuro,
+  // editan ROT_OFFSET/POS_OFFSET/SCALE_MULT en vivo (mismas variables que usa frame()).
+  function activeOffsets() {
+    return devMode === 'hand'
+      ? { rot: HAND_ROT_OFFSET, pos: HAND_POS_OFFSET, getScale: function () { return HAND_SCALE_MULT; }, setScale: function (v) { HAND_SCALE_MULT = v; } }
+      : { rot: MARKER_ROT_OFFSET, pos: MARKER_POS_OFFSET, getScale: function () { return MARKER_SCALE_MULT; }, setScale: function (v) { MARKER_SCALE_MULT = v; } };
+  }
+
+  var sliderIds = ['rotX', 'rotY', 'rotZ', 'offX', 'offY', 'offZ', 'scaleMult'];
+
+  function refreshSlidersFromState() {
+    var o = activeOffsets();
+    setSlider('rotX', o.rot.x);
+    setSlider('rotY', o.rot.y);
+    setSlider('rotZ', o.rot.z);
+    setSlider('offX', o.pos.x);
+    setSlider('offY', o.pos.y);
+    setSlider('offZ', o.pos.z);
+    setSlider('scaleMult', o.getScale());
+  }
+  function setSlider(id, value) {
+    var input = document.getElementById(id);
+    var label = document.getElementById('v' + id.charAt(0).toUpperCase() + id.slice(1));
+    if (input) input.value = value;
+    if (label) label.textContent = value;
+  }
+
+  function setDevMode(mode) {
+    devMode = mode;
+    document.getElementById('modoMano').classList.toggle('activo', mode === 'hand');
+    document.getElementById('modoMarcador').classList.toggle('activo', mode === 'marker');
+    refreshSlidersFromState();
+    updateValoresDev();
+  }
+
+  function setupDevPanel() {
+    var toggle = document.getElementById('devToggle');
+    var panel = document.getElementById('panelDev');
+    toggle.addEventListener('click', function () {
+      panel.hidden = !panel.hidden;
+    });
+
+    document.getElementById('modoMano').addEventListener('click', function () { setDevMode('hand'); });
+    document.getElementById('modoMarcador').addEventListener('click', function () { setDevMode('marker'); });
+
+    var rotKeys = { rotX: 'x', rotY: 'y', rotZ: 'z' };
+    var posKeys = { offX: 'x', offY: 'y', offZ: 'z' };
+    Object.keys(rotKeys).forEach(function (id) {
+      document.getElementById(id).addEventListener('input', function () {
+        activeOffsets().rot[rotKeys[id]] = parseFloat(this.value);
+        document.getElementById('v' + id.charAt(0).toUpperCase() + id.slice(1)).textContent = this.value;
+        updateValoresDev();
+      });
+    });
+    Object.keys(posKeys).forEach(function (id) {
+      document.getElementById(id).addEventListener('input', function () {
+        activeOffsets().pos[posKeys[id]] = parseFloat(this.value);
+        document.getElementById('v' + id.charAt(0).toUpperCase() + id.slice(1)).textContent = this.value;
+        updateValoresDev();
+      });
+    });
+    document.getElementById('scaleMult').addEventListener('input', function () {
+      activeOffsets().setScale(parseFloat(this.value));
+      document.getElementById('vScaleMult').textContent = this.value;
+      updateValoresDev();
+    });
+
+    setDevMode(devMode);
+  }
+  function updateValoresDev() {
+    var el = document.getElementById('valoresDev');
+    if (!el) return;
+    el.textContent =
+      'modo: ' + (devMode === 'hand' ? 'con mano' : 'sin mano') + '\n' +
+      'HAND_ROT: {x:' + HAND_ROT_OFFSET.x + ', y:' + HAND_ROT_OFFSET.y + ', z:' + HAND_ROT_OFFSET.z + '}\n' +
+      'HAND_POS: {x:' + HAND_POS_OFFSET.x + ', y:' + HAND_POS_OFFSET.y + ', z:' + HAND_POS_OFFSET.z + '}\n' +
+      'HAND_SCALE_MULT: ' + HAND_SCALE_MULT + '\n' +
+      'MARKER_ROT: {x:' + MARKER_ROT_OFFSET.x + ', y:' + MARKER_ROT_OFFSET.y + ', z:' + MARKER_ROT_OFFSET.z + '}\n' +
+      'MARKER_POS: {x:' + MARKER_POS_OFFSET.x + ', y:' + MARKER_POS_OFFSET.y + ', z:' + MARKER_POS_OFFSET.z + '}\n' +
+      'MARKER_SCALE_MULT: ' + MARKER_SCALE_MULT;
+  }
+
+  function setupCamera() {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
+      .then(function (stream) {
+        var v = document.getElementById('camVideo');
+        v.srcObject = stream;
+      })
+      .catch(function (err) {
+        console.error('camera error:', err);
+      });
+  }
+
+  function waitForVideo(cb) {
+    var v = document.querySelector('video');
+    if (v && v.videoWidth > 0) return cb(v);
+    requestAnimationFrame(function () { waitForVideo(cb); });
+  }
+
+  function setupHands(video) {
+    videoEl = video;
+    var hands = new Hands({
+      locateFile: function (file) {
+        return 'https://cdn.jsdelivr.net/npm/@mediapipe/hands/' + file;
+      }
+    });
+    hands.setOptions({
+      maxNumHands: 1,
+      modelComplexity: 0,
+      minDetectionConfidence: 0.6,
+      minTrackingConfidence: 0.5
+    });
+    hands.onResults(onResults);
+
+    var processing = false;
+    (function loop() {
+      if (!processing) {
+        processing = true;
+        handSendCount++;
+        hands.send({ image: video }).catch(function (err) {
+          lastHandError = err && err.message ? err.message : String(err);
+          console.error('mediapipe hands error:', err);
+        }).finally(function () {
+          processing = false;
+        });
+      }
+      requestAnimationFrame(loop);
+    })();
+  }
+
+  function onResults(results) {
+    if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) return;
+    handDetectCount++;
+    var lm = results.multiHandLandmarks[0];
+    if (!lm || lm.length < 21) return;
+    var wrist = lm[0], idx = lm[5], mid = lm[9], ring = lm[13], pinky = lm[17];
+    if (!wrist || !idx || !mid || !ring || !pinky) return;
+
+    // Centroide en línea de nudillos (MCPs), sin muñeca — muñeca corrida hacia abajo desviaba el punto lejos de la palma.
+    var cx = (idx.x + mid.x + ring.x + pinky.x) / 4;
+    var cy = (idx.y + mid.y + ring.y + pinky.y) / 4;
+    var span = Math.hypot(mid.x - wrist.x, mid.y - wrist.y);
+
+    smoothX = smoothX === null ? cx : smoothX + (cx - smoothX) * SMOOTH;
+    smoothY = smoothY === null ? cy : smoothY + (cy - smoothY) * SMOOTH;
+    smoothSpan = smoothSpan === null ? span : smoothSpan + (span - smoothSpan) * SMOOTH;
+
+    // Orientación 3D de la palma a partir de landmarks (muñeca, mcp índice/meñique/medio).
+    // Landmarks mediapipe: x,y normalizados con y hacia abajo, z relativo a la muñeca (más chico = más cerca de cámara).
+    var wristV = new THREE.Vector3(wrist.x, -wrist.y, -wrist.z);
+    var midV = new THREE.Vector3(mid.x, -mid.y, -mid.z);
+    var idxMcpV = new THREE.Vector3(idx.x, -idx.y, -idx.z);
+    var pinkyV = new THREE.Vector3(pinky.x, -pinky.y, -pinky.z);
+
+    var up = midV.clone().sub(wristV).normalize();
+    var right = idxMcpV.clone().sub(pinkyV).normalize();
+    var normal = new THREE.Vector3().crossVectors(right, up).normalize();
+    right = new THREE.Vector3().crossVectors(up, normal).normalize();
+
+    var basis = new THREE.Matrix4().makeBasis(right, up, normal);
+    var handQuat = new THREE.Quaternion().setFromRotationMatrix(basis);
+    smoothHandQuat = smoothHandQuat === null ? handQuat.clone() : smoothHandQuat.slerp(handQuat, SMOOTH);
+
+    lastHandTime = performance.now();
+
+    var thumbTip = lm[4], indexTip = lm[8];
+    var pinchDist = Math.hypot(thumbTip.x - indexTip.x, thumbTip.y - indexTip.y);
+    if (pinchDist < PINCH_THRESHOLD) {
+      var px = (thumbTip.x + indexTip.x) / 2;
+      var py = (thumbTip.y + indexTip.y) / 2;
+      smoothPinchX = smoothPinchX === null ? px : smoothPinchX + (px - smoothPinchX) * SMOOTH;
+      smoothPinchY = smoothPinchY === null ? py : smoothPinchY + (py - smoothPinchY) * SMOOTH;
+      lastPinchTime = performance.now();
+    }
+  }
+
+  function frame() {
+    var sceneEl = document.querySelector('a-scene');
+    var nudoHand = document.getElementById('nudoHand');
+    var nudoMarker = document.getElementById('nudoMarker');
+    var camEl = document.querySelector('[camera]');
+
+    if (sceneEl && sceneEl.hasLoaded && camEl && nudoHand && nudoMarker) {
+      var camera = camEl.getObject3D('camera');
+      var handActive = (performance.now() - lastHandTime) < HAND_TIMEOUT;
+
+      if (handActive && camera && smoothX !== null) {
+        camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+        lastProjDet = camera.projectionMatrix.determinant();
+        lastCamPos = camera.position.clone();
+
+        var ndcX = smoothX * 2 - 1;
+        var ndcY = -(smoothY * 2 - 1);
+
+        var vec = new THREE.Vector3(ndcX, ndcY, 0.5).unproject(camera);
+        lastVec = vec.clone();
+        var dir = vec.sub(camera.position).normalize();
+        // depth ~ inversamente proporcional al span (mano grande en pantalla = más cerca de cámara).
+        var depth = THREE.MathUtils.clamp(
+          HAND_DEPTH_REF * (REF_HANDSPAN / Math.max(smoothSpan, 0.001)),
+          HAND_DEPTH_MIN, HAND_DEPTH_MAX
+        );
+        lastHandDepth = depth;
+        var point = camera.position.clone().add(dir.multiplyScalar(depth));
+        point.x += HAND_POS_OFFSET.x;
+        point.y += HAND_POS_OFFSET.y;
+        point.z += HAND_POS_OFFSET.z;
+
+        nudoHand.object3D.position.copy(point);
+        var offsetQuat = new THREE.Quaternion().setFromEuler(new THREE.Euler(
+          THREE.MathUtils.degToRad(HAND_ROT_OFFSET.x),
+          THREE.MathUtils.degToRad(HAND_ROT_OFFSET.y),
+          THREE.MathUtils.degToRad(HAND_ROT_OFFSET.z)
+        ));
+        var handRotQuat = smoothHandQuat ? smoothHandQuat.clone().multiply(offsetQuat) : offsetQuat;
+        nudoHand.object3D.quaternion.copy(handRotQuat);
+        var scale = THREE.MathUtils.clamp(BASE_SCALE * (smoothSpan / REF_HANDSPAN), 0.01, 1.5) * HAND_SCALE_MULT;
+        nudoHand.object3D.scale.set(scale, scale, scale);
+
+        nudoHand.setAttribute('visible', true);
+        nudoMarker.setAttribute('visible', false);
+        lastHandActive = true;
+        lastHandPoint = point;
+        lastHandScale = scale;
+      } else {
+        nudoHand.setAttribute('visible', false);
+        nudoMarker.setAttribute('visible', true);
+        lastHandActive = false;
+
+        nudoMarker.object3D.position.set(
+          MARKER_POS_OFFSET.x,
+          MARKER_POS_OFFSET.y,
+          -1 + MARKER_POS_OFFSET.z
+        );
+        nudoMarker.object3D.rotation.set(
+          THREE.MathUtils.degToRad(MARKER_ROT_OFFSET.x),
+          THREE.MathUtils.degToRad(MARKER_ROT_OFFSET.y),
+          THREE.MathUtils.degToRad(MARKER_ROT_OFFSET.z)
+        );
+        nudoMarker.object3D.scale.set(MARKER_SCALE_MULT, MARKER_SCALE_MULT, MARKER_SCALE_MULT);
+      }
+    }
+
+    updateInfoLabel();
+    updateDebugMano();
+    requestAnimationFrame(frame);
+  }
+
+  function updateDebugMano() {
+    var el = document.getElementById('debugMano');
+    if (!el) return;
+    var msDesdeUltima = lastHandTime ? Math.round(performance.now() - lastHandTime) : '-';
+    var pos = lastHandPoint ? lastHandPoint.x.toFixed(2) + ',' + lastHandPoint.y.toFixed(2) + ',' + lastHandPoint.z.toFixed(2) : '-';
+    var nudoHand = document.getElementById('nudoHand');
+    var childCount = (nudoHand && nudoHand.object3D) ? nudoHand.object3D.children.length : '-';
+    var visReal = (nudoHand && nudoHand.object3D) ? nudoHand.object3D.visible : '-';
+    el.textContent =
+      'sendCount: ' + handSendCount + '\n' +
+      'detectCount: ' + handDetectCount + '\n' +
+      'msDesdeUltima: ' + msDesdeUltima + '\n' +
+      'handActive: ' + lastHandActive + '\n' +
+      'nudoHandPos: ' + pos + '\n' +
+      'nudoHandScale: ' + (lastHandScale !== null ? lastHandScale.toFixed(4) : '-') + '\n' +
+      'nudoHandDepth: ' + (lastHandDepth !== null ? lastHandDepth.toFixed(3) : '-') + '\n' +
+      'modelChildren: ' + childCount + '\n' +
+      'object3D.visible: ' + visReal + '\n' +
+      'projDet: ' + (lastProjDet !== null ? lastProjDet.toExponential(3) : '-') + '\n' +
+      'camPos: ' + (lastCamPos ? lastCamPos.x.toFixed(2)+','+lastCamPos.y.toFixed(2)+','+lastCamPos.z.toFixed(2) : '-') + '\n' +
+      'vecUnproj: ' + (lastVec ? lastVec.x.toFixed(2)+','+lastVec.y.toFixed(2)+','+lastVec.z.toFixed(2) : '-') + '\n' +
+      'error: ' + (lastHandError || 'ninguno');
+  }
+
+  function updateInfoLabel() {
+    var label = document.getElementById('nudoInfo');
+    if (!label || !videoEl) return;
+    var pinchActive = (performance.now() - lastPinchTime) < PINCH_TIMEOUT && smoothPinchX !== null;
+    if (!pinchActive) {
+      label.classList.remove('visible');
+      return;
+    }
+    var rect = videoEl.getBoundingClientRect();
+    label.style.left = (rect.left + smoothPinchX * rect.width) + 'px';
+    label.style.top = (rect.top + smoothPinchY * rect.height) + 'px';
+    label.classList.add('visible');
+  }
+
+  setupDevPanel();
+  setupCamera();
+  waitForVideo(setupHands);
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

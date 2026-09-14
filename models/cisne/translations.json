@@ -1,0 +1,29 @@
+{
+    "es": {
+        "name": "Cisne de cuello negro",
+        "short_description": "Inconfundible por su cuerpo blanco y cuello negro, esta ave acuática es un emblema de los humedales. Destaca por la carúncula roja en su pico y su costumbre de llevar a las crías en el lomo.",
+        "habitat": "Lagos, lagunas de agua dulce o salobre, humedales, desembocaduras de ríos y zonas costeras protegidas.",
+        "diet": "Mayormente herbívoro (algas y plantas acuáticas que alcanza sumergiendo el cuello), complementado con pequeños invertebrados e insectos.",
+        "status": "Preocupación menor",
+        "detailed_description": "{\r\n  \"description\": \"<h3>El Cisne de cuello negro: Elegancia de los humedales<\/h3><p>El <strong>Cisne de cuello negro<\/strong> (<em>Cygnus melancoryphus<\/em>) es el ave acuática más grande y majestuosa de los humedales de Chile y el cono sur. A diferencia de otros cisnes, es inconfundible por el marcado contraste de su plumaje: un cuerpo inmaculadamente <strong>blanco<\/strong> que sostiene un largo y esbelto <strong>cuello y cabeza de color negro<\/strong> aterciopelado.<\/p><p>Otro rasgo distintivo es su pico grisáceo, adornado con una llamativa <strong>carúncula roja<\/strong> (una protuberancia carnosa) en la base, que es más desarrollada en los machos. Sus patas son cortas y de color rosado. Es un ave gregaria y monógama que se desplaza con elegancia en el agua, pero con cierta torpeza en tierra. Una imagen tierna y común en esta especie es ver a los padres transportando a sus polluelos (cigoñinos), que nacen con plumaje blanco grisáceo, sobre su lomo para protegerlos.<\/p>\"\r\n}",
+        "wikipedia": "https:\/\/es.wikipedia.org\/wiki\/Cygnus_melancoryphus"
+    },
+    "en": {
+        "name": "",
+        "short_description": "",
+        "habitat": "",
+        "diet": "",
+        "status": "",
+        "detailed_description": "",
+        "wikipedia": ""
+    },
+    "pt": {
+        "name": "",
+        "short_description": "",
+        "habitat": "",
+        "diet": "",
+        "status": "",
+        "detailed_description": "",
+        "wikipedia": ""
+    }
+}

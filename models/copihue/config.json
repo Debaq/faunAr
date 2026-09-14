@@ -1,0 +1,41 @@
+{
+    "id": "copihue",
+    "category": "flora",
+    "name": "Copihue",
+    "scientificName": "Lapageria rosea",
+    "description": "Es la Flor Nacional de Chile. Una enredadera endémica de los bosques templados, famosa por sus flores acampanadas de textura cerosa y colores que varían entre el rojo intenso, rosado y blanco.",
+    "icon": "🍃",
+    "arMode": "marker",
+    "image": "imagen_copihue.png",
+    "thumbnail": "thumbnail.png",
+    "silhouette": "silueta_copihue.svg",
+    "gps": {
+        "enabled": false,
+        "latitude": 0,
+        "longitude": 0,
+        "radius": 50
+    },
+    "marker": {
+        "enabled": true,
+        "type": "mind",
+        "file": "copihue.mind"
+    },
+    "audio": {
+        "enabled": false,
+        "file": "sound.mp3"
+    },
+    "model": {
+        "glb": "copihue.glb",
+        "usdz": "copihue.usdz",
+        "scale": "0.5 0.5 0.5",
+        "position": "0 0 0",
+        "rotation": "0 0 0"
+    },
+    "info": {
+        "habitat": "Bosques templados lluviosos (selva valdiviana), zonas sombrías y húmedas del centro-sur de Chile.",
+        "diet": "Suelos ácidos, ricos en materia orgánica (humus), con buen drenaje y alta humedad ambiental.",
+        "status": "En peligro (Protegida por Ley)",
+        "wikipedia": "https:\/\/es.wikipedia.org\/wiki\/Lapageria_rosea"
+    },
+    "video_url": ""
+}

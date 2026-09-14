@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Casa Pauli 360°</title>
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: sans-serif; background: #000; }
+
+  a-scene { display: none; }
+  a-scene.activa { display: block; }
+
+  #overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999;
+    background: radial-gradient(circle at 50% 30%, #2b2b2b, #000);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    box-sizing: border-box;
+  }
+  #overlay h1 { font-size: 22px; margin: 0 0 8px; }
+  #overlay p { font-size: 14px; opacity: .8; max-width: 320px; margin: 0 0 28px; line-height: 1.4; }
+
+  #btnGyro {
+    background: #ffd400;
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 16px 28px;
+    font-size: 16px;
+    font-weight: bold;
+    font-family: sans-serif;
+  }
+  #btnGyro:active { background: #e0bb00; }
+
+  #hint {
+    margin-top: 16px;
+    font-size: 12px;
+    opacity: .6;
+  }
+
+  #distancia {
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: bold;
+  }
+  #distancia.ok { color: #6fd66f; }
+  #distancia.lejos { color: #ff9d4d; }
+
+  #volver {
+    position: fixed;
+    top: 12px; left: 12px;
+    z-index: 1000;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    text-decoration: none;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: sans-serif;
+  }
+
+  #fotoRealBtn {
+    position: fixed;
+    top: 12px; right: 12px;
+    z-index: 1000;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    border: none;
+    text-decoration: none;
+    font-size: 13px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-family: sans-serif;
+  }
+
+  #fotoModal {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: rgba(0,0,0,0.92);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+  #fotoModal.abierto { display: flex; }
+  #fotoModal p {
+    color: #ffd400;
+    font-size: 13px;
+    text-align: center;
+    max-width: 420px;
+    margin: 0 0 16px;
+    line-height: 1.4;
+    font-family: sans-serif;
+    font-weight: bold;
+  }
+  #fotoModal img {
+    max-width: 100%;
+    max-height: 70vh;
+    border-radius: 8px;
+    object-fit: contain;
+  }
+  #fotoCerrar {
+    margin-top: 18px;
+    background: #ffd400;
+    color: #000;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: bold;
+    font-family: sans-serif;
+  }
+
+  #devBtn {
+    position: fixed;
+    bottom: 12px; right: 12px;
+    z-index: 1000;
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.5);
+    color: #fff;
+    font-size: 18px;
+    display: none;
+  }
+  a-scene.activa ~ #devBtn { display: block; }
+
+  #devPanel {
+    position: fixed;
+    bottom: 60px; right: 12px;
+    z-index: 1000;
+    width: min(320px, calc(100vw - 24px));
+    max-height: 70vh;
+    overflow-y: auto;
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    font-family: monospace;
+    font-size: 11px;
+    padding: 10px;
+    border-radius: 8px;
+    display: none;
+  }
+  #devPanel.abierto { display: block; }
+  #devPanel h3 { margin: 0 0 6px; font-size: 12px; color: #ffd400; }
+  #devPanel .fila { display: flex; justify-content: space-between; margin: 2px 0; }
+  #devPanel button {
+    width: 100%;
+    margin-top: 6px;
+    padding: 8px;
+    background: #ffd400;
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-family: sans-serif;
+    font-size: 12px;
+  }
+  #devLog { margin-top: 8px; border-top: 1px solid #444; padding-top: 6px; }
+  #devLog .entrada { border-bottom: 1px solid #333; padding: 4px 0; }
+</style>
+</head>
+<body>
+
+<a href="../" id="volver">← Volver</a>
+<button id="fotoRealBtn">📷 Ver foto real</button>
+
+<div id="fotoModal">
+  <p>El resto de esta demostración fue generado para esta presentación: no es fiel ni real. Esta es la foto real del lugar.</p>
+  <img src="./foto.jpg" alt="Foto real de Casa Pauli">
+  <button id="fotoCerrar">Cerrar</button>
+</div>
+
+<div id="overlay">
+  <h1>Casa Pauli</h1>
+  <p>Fotografía 360° del lugar. Mueve el celular para mirar alrededor, o desliza con el dedo.</p>
+  <button id="btnGyro">Activar giroscopio y ver</button>
+  <div id="distancia" style="display:none"></div>
+  <div id="hint">En iPhone usa Safari</div>
+</div>
+
+<a-scene id="escena" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false" renderer="colorManagement: true">
+  <a-assets>
+    <img id="pano" src="./360.jpg">
+  </a-assets>
+
+  <a-sky src="#pano"></a-sky>
+
+  <a-camera id="camara" look-controls="magicWindowTrackingEnabled: true" wasd-controls="enabled: false" position="0 0 0"></a-camera>
+</a-scene>
+
+<button id="devBtn">⚙</button>
+<div id="devPanel">
+  <h3>Calibración alineación</h3>
+  <div class="fila"><span>GPS</span><span id="devGps">–</span></div>
+  <div class="fila"><span>Distancia casa</span><span id="devDist">–</span></div>
+  <div class="fila"><span>Rumbo real a casa</span><span id="devBearing">–</span></div>
+  <div class="fila"><span>Brújula celular</span><span id="devHeading">–</span></div>
+  <div class="fila"><span>Yaw panorama</span><span id="devYaw">–</span></div>
+  <div class="fila"><span>Offset sugerido</span><span id="devOffset">–</span></div>
+  <button id="devMarcar">Marcar: estoy mirando la casa</button>
+  <button id="devCopiar">Copiar datos (JSON)</button>
+  <div id="devLog"></div>
+</div>
+
+<script>
+  var fotoRealBtn = document.getElementById('fotoRealBtn');
+  var fotoModal = document.getElementById('fotoModal');
+  var fotoCerrar = document.getElementById('fotoCerrar');
+  fotoRealBtn.addEventListener('click', function () {
+    fotoModal.classList.add('abierto');
+  });
+  fotoCerrar.addEventListener('click', function () {
+    fotoModal.classList.remove('abierto');
+  });
+
+  var btn = document.getElementById('btnGyro');
+  var overlay = document.getElementById('overlay');
+  var escena = document.getElementById('escena');
+  var divDistancia = document.getElementById('distancia');
+
+  var CASA_PAULI = { lat: -41.47090, lon: -72.94094 };
+
+  function distanciaMetros(lat1, lon1, lat2, lon2) {
+    // Haversine
+    var R = 6371000;
+    var dLat = (lat2 - lat1) * Math.PI / 180;
+    var dLon = (lon2 - lon1) * Math.PI / 180;
+    var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }
+
+  function chequearUbicacion() {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      var d = distanciaMetros(
+        pos.coords.latitude, pos.coords.longitude,
+        CASA_PAULI.lat, CASA_PAULI.lon
+      );
+      divDistancia.style.display = 'block';
+      if (d <= 30) {
+        divDistancia.textContent = '✓ Estás en el lugar (' + Math.round(d) + ' m)';
+        divDistancia.className = 'ok';
+      } else {
+        divDistancia.textContent = 'Estás a ' + Math.round(d) + ' m de Casa Pauli';
+        divDistancia.className = 'lejos';
+      }
+    }, function (err) {
+      console.log('[Casa Pauli] geolocalización no disponible', err);
+    }, { enableHighAccuracy: true, timeout: 8000 });
+  }
+
+  chequearUbicacion();
+
+  function mostrarEscena() {
+    overlay.style.display = 'none';
+    escena.classList.add('activa');
+  }
+
+  btn.addEventListener('click', function () {
+    var DOE = window.DeviceOrientationEvent;
+    if (DOE && typeof DOE.requestPermission === 'function') {
+      // iOS 13+: pide permiso explícito (requiere gesto de usuario, por eso va en el click)
+      DOE.requestPermission().then(function (respuesta) {
+        mostrarEscena();
+        if (respuesta !== 'granted') {
+          console.log('[Casa Pauli] permiso de giroscopio denegado, se puede mover igual con el dedo');
+        }
+      }).catch(function (err) {
+        console.log('[Casa Pauli] error pidiendo permiso giroscopio', err);
+        mostrarEscena();
+      });
+    } else {
+      // Android y navegadores que no piden permiso explícito
+      mostrarEscena();
+    }
+    iniciarDevPanel();
+  });
+
+  // --- Panel dev: calibración de alineación (brújula real vs yaw del panorama) ---
+
+  function bearingGrados(lat1, lon1, lat2, lon2) {
+    var φ1 = lat1 * Math.PI / 180, φ2 = lat2 * Math.PI / 180;
+    var Δλ = (lon2 - lon1) * Math.PI / 180;
+    var y = Math.sin(Δλ) * Math.cos(φ2);
+    var x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  }
+
+  function normalizar360(g) {
+    return ((g % 360) + 360) % 360;
+  }
+
+  var devBtn = document.getElementById('devBtn');
+  var devPanel = document.getElementById('devPanel');
+  var devGps = document.getElementById('devGps');
+  var devDist = document.getElementById('devDist');
+  var devBearing = document.getElementById('devBearing');
+  var devHeading = document.getElementById('devHeading');
+  var devYaw = document.getElementById('devYaw');
+  var devOffset = document.getElementById('devOffset');
+  var devLog = document.getElementById('devLog');
+  var devMarcar = document.getElementById('devMarcar');
+  var devCopiar = document.getElementById('devCopiar');
+  var camaraEl = document.getElementById('camara');
+
+  var ultimaPos = null;      // {lat, lon}
+  var ultimoHeading = null;  // grados, 0 = norte real, sentido horario
+  var entradas = [];
+
+  devBtn.addEventListener('click', function () {
+    devPanel.classList.toggle('abierto');
+  });
+
+  function yawPanoramaGrados() {
+    var rotY = camaraEl.object3D.rotation.y; // radianes
+    // look-controls: yaw crece girando a la izquierda -> se invierte pa que
+    // "sentido horario" coincida con la convención de la brújula.
+    return normalizar360(-rotY * 180 / Math.PI);
+  }
+
+  function actualizarPanel() {
+    var yaw = yawPanoramaGrados();
+    devYaw.textContent = yaw.toFixed(0) + '°';
+
+    if (ultimaPos) {
+      devGps.textContent = ultimaPos.lat.toFixed(5) + ', ' + ultimaPos.lon.toFixed(5);
+      var d = distanciaMetros(ultimaPos.lat, ultimaPos.lon, CASA_PAULI.lat, CASA_PAULI.lon);
+      devDist.textContent = Math.round(d) + ' m';
+      var b = bearingGrados(ultimaPos.lat, ultimaPos.lon, CASA_PAULI.lat, CASA_PAULI.lon);
+      devBearing.textContent = b.toFixed(0) + '°';
+    }
+
+    if (ultimoHeading !== null) {
+      devHeading.textContent = ultimoHeading.toFixed(0) + '°';
+      var offset = normalizar360(ultimoHeading - yaw);
+      devOffset.textContent = offset.toFixed(0) + '°';
+    }
+  }
+
+  function extraerHeading(e) {
+    // iOS: webkitCompassHeading ya viene 0=norte, sentido horario, listo pa usar.
+    if (typeof e.webkitCompassHeading === 'number') return e.webkitCompassHeading;
+    // Android (deviceorientationabsolute / alpha absoluto): conversión estándar.
+    if (e.absolute && e.alpha !== null) return normalizar360(360 - e.alpha);
+    return null;
+  }
+
+  function iniciarDevPanel() {
+    if (navigator.geolocation) {
+      navigator.geolocation.watchPosition(function (pos) {
+        ultimaPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        actualizarPanel();
+      }, function (err) {
+        console.log('[Casa Pauli] watchPosition error', err);
+      }, { enableHighAccuracy: true });
+    }
+
+    function onOrientacion(e) {
+      var h = extraerHeading(e);
+      if (h !== null) {
+        ultimoHeading = h;
+        actualizarPanel();
+      }
+    }
+    if ('ondeviceorientationabsolute' in window) {
+      window.addEventListener('deviceorientationabsolute', onOrientacion);
+    } else {
+      window.addEventListener('deviceorientation', onOrientacion);
+    }
+
+    setInterval(actualizarPanel, 300);
+  }
+
+  devMarcar.addEventListener('click', function () {
+    var yaw = yawPanoramaGrados();
+    var entrada = {
+      hora: new Date().toLocaleTimeString(),
+      lat: ultimaPos ? +ultimaPos.lat.toFixed(6) : null,
+      lon: ultimaPos ? +ultimaPos.lon.toFixed(6) : null,
+      rumboRealACasa: ultimaPos ? +bearingGrados(ultimaPos.lat, ultimaPos.lon, CASA_PAULI.lat, CASA_PAULI.lon).toFixed(1) : null,
+      brujulaCelular: ultimoHeading !== null ? +ultimoHeading.toFixed(1) : null,
+      yawPanorama: +yaw.toFixed(1),
+      offset: ultimoHeading !== null ? +normalizar360(ultimoHeading - yaw).toFixed(1) : null
+    };
+    entradas.push(entrada);
+
+    var div = document.createElement('div');
+    div.className = 'entrada';
+    div.textContent = entrada.hora + ' — offset: ' + entrada.offset + '° (rumbo ' + entrada.rumboRealACasa + '°, brújula ' + entrada.brujulaCelular + '°, yaw ' + entrada.yawPanorama + '°)';
+    devLog.prepend(div);
+
+    console.log('[Casa Pauli] entrada calibración', entrada);
+  });
+
+  devCopiar.addEventListener('click', function () {
+    var json = JSON.stringify(entradas, null, 2);
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(json).then(function () {
+        devCopiar.textContent = 'Copiado ✓';
+        setTimeout(function () { devCopiar.textContent = 'Copiar datos (JSON)'; }, 1500);
+      }).catch(function () {
+        console.log('[Casa Pauli] no se pudo copiar, datos:', json);
+      });
+    } else {
+      console.log('[Casa Pauli] datos calibración:', json);
+    }
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,165 @@
+/* ============================================================
+   FaunAR — theme.css
+   Tema compartido, tomado de la paleta y tipografía del sitio
+   del proyecto (Puerto Montt Patrimonial Aumentado / UACh).
+   ============================================================ */
+
+:root {
+    --soil:        #16110C;
+    --soil-mid:    #211A12;
+    --soil-soft:   #2C2318;
+    --line:        #3A2F20;
+
+    --ochre:       #D08303;
+    --ochre-light: #E9A93C;
+    --ochre-glow:  rgba(208,131,3,0.28);
+
+    --sage:        #8C8C7A;
+    --sage-light:  #B7B7A4;
+    --crimson:     #9E1B32;
+
+    --cream:       #F6F1E8;
+    --sand-300:    #D9CFBE;
+    --sand-500:    #9E9284;
+
+    --radius:      14px;
+    --radius-lg:   22px;
+
+    --glass-bg:     rgba(33,26,18,0.62);
+    --glass-border: rgba(208,131,3,0.20);
+    --glass-blur:   blur(18px);
+
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.30);
+    --shadow-md: 0 6px 24px rgba(0,0,0,0.42);
+    --shadow-lg: 0 16px 48px rgba(0,0,0,0.55);
+
+    --t-fast: 150ms ease;
+    --t-base: 250ms ease;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    background-color: var(--soil);
+    color: var(--sand-300);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+img, svg { display: block; max-width: 100%; }
+a { color: var(--ochre-light); text-decoration: none; transition: color var(--t-fast); }
+a:hover { color: var(--ochre); }
+
+h1, h2, h3, h4 {
+    font-family: 'Fraunces', Georgia, serif;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--cream);
+    letter-spacing: -0.01em;
+}
+h1 { font-size: clamp(2rem, 5.2vw, 3rem); }
+h2 { font-size: clamp(1.2rem, 3vw, 1.4rem); }
+
+p { color: var(--sand-300); font-size: 1rem; line-height: 1.6; }
+.lead { font-size: 1.05rem; color: var(--cream); font-weight: 400; }
+
+/* --- Fondo --- */
+.bg-mesh {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background:
+        radial-gradient(ellipse 75% 55% at 15% 5%,  rgba(208,131,3,0.13) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 85% 85%, rgba(140,140,122,0.10) 0%, transparent 58%),
+        radial-gradient(ellipse 50% 40% at 55% 45%, rgba(158,27,50,0.06) 0%, transparent 55%),
+        var(--soil);
+    pointer-events: none;
+}
+
+.container { width: 100%; max-width: 1180px; margin: 0 auto; padding: 0 1.5rem; }
+.container-narrow { max-width: 780px; margin: 0 auto; padding: 0 1.5rem; }
+
+/* --- Eyebrow / badge de estado --- */
+.eyebrow {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .38rem 1rem; border-radius: 100px;
+    border: 1px solid rgba(208,131,3,.45); background: rgba(208,131,3,.12);
+    font-size: .74rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+    color: var(--ochre-light); margin-bottom: 1.25rem;
+}
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .28rem .75rem;
+    border-radius: 100px;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+}
+.badge-ochre { background: rgba(208,131,3,.16); color: var(--ochre-light); }
+.badge-sage  { background: rgba(140,140,122,.18); color: var(--sage-light); }
+
+/* --- Tarjetas --- */
+.card {
+    position: relative;
+    background: var(--soil-mid);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    padding: 1.6rem;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    transition: border-color var(--t-base), transform var(--t-base), box-shadow var(--t-base);
+}
+.card:hover, .card:focus-visible {
+    border-color: rgba(208,131,3,.4);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+}
+.card:focus-visible { outline: 2px solid var(--ochre); outline-offset: 2px; }
+
+.card__icon {
+    width: 46px; height: 46px; border-radius: 12px;
+    background: rgba(208,131,3,.14);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; margin-bottom: .2rem;
+}
+.card h2 { font-size: 1.08rem; margin: 0; }
+.card p { font-size: .875rem; color: var(--sand-500); margin: 0; line-height: 1.55; }
+
+/* --- Botones --- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    padding: .6rem 1.3rem;
+    border-radius: var(--radius);
+    border: none;
+    font-family: inherit;
+    font-size: .85rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: opacity var(--t-fast), transform var(--t-fast), color var(--t-fast);
+}
+.btn:hover { opacity: .9; transform: translateY(-1px); }
+.btn-ghost { background: transparent; color: var(--cream); border: 1.5px solid var(--line); }
+.btn-ghost:hover { border-color: var(--ochre); color: var(--ochre-light); opacity: 1; }
+
+/* --- Footer --- */
+.site-footer { text-align: center; padding: 2.5rem 1rem 3rem; }
+.site-footer p { font-size: .78rem; color: var(--sand-500); }
+
+@media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+}

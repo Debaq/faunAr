@@ -1,0 +1,29 @@
+{
+    "es": {
+        "name": "Copihue",
+        "short_description": "Es la Flor Nacional de Chile. Una enredadera endémica de los bosques templados, famosa por sus flores acampanadas de textura cerosa y colores que varían entre el rojo intenso, rosado y blanco.",
+        "habitat": "Bosques templados lluviosos (selva valdiviana), zonas sombrías y húmedas del centro-sur de Chile.",
+        "diet": "Suelos ácidos, ricos en materia orgánica (humus), con buen drenaje y alta humedad ambiental.",
+        "status": "En peligro (Protegida por Ley)",
+        "detailed_description": "\"<h3>El Copihue: La Flor Nacional de Chile<\/h3><p>El <strong>Copihue<\/strong> (<em>Lapageria rosea<\/em>) es una planta trepadora perenne endémica de los bosques del sur de Chile y es la única especie de su género. Crece entrelazándose en los árboles nativos del bosque valdiviano, alcanzando alturas de hasta 10 metros en busca de luz, aunque sus raíces requieren sombra y humedad constante.<\/p><p>Su rasgo más distintivo es su <strong>flor solitaria y péndula<\/strong> (colgante), que tiene forma de campana alargada de hasta 10 cm de longitud. Está compuesta por 6 tépalos de textura cerosa y gruesa. El color más emblemático es el <strong>rojo carmesí<\/strong>, pero existen más de 20 variedades naturales que incluyen tonos rosados, blancos (variedad <em>Albina<\/em>) y jaspeados.<\/p><p>Produce un fruto comestible conocido como \\\"pepino\\\", una baya verde-amarillenta de sabor dulce. Debido a su recolección indiscriminada en el pasado y la pérdida de hábitat, es una especie protegida y su corte en estado silvestre está prohibido.<\/p>\"",
+        "wikipedia": "https:\/\/es.wikipedia.org\/wiki\/Lapageria_rosea"
+    },
+    "en": {
+        "name": "",
+        "short_description": "",
+        "habitat": "",
+        "diet": "",
+        "status": "",
+        "detailed_description": "",
+        "wikipedia": ""
+    },
+    "pt": {
+        "name": "",
+        "short_description": "",
+        "habitat": "",
+        "diet": "",
+        "status": "",
+        "detailed_description": "",
+        "wikipedia": ""
+    }
+}

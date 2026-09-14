@@ -1,0 +1,29 @@
+{
+    "es": {
+        "name": "Bandurria",
+        "short_description": "Conocida por su fuerte y resonante canto metálico y su característico pico largo y curvado, la Bandurria es una ave inconfundible de los campos abiertos y pastizales de Sudamérica.",
+        "habitat": "Praderas, pastizales húmedos, campos agrícolas, zonas abiertas y bordes de humedales.",
+        "diet": "Carnívoro insectívoro (lombrices, insectos, larvas, pequeños anfibios y reptiles).",
+        "status": "Preocupación menor",
+        "detailed_description": "<h3>La Bandurria: El clarín de los campos sureños<\/h3><p>La <strong>Bandurria<\/strong> (<em>Theristicus caudatus<\/em>) es un ave pelecaniforme de la familia Threskiornithidae, famosa por ser una de las aves más ruidosas del paisaje rural. A menudo se detecta primero por su potente reclamo, un sonido <strong>metálico y resonante<\/strong> similar a una trompeta, que emite tanto en vuelo como en tierra, especialmente cuando está en grupo.<\/p><p>Físicamente es inconfundible. Posee un largo <strong>pico negro curvado hacia abajo<\/strong>, ideal para sondear la tierra blanda en busca de alimento. Su cabeza y cuello son de un color <span style=\"color: #C4A484;\">ocre amarillento o anteado<\/span>, contrastando con su cuerpo grisáceo, vientre negro y llamativas patas rojas. Es un ave eminentemente caminadora, que recorre pastizales con paso elegante. Al volar, sus alas muestran una gran mancha <strong>blanca<\/strong> que la hace fácilmente identificable a distancia.<\/p><br>",
+        "wikipedia": "https:\/\/es.wikipedia.org\/wiki\/Theristicus_caudatus"
+    },
+    "en": {
+        "name": "",
+        "short_description": "",
+        "habitat": "",
+        "diet": "",
+        "status": "",
+        "detailed_description": "",
+        "wikipedia": ""
+    },
+    "pt": {
+        "name": "",
+        "short_description": "",
+        "habitat": "",
+        "diet": "",
+        "status": "",
+        "detailed_description": "",
+        "wikipedia": ""
+    }
+}

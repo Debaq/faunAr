@@ -1,0 +1,29 @@
+{
+    "es": {
+        "name": "Chilesaurus",
+        "short_description": "Un extraño dinosaurio herbívoro del Jurásico Tardío descubierto en la Patagonia chilena. Es famoso por ser un 'rompecabezas evolutivo' con características de varios grupos de dinosaurios.",
+        "habitat": "Bosques y valles fluviales del Jurásico Tardío en la actual Región de Aysén.",
+        "diet": "Herbívoro estricto (helechos, araucarias y cícadas).",
+        "status": "Extinto",
+        "detailed_description": "<h3>El Chilesaurus: El ornitorrinco de los dinosaurios<\/h3><p>El <strong>Chilesaurus<\/strong> (<em>Chilesaurus diegosuarezi<\/em>) es uno de los descubrimientos paleontológicos más fascinantes de las últimas décadas. Fue hallado en 2004 por <strong>Diego Suárez<\/strong>, un niño de 7 años, mientras recorría la Región de Aysén junto a sus padres geólogos. Vivió hace 148 millones de años, durante el Jurásico Tardío.<\/p><p>Es conocido mundialmente como el <strong>\\\"dinosaurio Frankenstein\\\"<\/strong> debido a su extraña mezcla de características: posee cuello largo y pies similares a los sauropodomorfos (cuello largo), caderas de ornitisquio y cuerpo de terópodo (carnívoro). Aunque pertenece a la familia de los terópodos —la misma del <em>T. Rex<\/em> y el <em>Velociraptor<\/em>—, el Chilesaurus <strong>evolucionó para ser totalmente herbívoro<\/strong>.<\/p><p>Era un animal de tamaño mediano, alcanzando hasta <strong>3 metros de longitud<\/strong>. Su boca terminaba en un pico córneo y tenía dientes en forma de hoja, perfectos para cortar la dura vegetación prehistórica de la Patagonia, como helechos y coníferas.<\/p><br>",
+        "wikipedia": "https:\/\/es.wikipedia.org\/wiki\/Chilesaurus_diegosuarezi"
+    },
+    "en": {
+        "name": "",
+        "short_description": "",
+        "habitat": "",
+        "diet": "",
+        "status": "",
+        "detailed_description": "",
+        "wikipedia": ""
+    },
+    "pt": {
+        "name": "",
+        "short_description": "",
+        "habitat": "",
+        "diet": "",
+        "status": "",
+        "detailed_description": "",
+        "wikipedia": ""
+    }
+}

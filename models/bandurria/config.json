@@ -1,0 +1,41 @@
+{
+    "id": "bandurria",
+    "name": "Bandurria",
+    "scientificName": "Theristicus caudatus",
+    "description": "Conocida por su fuerte y resonante canto metálico y su característico pico largo y curvado, la Bandurria es una ave inconfundible de los campos abiertos y pastizales de Sudamérica.",
+    "icon": "🐦",
+    "arMode": "hybrid",
+    "image": "imagen_bandurria.png",
+    "thumbnail": "thumbnail.png",
+    "silhouette": "silueta_bandurria.svg",
+    "gps": {
+        "enabled": true,
+        "latitude": -33.4489,
+        "longitude": -70.6693,
+        "radius": 50
+    },
+    "marker": {
+        "enabled": true,
+        "type": "mind",
+        "file": "bandurria.mind"
+    },
+    "audio": {
+        "enabled": false,
+        "file": "sound.mp3"
+    },
+    "model": {
+        "glb": "bandurria.glb",
+        "usdz": "bandurria.usdz",
+        "scale": "0.5 0.5 0.5",
+        "position": "0 0 0",
+        "rotation": "0 0 0"
+    },
+    "info": {
+        "habitat": "Praderas, pastizales húmedos, campos agrícolas, zonas abiertas y bordes de humedales.",
+        "diet": "Carnívoro insectívoro (lombrices, insectos, larvas, pequeños anfibios y reptiles).",
+        "status": "Preocupación menor",
+        "wikipedia": "https:\/\/es.wikipedia.org\/wiki\/Theristicus_caudatus"
+    },
+    "video_url": "",
+    "category": "fauna"
+}

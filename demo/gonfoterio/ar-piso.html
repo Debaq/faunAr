@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Gonfoterio AR piso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/theme.css">
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; touch-action: manipulation; }
+
+  model-viewer {
+    width: 100%;
+    height: 100%;
+    --poster-color: var(--soil);
+    background: radial-gradient(circle at 50% 40%, var(--soil-soft), var(--soil));
+  }
+
+  #volver {
+    position: fixed;
+    top: 12px; left: 12px;
+    z-index: 999999;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    color: var(--cream);
+    text-decoration: none;
+    font-size: .8rem;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: var(--radius);
+    border: 1px solid var(--glass-border);
+  }
+  #volver:hover { color: var(--ochre-light); }
+
+  #noArBanner {
+    position: fixed;
+    top: 54px; left: 8px; right: 8px;
+    z-index: 999999;
+    background: var(--ochre-light);
+    color: var(--soil);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 10px 12px;
+    border-radius: var(--radius);
+    display: none;
+    line-height: 1.4;
+  }
+
+  #status {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 999999;
+    color: var(--sand-300);
+    font-size: 12px;
+    padding: 6px 8px;
+    background: var(--glass-bg);
+    white-space: pre-wrap;
+    pointer-events: none;
+    text-align: center;
+  }
+
+  #arBtn {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999999;
+    background: var(--ochre);
+    color: var(--cream);
+    border: none;
+    border-radius: var(--radius);
+    padding: 14px 22px;
+    font-size: 15px;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-weight: 700;
+    box-shadow: var(--shadow-md);
+  }
+  #arBtn:active { background: var(--ochre-light); }
+</style>
+</head>
+<body>
+
+<a id="volver" href="./">← Volver</a>
+<div id="status">cargando modelo...</div>
+<div id="noArBanner"></div>
+
+<model-viewer
+  id="mv"
+  src="./Gonfoterio.draco.glb?v=20260828-1"
+  ios-src="./Gonfoterio.usdz?v=20260828-1"
+  alt="Gonfoterio"
+  ar
+  ar-modes="webxr scene-viewer quick-look"
+  ar-placement="floor"
+  ar-scale="auto"
+  camera-controls
+  shadow-intensity="1"
+  environment-image="neutral"
+  exposure="1"
+>
+  <button id="arBtn" slot="ar-button">Ver en tu espacio (AR)</button>
+</model-viewer>
+
+<script>
+  var mv = document.getElementById('mv');
+  var statusEl = document.getElementById('status');
+
+  function log(msg) {
+    statusEl.textContent = msg;
+    console.log('[AR]', msg);
+  }
+
+  mv.addEventListener('load', function () {
+    log('modelo cargado ok. dimensiones: ' + JSON.stringify(mv.getDimensions()));
+  });
+
+  mv.addEventListener('error', function (e) {
+    log('ERROR cargando modelo: ' + JSON.stringify(e.detail));
+  });
+
+  mv.addEventListener('ar-status', function (e) {
+    log('ar-status: ' + e.detail.status);
+  });
+
+  mv.addEventListener('ar-tracking', function (e) {
+    log('ar-tracking: ' + e.detail.status);
+  });
+
+  mv.addEventListener('camera-change', function (e) {
+    var o = mv.getCameraOrbit();
+    // no spamear el log en cada frame, solo dejamos disponible via consola si hace falta
+  });
+
+  if (!navigator.xr && !/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+    log('Aviso: pareces estar en desktop. AR real solo funciona en celular (Android con ARCore o iPhone con ARKit).');
+  }
+
+  // deteccion de navegador en iOS: Quick Look (AR) es exclusivo de Safari/WebKit.
+  // Chrome/Firefox/Edge en iOS usan el motor WebKit pero interceptan la navegacion
+  // de forma distinta y en la practica no siempre disparan Quick Look.
+  var ua = navigator.userAgent;
+  var isIOS = /iPhone|iPad|iPod/i.test(ua);
+  var isAndroid = /Android/i.test(ua);
+  var isDesktop = !isIOS && !isAndroid;
+  var isSafariIOS = isIOS && /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS|Mercury/i.test(ua);
+  var isChromeAndroid = isAndroid && /Chrome/i.test(ua) && !/SamsungBrowser|Firefox|EdgA|OPR/i.test(ua);
+  var noArBanner = document.getElementById('noArBanner');
+
+  function showNoArBanner(msg) {
+    var btn = document.getElementById('arBtn');
+    if (btn) btn.style.display = 'none';
+    noArBanner.textContent = msg;
+    noArBanner.style.display = 'block';
+  }
+
+  function platformHint() {
+    if (isIOS) return 'En iPhone, AR solo funciona en Safari (no en Chrome/Firefox/Edge de iOS). Copia este link y abrelo en Safari.';
+    if (isAndroid) return 'En Android, AR necesita Chrome y que el celular tenga instalado "ARCore" (Google Play Services for AR). Abre este link en Chrome.';
+    return 'AR solo funciona en celular: iPhone (Safari) o Android (Chrome con ARCore instalado). Abre este link desde tu celular.';
+  }
+
+  if (isIOS && !isSafariIOS) {
+    showNoArBanner(platformHint() + ' Mientras tanto puedes girar el modelo con el dedo abajo.');
+  }
+
+  // chequeo real de soporte AR una vez el componente esta listo (cubre casos
+  // que la deteccion por user-agent no pilla, ej. WebXR no disponible, ARCore
+  // no instalado en Android, o navegador de escritorio)
+  window.addEventListener('load', function () {
+    setTimeout(function () {
+      if (mv.canActivateAR === false && !(isIOS && !isSafariIOS)) {
+        showNoArBanner(platformHint() + ' Mientras tanto puedes girar el modelo con el dedo abajo.');
+      }
+    }, 1500);
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+    "title": "FaunAr",
+    "description": "",
+    "type": "project",
+    "category": "experiment",
+    "collections": [],
+    "favicon": "faunAr/assets/images/favicon.png",
+    "github": "https://github.com/debaq/Faunar",
+    "hide_readme": false,
+    "status_percentage": 20,
+    "status_state": "beta"
+}

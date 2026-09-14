@@ -1,0 +1,41 @@
+{
+    "id": "gonfoterio",
+    "category": "megafauna",
+    "name": "Gonfoterio",
+    "scientificName": "Notiomastodon platensis ",
+    "description": "Un gigante extinto similar a los elefantes modernos que habitó Chile durante el Pleistoceno. Se caracterizaba por sus defensas rectas y su gran tamaño.",
+    "icon": "🐘",
+    "arMode": "marker",
+    "image": "imagen_gonfoterio.png",
+    "thumbnail": "thumbnail.png",
+    "silhouette": "silueta_gonfoterio.svg",
+    "gps": {
+        "enabled": false,
+        "latitude": 0,
+        "longitude": 0,
+        "radius": 50
+    },
+    "marker": {
+        "enabled": true,
+        "type": "mind",
+        "file": "gonfoterio.mind"
+    },
+    "audio": {
+        "enabled": false,
+        "file": "sound.mp3"
+    },
+    "model": {
+        "glb": "gonfoterio.glb",
+        "usdz": "gonfoterio.usdz",
+        "scale": "0.5 0.5 0.5",
+        "position": "0 0 0",
+        "rotation": "0 0 0"
+    },
+    "info": {
+        "habitat": "abanas abiertas, bosques templados y orillas de lagunas del Pleistoceno (como Tagua Tagua y Pilauco)",
+        "diet": "Herbívoro generalista (hojas de árboles, arbustos, pastos y cortezas).",
+        "status": "Extinto",
+        "wikipedia": "https:\/\/es.wikipedia.org\/wiki\/Notiomastodon"
+    },
+    "video_url": ""
+}

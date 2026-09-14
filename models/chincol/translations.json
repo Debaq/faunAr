@@ -1,0 +1,29 @@
+{
+    "es": {
+        "name": "Chincol",
+        "short_description": "El ave más común de los jardines chilenos. Inconfundible por su collar canela y su canto que parece preguntar '¿Has visto a mi tío Agustín?'.",
+        "habitat": "Extraordinariamente adaptable. Jardines, plazas, huertos, campos agrícolas y matorrales desde la costa hasta la precordillera (2.000+ msnm).",
+        "diet": "Omnívoro. Principalmente semillas (granívoro) que busca en el suelo, complementado con insectos y lombrices, especialmente en época de cría.",
+        "status": "Preocupación menor",
+        "detailed_description": "\"<h3>El Chincol: El vecino melodioso<\/h3><p>El <strong>Chincol<\/strong> (<em>Zonotrichia capensis<\/em>) es quizás el ave más conocida y querida de Chile, presente en casi todos los jardines, plazas y campos del país. Es un pájaro pequeño y confiado que se identifica rápidamente por su característico <strong>collar de color canela<\/strong> o rojizo en la nuca y un copete de plumas que suele erguir cuando está agitado.<\/p><p>Su cabeza es gris con tres líneas negras distintivas a cada lado. Aunque su plumaje dorsal es pardo para camuflarse, es su canto lo que lo hace inconfundible: un trino alegre que finaliza abruptamente y que la tradición popular chilena traduce como la pregunta: <strong>\\\"¿Has visto a mi tío Agustín?\\\"<\/strong>. A diferencia de otras aves, se adapta perfectamente a la vida urbana, saltando por el suelo en busca de semillas y migas.<\/p>\"\r\n",
+        "wikipedia": "https:\/\/es.wikipedia.org\/wiki\/Zonotrichia_capensis"
+    },
+    "en": {
+        "name": "",
+        "short_description": "",
+        "habitat": "",
+        "diet": "",
+        "status": "",
+        "detailed_description": "",
+        "wikipedia": ""
+    },
+    "pt": {
+        "name": "",
+        "short_description": "",
+        "habitat": "",
+        "diet": "",
+        "status": "",
+        "detailed_description": "",
+        "wikipedia": ""
+    }
+}
