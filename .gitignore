@@ -1,0 +1,7 @@
+# Fuentes 3D sin comprimir de las demos (pesan >50MB, GitHub las rechaza).
+# Las páginas usan las versiones .draco.glb, mucho más livianas.
+# Estos archivos quedan en el disco pero no se versionan.
+demo/nudo/NUDO.glb
+demo/chilesaurio/assets/modelo.glb
+demo/gonfoterio/mamut_walkcycle_color.glb
+demo/gonfoterio/Gonfoterio.glb
