@@ -1,41 +1,41 @@
 {
-    "id": "chilesaurus",
-    "category": "dinosaurios",
-    "name": "Chilesaurus",
-    "scientificName": "Chilesaurus diegosuarezi",
-    "description": "Un extraño dinosaurio herbívoro del Jurásico Tardío descubierto en la Patagonia chilena. Es famoso por ser un 'rompecabezas evolutivo' con características de varios grupos de dinosaurios.",
-    "icon": "🐉",
-    "arMode": "marker",
-    "image": "imagen_chilesaurus.png",
-    "thumbnail": "thumbnail.png",
-    "silhouette": "silueta_chilesaurus.svg",
-    "gps": {
-        "enabled": false,
-        "latitude": 0,
-        "longitude": 0,
-        "radius": 50
-    },
-    "marker": {
-        "enabled": true,
-        "type": "mind",
-        "file": "chilesaurus.mind"
-    },
-    "audio": {
-        "enabled": false,
-        "file": "sound.mp3"
-    },
-    "model": {
-        "glb": "chilesaurus.glb",
-        "usdz": "chilesaurus.usdz",
-        "scale": "0.5 0.5 0.5",
-        "position": "0 0 0",
-        "rotation": "0 0 0"
-    },
-    "info": {
-        "habitat": "Bosques y valles fluviales del Jurásico Tardío en la actual Región de Aysén.",
-        "diet": "Herbívoro estricto (helechos, araucarias y cícadas).",
-        "status": "Extinto",
-        "wikipedia": "https:\/\/es.wikipedia.org\/wiki\/Chilesaurus_diegosuarezi"
-    },
-    "video_url": ""
+  "id": "chilesaurus",
+  "category": "dinosaurios",
+  "name": "Chilesaurus",
+  "scientificName": "Chilesaurus diegosuarezi",
+  "description": "Un extraño dinosaurio herbívoro del Jurásico Tardío descubierto en la Patagonia chilena. Es famoso por ser un 'rompecabezas evolutivo' con características de varios grupos de dinosaurios.",
+  "icon": "🐉",
+  "arMode": "marker",
+  "image": "imagen_chilesaurus.webp",
+  "thumbnail": "thumbnail.webp",
+  "silhouette": "silueta_chilesaurus.svg",
+  "gps": {
+    "enabled": false,
+    "latitude": 0,
+    "longitude": 0,
+    "radius": 50
+  },
+  "marker": {
+    "enabled": true,
+    "type": "mind",
+    "file": "chilesaurus.mind"
+  },
+  "audio": {
+    "enabled": false,
+    "file": "sound.mp3"
+  },
+  "model": {
+    "glb": "chilesaurus.glb",
+    "usdz": "chilesaurus.usdz",
+    "scale": "0.5 0.5 0.5",
+    "position": "0 0 0",
+    "rotation": "0 0 0"
+  },
+  "info": {
+    "habitat": "Bosques y valles fluviales del Jurásico Tardío en la actual Región de Aysén.",
+    "diet": "Herbívoro estricto (helechos, araucarias y cícadas).",
+    "status": "Extinto",
+    "wikipedia": "https://es.wikipedia.org/wiki/Chilesaurus_diegosuarezi"
+  },
+  "video_url": ""
 }

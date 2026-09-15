@@ -2,6 +2,14 @@
 // Script de migración única: crea translations.json para todos los animales existentes
 // Este script solo debe ejecutarse una vez
 
+session_start();
+if (!isset($_SESSION['admin_user'])) {
+    http_response_code(401);
+    header('Content-Type: text/plain; charset=UTF-8');
+    echo "No autenticado.\n";
+    exit;
+}
+
 $models_dir = __DIR__ . '/../models';
 $animals = array_filter(glob($models_dir . '/*'), 'is_dir');
 

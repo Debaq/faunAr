@@ -6,7 +6,18 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>Gonfoterio — Marcador</title>
+<title>Gonfoterio — Marcador impreso — FaunAR</title>
+<meta name="description" content="Realidad aumentada con marcador impreso: el gonfoterio aparece en 3D al enfocar la imagen del marcador con la cámara.">
+<meta name="author" content="TecMedHub - Universidad Austral de Chile (Sede Puerto Montt)">
+<meta name="keywords" content="Gonfoterio, realidad aumentada, AR.js, marcador impreso, FaunAR, Puerto Montt">
+<link rel="canonical" href="https://tmeduca.org/faunAr/demo/gonfoterio/marcador.html">
+<meta property="og:title" content="Gonfoterio — Marcador impreso — FaunAR">
+<meta property="og:description" content="Realidad aumentada con marcador impreso: el gonfoterio aparece en 3D al enfocar la imagen del marcador con la cámara.">
+<meta property="og:image" content="https://tmeduca.org/faunAr/assets/images/logo_faunar.png">
+<meta property="og:url" content="https://tmeduca.org/faunAr/demo/gonfoterio/marcador.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Gonfoterio — Marcador impreso — FaunAR">
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/meshoptimizer@0.18.1/meshopt_decoder.js"></script>
@@ -24,6 +35,34 @@
 </script>
 <style>
   html, body { margin: 0; padding: 0; height: 100%; }
+
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  #fallbackCamara {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    background: rgba(0,0,0,0.92);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    font-family: sans-serif;
+    text-align: center;
+  }
+  #fallbackCamara[hidden] { display: none; }
+  #fallbackCamara .tarjetaFallback { max-width: 320px; }
+  #fallbackCamara p { line-height: 1.5; margin-bottom: 14px; }
+  #fallbackCamara a { display: inline-block; color: #ffcf6b; text-decoration: underline; }
 
   a#volver {
     position: fixed;
@@ -209,7 +248,17 @@
 <body style="margin:0; overflow: hidden;">
 
 <a id="volver" href="./">← Volver</a>
-<div id="ayuda">Apunta la cámara al marcador</div>
+<h1 class="sr-only">Gonfoterio en realidad aumentada con marcador impreso</h1>
+<div id="ayuda">Esta página pide acceso a tu cámara para reconocer el marcador impreso. Apuntala hacia él.</div>
+
+<div id="fallbackCamara" hidden role="alert">
+  <div class="tarjetaFallback">
+    <p>No pudimos acceder a tu cámara. Puede que hayas rechazado el permiso o que el dispositivo no sea compatible.</p>
+    <p>Revisá los permisos de cámara del navegador, o probá la versión sin marcador.</p>
+    <a href="./ar-piso.html">Ver AR en tu espacio (sin marcador)</a><br>
+    <a href="./">← Volver</a>
+  </div>
+</div>
 
 <div id="gonfoterioInfo">
   <strong>Gonfoterio</strong><br>
@@ -221,7 +270,7 @@
 <div id="modalHuellas" hidden>
   <div class="tarjeta">
     <button id="cerrarModal" title="Cerrar">✕</button>
-    <img src="./imagen_pisadas.jpeg" alt="Huellas de gonfoterio en Pelluco">
+    <img src="./imagen_pisadas.webp" alt="Huellas de gonfoterio en Pelluco">
     <div class="tituloFila">
       <h3>El paso del gigante</h3>
       <button id="btnAudio">▶ Escuchar</button>
@@ -456,6 +505,23 @@
     applyLuces();
     fixAndroidZoom();
     setInterval(updateDebugTarget, 300);
+
+    // Sonda de cámara independiente de AR.js: solo para mostrar un mensaje
+    // claro si el usuario niega el permiso o el dispositivo no es
+    // compatible. No interfiere con la solicitud de cámara propia de AR.js
+    // (el navegador reutiliza el permiso ya resuelto).
+    var fallback = document.getElementById('fallbackCamara');
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      if (fallback) fallback.hidden = false;
+    } else {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function (stream) {
+          stream.getTracks().forEach(function (t) { t.stop(); });
+        })
+        .catch(function () {
+          if (fallback) fallback.hidden = false;
+        });
+    }
   });
 
   // Bug conocido de Chrome Android: en celulares con multi-lente la cámara

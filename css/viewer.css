@@ -4,6 +4,12 @@
     box-sizing: border-box;
 }
 
+a:focus-visible,
+button:focus-visible {
+    outline: 3px solid #4CAF50;
+    outline-offset: 2px;
+}
+
 html, body {
     margin: 0;
     padding: 0;
@@ -525,13 +531,83 @@ canvas {
     padding-bottom: 10px;
 }
 
-#map-image {
+#map-frame {
+    position: relative;
     width: 100%;
-    height: auto;
+    aspect-ratio: 3 / 2;
     max-height: 60vh;
-    object-fit: contain;
     border-radius: 8px;
+    overflow: hidden;
     border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+#map-image {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#map-pins {
+    position: absolute;
+    inset: 0;
+}
+
+.map-pin {
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: rgba(30, 30, 30, 0.75);
+    border: 2px solid rgba(205, 133, 63, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 5px;
+    box-sizing: border-box;
+    transition: transform 0.2s ease;
+}
+
+.map-pin:hover {
+    transform: translate(-50%, -50%) scale(1.15);
+}
+
+.map-pin img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: grayscale(100%) brightness(0.6);
+}
+
+.map-pin.unlocked {
+    background: rgba(139, 69, 19, 0.85);
+    border-color: rgba(255, 220, 170, 0.95);
+}
+
+.map-pin.unlocked img {
+    filter: grayscale(0%) brightness(1);
+}
+
+.map-pin.locked {
+    opacity: 0.55;
+}
+
+#map-pin-tooltip {
+    position: fixed;
+    display: none;
+    background: rgba(20, 20, 20, 0.95);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    pointer-events: none;
+    z-index: 2500;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transform: translate(-50%, -130%);
+    white-space: nowrap;
 }
 
 #map-placeholder {
@@ -583,6 +659,55 @@ canvas {
     font-size: 12px;
     font-weight: bold;
     color: white;
+}
+
+#animals-progress .score-line {
+    margin-top: 8px;
+    font-size: 0.85rem;
+    color: rgba(255, 220, 170, 0.95);
+    font-weight: 600;
+}
+
+#achievements-strip {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 4px 2px 14px 2px;
+    margin-bottom: 6px;
+}
+
+.achievement-badge {
+    flex: 0 0 auto;
+    width: 78px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: 10px;
+    background: rgba(60, 60, 60, 0.6);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    opacity: 0.4;
+    filter: grayscale(100%);
+}
+
+.achievement-badge.unlocked {
+    opacity: 1;
+    filter: grayscale(0%);
+    border-color: rgba(205, 133, 63, 0.9);
+    background: rgba(139, 69, 19, 0.5);
+}
+
+.achievement-badge .achievement-icon {
+    font-size: 26px;
+    line-height: 1;
+    margin-bottom: 4px;
+}
+
+.achievement-badge .achievement-name {
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
 }
 
 #animals-grid {

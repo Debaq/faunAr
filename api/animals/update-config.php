@@ -1,6 +1,13 @@
 <?php
+session_start();
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
+
+if (!isset($_SESSION['admin_user'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'No autenticado']);
+    exit;
+}
 
 // Leer datos del request
 $input = json_decode(file_get_contents('php://input'), true);

@@ -1,11 +1,24 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
+    <title>Chilesaurio — FaunAR</title>
+    <meta name="description" content="Realidad aumentada por marcador de imagen: el Chilesaurus diegosuarezi aparece en 3D al enfocar su propia ilustración con la cámara.">
+    <meta name="author" content="TecMedHub - Universidad Austral de Chile (Sede Puerto Montt)">
+    <meta name="keywords" content="Chilesaurio, Chilesaurus diegosuarezi, realidad aumentada, MindAR, marcador de imagen, FaunAR">
+    <link rel="canonical" href="https://tmeduca.org/faunAr/demo/chilesaurio/">
+    <meta property="og:title" content="Chilesaurio — FaunAR">
+    <meta property="og:description" content="Realidad aumentada por marcador de imagen: el Chilesaurus diegosuarezi aparece en 3D al enfocar su propia ilustración con la cámara.">
+    <meta property="og:image" content="https://tmeduca.org/faunAr/demo/chilesaurio/assets/WhatsApp%20Image%202025-11-27%20at%205.24.00%20PM.jpeg">
+    <meta property="og:url" content="https://tmeduca.org/faunAr/demo/chilesaurio/">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Chilesaurio — FaunAR">
+    <meta name="twitter:description" content="Realidad aumentada por marcador de imagen: el Chilesaurus diegosuarezi en 3D.">
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/meshoptimizer@0.18.1/meshopt_decoder.js"></script>
@@ -114,17 +127,75 @@
         transition: opacity 0.15s ease;
       }
       #ayuda.oculto { opacity: 0; pointer-events: none; }
+
+      .sr-only {
+        position: absolute;
+        width: 1px; height: 1px;
+        padding: 0; margin: -1px;
+        overflow: hidden;
+        clip: rect(0,0,0,0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      #descargaMarcador {
+        position: fixed;
+        top: 12px; right: 12px;
+        z-index: 1000;
+        background: rgba(0,0,0,0.5);
+        color: #fff;
+        text-decoration: none;
+        font-size: 13px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-family: sans-serif;
+      }
+
+      #fallbackCamara {
+        position: fixed;
+        inset: 0;
+        z-index: 3000;
+        background: rgba(0,0,0,0.92);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        font-family: sans-serif;
+        text-align: center;
+      }
+      #fallbackCamara[hidden] { display: none; }
+      #fallbackCamara .tarjetaFallback { max-width: 320px; }
+      #fallbackCamara p { line-height: 1.5; margin-bottom: 14px; }
+      #fallbackCamara a {
+        display: inline-block;
+        color: #ffcf6b;
+        margin: 6px 10px;
+        text-decoration: underline;
+      }
     </style>
   </head>
   <body>
     <a id="volver" href="../">← Volver</a>
+    <h1 class="sr-only">Chilesaurio en realidad aumentada</h1>
 
-    <div id="ayuda">Apunta la cámara a la imagen para escanearla</div>
+    <div id="ayuda">Esta página pide acceso a tu cámara para reconocer la imagen del Chilesaurio como marcador. Apúntala a la ilustración para escanearla.</div>
 
     <div id="chileInfo">
       <strong>Chilesaurio</strong> (Chilesaurus diegosuarezi)<br>
       Dinosaurio herbívoro descubierto en 2004 en la región de Aysén, Patagonia chilena, y descrito científicamente en 2015. Su nombre honra a Diego Suárez, quien lo halló siendo niño.<br>
       <strong>Artista:</strong> Mauricio Álvarez.
+    </div>
+
+    <a id="descargaMarcador" href="./assets/WhatsApp%20Image%202025-11-27%20at%205.24.00%20PM.jpeg" download="marcador-chilesaurio.jpg">📥 Descargar marcador</a>
+
+    <div id="fallbackCamara" hidden role="alert">
+      <div class="tarjetaFallback">
+        <p>No pudimos acceder a tu cámara. Puede que hayas rechazado el permiso o que el dispositivo no sea compatible.</p>
+        <p>Podés revisar los permisos de cámara del navegador e intentar de nuevo, o ver el marcador para probarlo en otro dispositivo.</p>
+        <a href="./assets/WhatsApp%20Image%202025-11-27%20at%205.24.00%20PM.jpeg" download="marcador-chilesaurio.jpg">📥 Descargar marcador</a>
+        <a href="../">← Volver</a>
+      </div>
     </div>
 
     <button id="devToggle" title="Herramientas dev">⚙</button>
@@ -292,6 +363,23 @@
         setupDevPanel();
         applyTransform();
         setInterval(updateDebugTarget, 300);
+
+        // Sonda de cámara independiente de MindAR: solo para mostrar un
+        // mensaje claro si el usuario niega el permiso o el dispositivo no
+        // es compatible. No interfiere con la solicitud de cámara propia
+        // de MindAR (el navegador reutiliza el permiso ya resuelto).
+        var fallback = document.getElementById('fallbackCamara');
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+          if (fallback) fallback.hidden = false;
+        } else {
+          navigator.mediaDevices.getUserMedia({ video: true })
+            .then(function (stream) {
+              stream.getTracks().forEach(function (t) { t.stop(); });
+            })
+            .catch(function () {
+              if (fallback) fallback.hidden = false;
+            });
+        }
       });
     })();
     </script>

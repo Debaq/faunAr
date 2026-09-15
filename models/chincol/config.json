@@ -1,41 +1,41 @@
 {
-    "id": "chincol",
-    "category": "fauna",
-    "name": "Chincol",
-    "scientificName": "Zonotrichia capensis",
-    "description": "El ave más común de los jardines chilenos. Inconfundible por su collar canela y su canto que parece preguntar '¿Has visto a mi tío Agustín?'.",
-    "icon": "🐥",
-    "arMode": "hybrid",
-    "image": "imagen_chincol.png",
-    "thumbnail": "thumbnail.png",
-    "silhouette": "silueta_chincol.svg",
-    "gps": {
-        "enabled": true,
-        "latitude": -33.4005,
-        "longitude": -70.5732,
-        "radius": 50
-    },
-    "marker": {
-        "enabled": true,
-        "type": "mind",
-        "file": "chincol.mind"
-    },
-    "audio": {
-        "enabled": false,
-        "file": "sound.mp3"
-    },
-    "model": {
-        "glb": "chincol.glb",
-        "usdz": "chincol.usdz",
-        "scale": "0.5 0.5 0.5",
-        "position": "0 0 0",
-        "rotation": "0 0 0"
-    },
-    "info": {
-        "habitat": "Extraordinariamente adaptable. Jardines, plazas, huertos, campos agrícolas y matorrales desde la costa hasta la precordillera (2.000+ msnm).",
-        "diet": "Omnívoro. Principalmente semillas (granívoro) que busca en el suelo, complementado con insectos y lombrices, especialmente en época de cría.",
-        "status": "Preocupación menor",
-        "wikipedia": "https:\/\/es.wikipedia.org\/wiki\/Zonotrichia_capensis"
-    },
-    "video_url": ""
+  "id": "chincol",
+  "category": "fauna",
+  "name": "Chincol",
+  "scientificName": "Zonotrichia capensis",
+  "description": "El ave más común de los jardines chilenos. Inconfundible por su collar canela y su canto que parece preguntar '¿Has visto a mi tío Agustín?'.",
+  "icon": "🐥",
+  "arMode": "hybrid",
+  "image": "imagen_chincol.webp",
+  "thumbnail": "thumbnail.webp",
+  "silhouette": "silueta_chincol.svg",
+  "gps": {
+    "enabled": true,
+    "latitude": -33.4005,
+    "longitude": -70.5732,
+    "radius": 50
+  },
+  "marker": {
+    "enabled": true,
+    "type": "mind",
+    "file": "chincol.mind"
+  },
+  "audio": {
+    "enabled": false,
+    "file": "sound.mp3"
+  },
+  "model": {
+    "glb": "chincol.glb",
+    "usdz": "chincol.usdz",
+    "scale": "0.5 0.5 0.5",
+    "position": "0 0 0",
+    "rotation": "0 0 0"
+  },
+  "info": {
+    "habitat": "Extraordinariamente adaptable. Jardines, plazas, huertos, campos agrícolas y matorrales desde la costa hasta la precordillera (2.000+ msnm).",
+    "diet": "Omnívoro. Principalmente semillas (granívoro) que busca en el suelo, complementado con insectos y lombrices, especialmente en época de cría.",
+    "status": "Preocupación menor",
+    "wikipedia": "https://es.wikipedia.org/wiki/Zonotrichia_capensis"
+  },
+  "video_url": ""
 }

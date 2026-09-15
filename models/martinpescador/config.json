@@ -4,7 +4,7 @@
   "name": "Martín Pescador",
   "scientificName": "Megaceryle torquata",
   "description": "El Martín Pescador Grande es un ave inconfundible que habita a lo largo de casi todo Chile, frecuentando ríos, lagos y costas. Es conocido por su gran tamaño, su cabeza crestada, su característico llamado ruidoso tipo matraca y su espectacular forma de pescar, zambulléndose en picada para atrapar peces bajo el agua.",
-  "thumbnail": "thumbnail.jpg",
+  "thumbnail": "thumbnail.webp",
   "icon": "🐦",
   "silhouette": "silueta_martinpescador.svg",
   "arMode": "hybrid",
@@ -36,5 +36,5 @@
     "status": "Preocupación menor",
     "wikipedia": "https://es.wikipedia.org/wiki/Megaceryle_torquata"
   },
-  "image": "imagen_martinpescador.png"
+  "image": "imagen_martinpescador.webp"
 }

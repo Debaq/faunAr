@@ -3,7 +3,8 @@ session_start();
 header('Content-Type: application/json');
 
 // Verificar sesión
-if (!isset($_SESSION['admin_logged_in'])) {
+if (!isset($_SESSION['admin_user'])) {
+    http_response_code(401);
     echo json_encode([
         'success' => false,
         'message' => 'No autorizado'

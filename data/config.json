@@ -2,13 +2,13 @@
     "site": {
         "title": "FaunAR",
         "description": "Portal de Realidad Aumentada de Fauna Nativa de Chile",
-        "baseUrl": "https:\/\/tmeduca.org\/faunA",
+        "baseUrl": "https:\/\/tmeduca.org\/faunAr",
         "defaultLanguage": "es",
         "availableLanguages": [
             "es",
             "en"
         ],
-        "footer_text": "TecMedHub @ 2025"
+        "footer_text": "© 2026 TecMedHub"
     },
     "ar": {
         "defaultMode": "marker",

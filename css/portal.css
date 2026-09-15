@@ -10,6 +10,14 @@
     box-sizing: border-box;
 }
 
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+    outline: 3px solid #4CAF50;
+    outline-offset: 2px;
+}
+
 body {
     font-family: system-ui, -apple-system, sans-serif;
     background: linear-gradient(135deg, var(--primary-gradient-start) 0%, var(--primary-gradient-end) 100%);

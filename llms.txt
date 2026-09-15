@@ -1,0 +1,37 @@
+# FaunAR
+
+> Plataforma web de realidad aumentada (RA/AR) que permite explorar fauna, flora y megafauna nativa de Chile, y patrimonio cultural local, directamente desde el navegador del celular o el computador — sin instalar aplicaciones.
+
+Desarrollado por TecMedHub (Laboratorio de Prototipado Avanzado de la Universidad Austral de Chile, Sede Puerto Montt). Implementación inicial centrada en el sendero del Parque Laguna Azul, Región de Los Lagos, Chile.
+
+## Tecnología
+
+- Sitio estático + PHP (backend simple para el panel de administración y el listado de modelos), sin frameworks de frontend.
+- Realidad aumentada por marcador de imagen: MindAR (A-Frame).
+- Realidad aumentada por marcador impreso: AR.js (A-Frame).
+- Realidad aumentada de superficie (sin marcador): WebXR / Quick Look, vía `<model-viewer>` de Google.
+- Reconocimiento de mano (sin marcador): MediaPipe Hands.
+- Panorama 360° con orientación del dispositivo: A-Frame.
+- Modelos 3D en formato GLB (Android/web) y USDZ (iOS Quick Look).
+- Funciona en cualquier navegador móvil moderno con acceso a cámara; no requiere descargar una app.
+
+## Estructura
+
+- `/` — Portal principal: catálogo de fauna, flora y megafauna nativa de Chile en RA (16 especies).
+- `/demo/` — Cuatro demostraciones operativas de patrimonio cultural y natural de Puerto Montt:
+  - `/demo/nudo/` — El Nudo de Monte Verde (~14.500 años de antigüedad): reconocimiento de mano por cámara, sin marcador impreso.
+  - `/demo/chilesaurio/` — Chilesaurus diegosuarezi: reconocimiento de imagen (marcador natural), usando la propia ilustración del dinosaurio.
+  - `/demo/gonfoterio/` — Gonfoterio (megafauna extinta, huellas halladas en Pelluco, Puerto Montt): AR de superficie sin marcador, o con marcador impreso.
+  - `/demo/casa_pauli/` — Recorrido 360° de un lugar patrimonial, navegable con el giroscopio del celular.
+  - `/demo/proyecto/` — Descripción completa del proyecto: alcance, metodología y objetivos.
+- `/viewer.html?model=<especie>` — Visor de RA individual para cada especie del catálogo del portal.
+
+## Contacto
+
+TecMedHub - Universidad Austral de Chile (Sede Puerto Montt)
+Instagram: https://www.instagram.com/tecmedhub
+
+## Notas para revisores automatizados
+
+- El catálogo del portal (`/`) se renderiza también como una lista estática en el HTML servido (sin depender de JavaScript), además de su versión interactiva.
+- El panel de administración (`/admin/`) no es parte de la experiencia pública y no está pensado para ser indexado.

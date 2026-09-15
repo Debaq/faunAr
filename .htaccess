@@ -1,6 +1,17 @@
 # FaunAR - Control de caché
 # Asegurar que los usuarios siempre obtengan la versión más reciente
 
+# Página de error 404 propia. También resuelve variantes de mayúsculas/minúsculas
+# en las subrutas dentro de /faunAr/ (demo, admin, nombres de experiencia, etc.)
+# redirigiendo con 301 a la forma canónica cuando existe una coincidencia exacta
+# salvo por mayúsculas. Ver 404.php para el detalle.
+ErrorDocument 404 /faunAr/404.php
+
+# Ocultar el panel de administración de listados de directorio
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
 # Desactivar caché para HTML
 <FilesMatch "\.(html|htm)$">
     Header set Cache-Control "no-cache, no-store, must-revalidate"

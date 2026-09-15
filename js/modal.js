@@ -80,7 +80,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Poblar contenido
             modalTitle.textContent = translation.name || config.name || 'Detalles';
-            modalImage.src = `models/${folder}/imagen_${folder}.png`;
+            modalImage.src = `models/${folder}/imagen_${folder}.webp`;
             modalImage.alt = `Imagen de ${translation.name || config.name}`;
             modalText.innerHTML = translation.detailed_description || '<p>No hay descripción disponible.</p>';
 

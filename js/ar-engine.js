@@ -12,6 +12,29 @@ const urlParams = new URLSearchParams(window.location.search);
 const modelId = urlParams.get('model'); // Sistema antiguo (compatibilidad)
 const qrCode = urlParams.get('qr');     // Sistema nuevo (instancias)
 
+// Mensaje de error no bloqueante (reemplaza a alert()): persiste en pantalla
+// hasta que el usuario lo cierra, sin interrumpir el resto de la ejecución.
+function showFriendlyError(message) {
+    console.error(message);
+    let banner = document.getElementById('friendly-error-banner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'friendly-error-banner';
+        banner.setAttribute('role', 'alert');
+        banner.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:5000;max-width:88vw;background:rgba(20,20,20,0.94);color:#fff;font-family:sans-serif;font-size:14px;line-height:1.5;padding:14px 18px;border-radius:10px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,0.4);';
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Cerrar';
+        closeBtn.style.cssText = 'display:block;margin:10px auto 0;background:#4CAF50;color:#fff;border:none;border-radius:6px;padding:8px 16px;font-size:13px;min-height:36px;cursor:pointer;';
+        closeBtn.addEventListener('click', () => banner.remove());
+        const text = document.createElement('div');
+        text.id = 'friendly-error-text';
+        banner.appendChild(text);
+        banner.appendChild(closeBtn);
+        document.body.appendChild(banner);
+    }
+    document.getElementById('friendly-error-text').textContent = message;
+}
+
 // Función para solicitar permisos desde el botón del usuario
 window.requestPermissionsFromUser = async function() {
     console.log('🔐 Usuario solicitando permisos de sensores...');
@@ -21,7 +44,13 @@ window.requestPermissionsFromUser = async function() {
         permissionsBtn.textContent = 'Solicitando permisos...';
         permissionsBtn.disabled = true;
 
-        await requestAllPermissions();
+        const granted = await requestAllPermissions();
+
+        if (!granted.camera) {
+            console.log('📦 Sin cámara disponible, pasando a vista 3D sin cámara');
+            showNoCameraViewer('sin-camara');
+            return;
+        }
 
         console.log('✅ Permisos concedidos, continuando con AR...');
         permissionsBtn.style.display = 'none';
@@ -33,7 +62,8 @@ window.requestPermissionsFromUser = async function() {
         console.error('Error solicitando permisos:', error);
         permissionsBtn.textContent = 'Reintentar Permisos';
         permissionsBtn.disabled = false;
-        alert('Se necesitan permisos para continuar. Por favor, autoriza el acceso cuando se solicite.');
+        document.getElementById('view-3d-fallback-btn').style.display = 'block';
+        showFriendlyError('No pudimos activar la cámara. Podés reintentar o ver el modelo sin cámara.');
     }
 };
 
@@ -57,11 +87,11 @@ window.manualStartAR = async function() {
             await continueMarkerSetup();
         } catch (error) {
             console.error('✗ Error al arrancar MindAR:', error);
-            alert('Error al activar la cámara: ' + error.message);
+            showFriendlyError('No pudimos activar la cámara. Puede que hayas rechazado el permiso o que el dispositivo no sea compatible.');
         }
     } else {
         console.error('Sistema MindAR no disponible');
-        alert('Error: Sistema AR no disponible');
+        showFriendlyError('Tu navegador no es compatible con esta experiencia de realidad aumentada.');
     }
 };
 
@@ -73,7 +103,21 @@ async function initAR() {
         return;
     }
 
-    // Verificar si requiere permiso del usuario (iOS)
+    // Siempre ofrecer la salida "ver en 3D sin cámara", por si el equipo no tiene
+    // (o el usuario no quiere usar) cámara — así no depende de que algo falle primero.
+    document.getElementById('view-3d-fallback-btn').style.display = 'block';
+
+    // Si el equipo no tiene ninguna cámara, no tiene sentido mostrar los flujos
+    // de permisos de sensores/cámara: vamos directo a la vista 3D sin cámara.
+    const cameraAvailable = await hasCameraDevice();
+    if (!cameraAvailable) {
+        console.log('📦 No hay cámara en este equipo, mostrando vista 3D directamente');
+        document.getElementById('no-camera-hint').style.display = 'block';
+        await showNoCameraViewer('sin-camara');
+        return;
+    }
+
+    // Verificar si requiere permiso explícito del usuario (iOS)
     const needsUserPermission = (
         (typeof DeviceOrientationEvent !== 'undefined' &&
          typeof DeviceOrientationEvent.requestPermission === 'function') ||
@@ -82,21 +126,62 @@ async function initAR() {
     );
 
     if (needsUserPermission) {
-        // En iOS, mostrar botón para solicitar permisos
-        console.log('📱 iOS detectado, mostrando botón de permisos');
+        // En iOS (o navegadores que exponen la misma API), mostrar botón para pedir permisos
+        console.log('📱 Navegador con permiso explícito de sensores, mostrando botón');
         updateLoadingStatus('Toca "Permitir Sensores" para continuar');
         document.getElementById('request-permissions-btn').style.display = 'block';
         return;
     } else {
         // En Android u otros navegadores, solicitar permisos automáticamente
+        let granted = { camera: true };
         try {
             updateLoadingStatus('Solicitando permisos de sensores...');
-            await requestAllPermissions();
+            granted = await requestAllPermissions();
         } catch (error) {
             console.warn('⚠️ Error solicitando permisos:', error);
         }
+
+        if (!granted.camera) {
+            console.log('📦 Cámara no concedida, mostrando vista 3D sin cámara');
+            await showNoCameraViewer('permiso-denegado');
+            return;
+        }
+
         await continueInitAR();
     }
+}
+
+// Carga currentConfig por QR o por modelId. Devuelve true si se cargó bien.
+// La usan tanto el flujo AR normal como el modo sin cámara.
+async function loadCurrentConfig() {
+    if (currentConfig) return true; // ya estaba cargado
+
+    updateLoadingStatus('Cargando configuración...');
+
+    if (qrCode) {
+        console.log('🔍 Sistema de instancias: Cargando por QR', qrCode);
+        currentConfig = await ConfigLoader.loadByQR(qrCode);
+
+        if (!currentConfig) {
+            alert(`Código QR "${qrCode}" no válido o instancia deshabilitada`);
+            document.getElementById('loading').style.display = 'none';
+            return false;
+        }
+
+        console.log('✅ Config cargado por QR:', currentConfig);
+    } else if (modelId) {
+        console.log('⚠️ Sistema legacy: Cargando por modelId', modelId);
+        currentConfig = await ConfigLoader.load(modelId);
+    }
+
+    if (!currentConfig) {
+        alert('Error cargando configuración');
+        document.getElementById('loading').style.display = 'none';
+        return false;
+    }
+
+    updateInfoPanel();
+    return true;
 }
 
 async function continueInitAR() {
@@ -107,37 +192,11 @@ async function continueInitAR() {
     }, 8000);
 
     try {
-        updateLoadingStatus('Cargando configuración...');
-
-        // NUEVO SISTEMA: Cargar por código QR
-        if (qrCode) {
-            console.log('🔍 Sistema de instancias: Cargando por QR', qrCode);
-            currentConfig = await ConfigLoader.loadByQR(qrCode);
-
-            if (!currentConfig) {
-                alert(`Código QR "${qrCode}" no válido o instancia deshabilitada`);
-                clearTimeout(safetyTimeout);
-                document.getElementById('loading').style.display = 'none';
-                return;
-            }
-
-            console.log('✅ Config cargado por QR:', currentConfig);
-        }
-        // SISTEMA ANTIGUO: Cargar por ID de modelo (compatibilidad)
-        else if (modelId) {
-            console.log('⚠️ Sistema legacy: Cargando por modelId', modelId);
-            currentConfig = await ConfigLoader.load(modelId);
-        }
-
-        if (!currentConfig) {
-            alert('Error cargando configuración');
+        const ok = await loadCurrentConfig();
+        if (!ok) {
             clearTimeout(safetyTimeout);
-            document.getElementById('loading').style.display = 'none';
             return;
         }
-
-        // Actualizar info panel
-        updateInfoPanel();
 
         // Iniciar según modo AR
         if (currentConfig.arMode === 'gps' || currentConfig.arMode === 'hybrid') {
@@ -156,6 +215,74 @@ async function continueInitAR() {
         document.getElementById('loading').style.display = 'none';
     }
 }
+
+// Detecta si el equipo tiene al menos una cámara física.
+// Si la API no está disponible o falla, asumimos que SÍ podría haber cámara
+// (mejor preguntar de más que bloquear a alguien que sí tiene cámara).
+async function hasCameraDevice() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+        return true;
+    }
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        return devices.some(d => d.kind === 'videoinput');
+    } catch (error) {
+        console.warn('No se pudo enumerar dispositivos de cámara:', error);
+        return true;
+    }
+}
+
+// Envuelve una promesa con un tiempo límite para que nunca quede colgada
+function withTimeout(promise, ms, timeoutError = 'Tiempo de espera agotado') {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error(timeoutError)), ms))
+    ]);
+}
+
+// Vista de respaldo: muestra el modelo 3D solo (sin cámara ni AR), rotable con
+// mouse/touch. Se usa cuando el equipo no tiene cámara, el usuario la rechaza,
+// o falla la inicialización de la cámara.
+window.showNoCameraViewer = async function(reason) {
+    console.log('📦 Activando vista 3D sin cámara. Motivo:', reason);
+
+    const ok = await loadCurrentConfig();
+    if (!ok) return;
+
+    // Ocultar toda la UI de carga/permiso, ya no aplica
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('request-permissions-btn').style.display = 'none';
+    document.getElementById('start-ar-btn').style.display = 'none';
+    document.getElementById('view-3d-fallback-btn').style.display = 'none';
+    document.getElementById('no-camera-hint').style.display = 'none';
+
+    // Botones que dependen de la cámara no aplican en este modo
+    const captureBtn = document.getElementById('capture-model-btn');
+    if (captureBtn) captureBtn.style.display = 'none';
+    const photoBtn = document.getElementById('capture-btn');
+    if (photoBtn) photoBtn.style.display = 'none';
+
+    document.getElementById('fallback-mode-banner').style.display = 'block';
+    document.documentElement.style.background = '#1b1f1c';
+    document.body.style.background = '#1b1f1c';
+
+    if (!isModelCaptured) {
+        isModelCaptured = true;
+        createCaptured3DModel(); // internamente hace scene.removeAttribute('background') y deja el canvas transparente
+    }
+
+    // Fondo neutro DESPUÉS de crear el modelo: sin cámara detrás, el canvas
+    // transparente necesita un color propio (createCaptured3DModel lo quita
+    // asumiendo que hay video de cámara detrás, acá no lo hay).
+    const scene = document.querySelector('a-scene');
+    if (scene) {
+        scene.setAttribute('background', 'color: #1b1f1c');
+    }
+
+    if (currentConfig?.id) {
+        unlockAnimal(currentConfig.id);
+    }
+};
 
 async function checkCameraAccess() {
     try {
@@ -256,11 +383,6 @@ async function initGPS() {
         return;
     }
 
-    // Activar componentes GPS en la cámara
-    const camera = document.getElementById('camera');
-    camera.setAttribute('gps-camera', '');
-    camera.setAttribute('rotation-reader', '');
-
     navigator.geolocation.watchPosition(
         (position) => {
             userLocation = {
@@ -326,39 +448,28 @@ function updateGPSStatus(distance) {
     }
 }
 
+// Muestra el modelo cuando el usuario entra al radio GPS del punto.
+// Nota: esto NO ancla el modelo a un punto fijo del mundo real (para eso hacía
+// falta la librería de AR.js "location-based", que nunca se cargó en este visor
+// y dejaba esta función rota). En su lugar, igual que al "capturar" el modelo
+// desde un marcador, lo mostramos flotando frente a la cámara y rotable con la
+// mano/mouse — simple y confiable, aunque no siga el punto exacto del terreno.
 function showGPSModel() {
-    const container = document.getElementById('gps-container');
+    if (isModelCaptured) return; // ya se mostró
 
-    // Evitar duplicados
-    if (container.querySelector('[gps-entity-place]')) return;
+    console.log('📍 Dentro del radio GPS, mostrando el modelo...');
+    document.getElementById('loading').style.display = 'none';
+    isModelCaptured = true;
+    createCaptured3DModel();
 
-    const entity = document.createElement('a-entity');
-    entity.setAttribute('gps-entity-place',
-        `latitude: ${currentConfig.gps.latitude}; longitude: ${currentConfig.gps.longitude}`);
-    entity.setAttribute('gltf-model', `models/${currentConfig.id}/${currentConfig.model.glb}`);
-    entity.setAttribute('scale', currentConfig.model.scale);
-    entity.setAttribute('rotation', currentConfig.model.rotation);
-
-    if (currentConfig.model.glb.includes('glb') || currentConfig.model.glb.includes('gltf')) {
-        entity.setAttribute('animation-mixer', '');
+    if (currentConfig?.id) {
+        unlockAnimal(currentConfig.id);
     }
-
-    container.appendChild(entity);
 
     // Animar botón de info para indicar que el modelo está disponible
     const infoBtn = document.getElementById('info-toggle-btn');
     if (infoBtn) {
         infoBtn.style.animation = 'pulse 1s ease-in-out 3';
-    }
-
-    // Reproducir sonido si está configurado
-    if (currentConfig.audio?.enabled) {
-        const audioGPS = new Audio(`models/${currentConfig.id}/${currentConfig.audio.file}`);
-        audioGPS.loop = true;
-        audioGPS.volume = 0.7;
-        audioGPS.play()
-            .then(() => console.log('🔊 Sonido GPS reproduciendo'))
-            .catch(err => console.log('⚠️ Error reproduciendo sonido GPS:', err.message));
     }
 }
 
@@ -560,7 +671,7 @@ async function continueMarkerSetup() {
 
     if (!video) {
         console.error('El video sigue sin crearse');
-        alert('Error: No se pudo activar la cámara');
+        showFriendlyError('No pudimos activar la cámara. Revisá los permisos del navegador e intentá de nuevo.');
         return;
     }
 
@@ -716,67 +827,80 @@ async function requestAllPermissions() {
         camera: false
     };
 
-    // Solicitar permiso para DeviceOrientation (giroscopio)
+    // Solicitar permiso para DeviceOrientation (giroscopio) - con tope de tiempo
     if (typeof DeviceOrientationEvent !== 'undefined' &&
         typeof DeviceOrientationEvent.requestPermission === 'function') {
         try {
-            const orientationPermission = await DeviceOrientationEvent.requestPermission();
+            const orientationPermission = await withTimeout(
+                DeviceOrientationEvent.requestPermission(), 5000, 'Timeout DeviceOrientation'
+            );
             if (orientationPermission === 'granted') {
                 console.log('✅ Permiso de DeviceOrientation (giroscopio) concedido');
                 permissionsGranted.orientation = true;
             } else {
-                console.log('⚠️ Permiso de DeviceOrientation denegado');
+                console.log('⚠️ Permiso de DeviceOrientation denegado (no es bloqueante)');
             }
         } catch (error) {
-            console.error('Error solicitando DeviceOrientation:', error);
+            console.warn('⚠️ No se pudo solicitar DeviceOrientation (no es bloqueante):', error.message);
         }
     } else {
-        // Navegadores que no requieren permiso
+        // Navegadores que no requieren permiso (la mayoría de PC/Android)
         permissionsGranted.orientation = true;
     }
 
-    // Solicitar permiso para DeviceMotion (acelerómetro)
+    // Solicitar permiso para DeviceMotion (acelerómetro) - con tope de tiempo
     if (typeof DeviceMotionEvent !== 'undefined' &&
         typeof DeviceMotionEvent.requestPermission === 'function') {
         try {
-            const motionPermission = await DeviceMotionEvent.requestPermission();
+            const motionPermission = await withTimeout(
+                DeviceMotionEvent.requestPermission(), 5000, 'Timeout DeviceMotion'
+            );
             if (motionPermission === 'granted') {
                 console.log('✅ Permiso de DeviceMotion (acelerómetro) concedido');
                 permissionsGranted.motion = true;
             } else {
-                console.log('⚠️ Permiso de DeviceMotion denegado');
+                console.log('⚠️ Permiso de DeviceMotion denegado (no es bloqueante)');
             }
         } catch (error) {
-            console.error('Error solicitando DeviceMotion:', error);
+            console.warn('⚠️ No se pudo solicitar DeviceMotion (no es bloqueante):', error.message);
         }
     } else {
         // Navegadores que no requieren permiso
         permissionsGranted.motion = true;
     }
 
-    // Solicitar permiso de cámara (MindAR lo solicitará después si es necesario)
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-                facingMode: 'environment',
-                width: { ideal: 1920 },
-                height: { ideal: 1080 }
-            }
-        });
-        console.log('✅ Permiso de cámara concedido');
-        permissionsGranted.camera = true;
-        stream.getTracks().forEach(track => track.stop());
-    } catch (error) {
-        console.warn('⚠️ Permiso de cámara no concedido ahora, MindAR lo solicitará después');
-        // No lanzar error, continuar de todos modos
+    // Solicitar permiso de cámara - con tope de tiempo para que nunca quede colgado
+    const cameraAvailable = await hasCameraDevice();
+    if (cameraAvailable) {
+        try {
+            const stream = await withTimeout(
+                navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'environment',
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    }
+                }),
+                10000,
+                'Timeout cámara'
+            );
+            console.log('✅ Permiso de cámara concedido');
+            permissionsGranted.camera = true;
+            stream.getTracks().forEach(track => track.stop());
+        } catch (error) {
+            console.warn('⚠️ Permiso de cámara no concedido:', error.message);
+        }
+    } else {
+        console.log('📦 No se detectó ninguna cámara en este equipo');
     }
 
     console.log('🔐 Permisos procesados:', permissionsGranted);
 
-    // Si al menos los permisos de sensores fueron concedidos, continuar
-    if (!permissionsGranted.orientation && !permissionsGranted.motion) {
-        throw new Error('Se necesitan permisos de sensores para la experiencia completa');
-    }
+    // Los sensores de orientación/movimiento son un plus (afectan el modo GPS y el
+    // giroscopio libre), pero NO deben bloquear experiencias de marcador que solo
+    // necesitan cámara. Por eso ya no se lanza error aquí: quien llama decide qué
+    // hacer según permissionsGranted.camera.
+    return permissionsGranted;
 }
 
 function setupModelRotationControls(entity) {
@@ -1281,6 +1405,8 @@ window.capturePhoto = function() {
 
         capturedPhotos.unshift(photo);
         savePhotos();
+        addScore(25);
+        checkAchievements();
 
         // Mostrar preview
         currentPhotoData = photo;
@@ -1502,7 +1628,7 @@ async function ensureCameraPermissions() {
         return true;
     } catch (error) {
         console.error('Error solicitando permisos de cámara:', error);
-        alert('Se necesitan permisos de cámara para usar la experiencia AR. Por favor, autoriza el acceso a la cámara.');
+        showFriendlyError('Esta experiencia necesita acceso a tu cámara. Revisá los permisos del navegador y volvé a intentarlo.');
         return false;
     }
 }
@@ -1513,6 +1639,154 @@ async function ensureCameraPermissions() {
 
 // Lista completa de animales - se carga dinámicamente desde los configs
 let ALL_ANIMALS = [];
+
+// Posición de cada especie en el mapa ilustrado del sector (% del ancho/alto del frame)
+const ANIMAL_MAP_POSITIONS = {
+    bandurria:      { x: 16, y: 62 },
+    tiuque:         { x: 26, y: 30 },
+    traro:          { x: 46, y: 18 },
+    carpintero:     { x: 12, y: 32 },
+    martinpescador: { x: 34, y: 72 },
+    cisne:          { x: 46, y: 80 },
+    chincol:        { x: 60, y: 40 },
+    chucao:         { x: 70, y: 28 },
+    puma:           { x: 84, y: 55 },
+    pudu:           { x: 90, y: 68 },
+    huillin:        { x: 56, y: 85 },
+    zorrodedarwin:  { x: 8, y: 78 },
+    ranadedarwin:   { x: 64, y: 82 },
+    copihue:        { x: 20, y: 88 },
+    chilesaurus:    { x: 78, y: 15 },
+    gonfoterio:     { x: 50, y: 50 }
+};
+
+// Grupos de especies usados por los logros
+const ACHIEVEMENT_SPECIES_GROUPS = {
+    aves: ['bandurria', 'carpintero', 'chincol', 'chucao', 'cisne', 'martinpescador', 'tiuque', 'traro'],
+    mamiferos: ['huillin', 'pudu', 'puma', 'zorrodedarwin']
+};
+
+// Definición de logros: id, nombre, ícono, condición según (discovered[], photoCount)
+const ACHIEVEMENTS = [
+    {
+        id: 'primer_descubrimiento',
+        name: 'Primer Descubrimiento',
+        icon: '🔍',
+        points: 50,
+        condition: (discovered) => discovered.length >= 1
+    },
+    {
+        id: 'mitad_camino',
+        name: 'Mitad del Camino',
+        icon: '🧭',
+        points: 150,
+        condition: (discovered) => discovered.length >= Math.ceil(ALL_ANIMALS.length / 2) && ALL_ANIMALS.length > 0
+    },
+    {
+        id: 'observador_aves',
+        name: 'Observador de Aves',
+        icon: '🐦',
+        points: 200,
+        condition: (discovered) => ACHIEVEMENT_SPECIES_GROUPS.aves.every(id => discovered.includes(id))
+    },
+    {
+        id: 'guardian_mamiferos',
+        name: 'Guardián de Mamíferos',
+        icon: '🦦',
+        points: 200,
+        condition: (discovered) => ACHIEVEMENT_SPECIES_GROUPS.mamiferos.every(id => discovered.includes(id))
+    },
+    {
+        id: 'cazador_fotografico',
+        name: 'Cazador Fotográfico',
+        icon: '📸',
+        points: 100,
+        condition: (discovered, photoCount) => photoCount >= 5
+    },
+    {
+        id: 'explorador_completo',
+        name: 'Explorador Completo',
+        icon: '🏆',
+        points: 500,
+        condition: (discovered) => ALL_ANIMALS.length > 0 && discovered.length >= ALL_ANIMALS.length
+    }
+];
+
+// Puntaje acumulado (localStorage)
+function loadScore() {
+    return parseInt(localStorage.getItem('faunar_score') || '0', 10);
+}
+
+function addScore(points) {
+    const current = loadScore();
+    const updated = current + points;
+    localStorage.setItem('faunar_score', String(updated));
+    return updated;
+}
+
+// Logros desbloqueados (localStorage)
+function loadUnlockedAchievements() {
+    const saved = localStorage.getItem('faunar_achievements');
+    return saved ? JSON.parse(saved) : [];
+}
+
+function saveUnlockedAchievements(list) {
+    localStorage.setItem('faunar_achievements', JSON.stringify(list));
+}
+
+// Revisa condiciones de logros y desbloquea los que correspondan
+function checkAchievements() {
+    const discovered = loadDiscoveredAnimals();
+    const photoCount = capturedPhotos.length;
+    const unlocked = loadUnlockedAchievements();
+    let changed = false;
+
+    ACHIEVEMENTS.forEach(achievement => {
+        if (unlocked.includes(achievement.id)) return;
+        if (achievement.condition(discovered, photoCount)) {
+            unlocked.push(achievement.id);
+            addScore(achievement.points);
+            showAchievementUnlockedNotification(achievement);
+            changed = true;
+        }
+    });
+
+    if (changed) {
+        saveUnlockedAchievements(unlocked);
+    }
+}
+
+// Notificación visual al desbloquear un logro
+function showAchievementUnlockedNotification(achievement) {
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(180, 130, 40, 0.95);
+        color: white;
+        padding: 15px 25px;
+        border-radius: 12px;
+        z-index: 3100;
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        font-size: 16px;
+        text-align: center;
+    `;
+    notification.innerHTML = `
+        <div style="font-size: 32px; margin-bottom: 5px;">${achievement.icon}</div>
+        <div style="font-weight: bold; margin-bottom: 3px;">¡Logro desbloqueado!</div>
+        <div style="font-size: 14px; opacity: 0.95;">${achievement.name} · +${achievement.points} pts</div>
+    `;
+    document.body.appendChild(notification);
+    setTimeout(() => {
+        notification.style.transition = 'opacity 0.5s';
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 500);
+    }, 3200);
+}
 
 // Cargar todos los animales desde los configs
 async function loadAllAnimals() {
@@ -1562,6 +1836,10 @@ function unlockAnimal(animalId) {
     saveDiscoveredAnimals(discovered);
 
     console.log(`✅ ¡Nuevo animal descubierto: ${animalId}!`);
+
+    // Sumar puntaje y revisar logros
+    addScore(100);
+    checkAchievements();
 
     // Actualizar badge
     updateFieldJournalBadge();
@@ -1665,6 +1943,7 @@ window.closeFieldJournal = function() {
 // Renderizar contenido del diario
 async function renderFieldJournal() {
     await loadAllAnimals();
+    checkAchievements();
 
     const discovered = loadDiscoveredAnimals();
     const progressDiv = document.getElementById('animals-progress');
@@ -1685,7 +1964,11 @@ async function renderFieldJournal() {
                 ${percentage > 15 ? percentage + '%' : ''}
             </div>
         </div>
+        <div class="score-line">⭐ ${loadScore()} puntos</div>
     `;
+
+    renderAchievementsStrip(discovered);
+    renderMapPins(discovered);
 
     // Renderizar grid de animales
     gridDiv.innerHTML = '';
@@ -1718,6 +2001,87 @@ async function renderFieldJournal() {
         }
 
         gridDiv.appendChild(item);
+    });
+}
+
+// Ícono de un animal (silueta si existe, sino emoji) como HTML reutilizable
+function getAnimalIconHTML(animal) {
+    if (animal.silhouette) {
+        const silhouettePath = `models/${animal.id}/${animal.silhouette}`;
+        return `<img src="${silhouettePath}" alt="${animal.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                <div style="display:none; font-size:18px;">${animal.icon}</div>`;
+    }
+    return `<div style="font-size:18px;">${animal.icon}</div>`;
+}
+
+// Renderizar franja de logros
+function renderAchievementsStrip(discovered) {
+    const strip = document.getElementById('achievements-strip');
+    if (!strip) return;
+
+    const unlocked = loadUnlockedAchievements();
+    strip.innerHTML = '';
+
+    ACHIEVEMENTS.forEach(achievement => {
+        const isUnlocked = unlocked.includes(achievement.id);
+        const badge = document.createElement('div');
+        badge.className = `achievement-badge ${isUnlocked ? 'unlocked' : ''}`;
+        badge.title = achievement.name;
+        badge.innerHTML = `
+            <div class="achievement-icon">${achievement.icon}</div>
+            <div class="achievement-name">${achievement.name}</div>
+        `;
+        strip.appendChild(badge);
+    });
+}
+
+// Renderizar pines del mapa del sector, uno por especie con posición fija
+function renderMapPins(discovered) {
+    const pinsContainer = document.getElementById('map-pins');
+    if (!pinsContainer) return;
+
+    pinsContainer.innerHTML = '';
+
+    ALL_ANIMALS.forEach(animal => {
+        const pos = ANIMAL_MAP_POSITIONS[animal.id];
+        if (!pos) return; // especie sin posición asignada en el mapa
+
+        const isUnlocked = discovered.includes(animal.id);
+        const pin = document.createElement('div');
+        pin.className = `map-pin ${isUnlocked ? 'unlocked' : 'locked'}`;
+        pin.style.left = `${pos.x}%`;
+        pin.style.top = `${pos.y}%`;
+        pin.innerHTML = getAnimalIconHTML(animal);
+
+        const tooltip = document.getElementById('map-pin-tooltip');
+        pin.addEventListener('mouseenter', (e) => {
+            if (!tooltip) return;
+            tooltip.textContent = isUnlocked ? animal.name : '???';
+            tooltip.style.display = 'block';
+            const rect = pin.getBoundingClientRect();
+            tooltip.style.left = `${rect.left + rect.width / 2}px`;
+            tooltip.style.top = `${rect.top}px`;
+        });
+        pin.addEventListener('mouseleave', () => {
+            if (tooltip) tooltip.style.display = 'none';
+        });
+
+        if (isUnlocked) {
+            pin.onclick = () => showAnimalDetail(animal);
+        } else {
+            pin.onclick = () => {
+                if (tooltip) {
+                    tooltip.textContent = '??? aún no descubierto';
+                    tooltip.style.display = 'block';
+                    const rect = pin.getBoundingClientRect();
+                    tooltip.style.left = `${rect.left + rect.width / 2}px`;
+                    tooltip.style.top = `${rect.top}px`;
+                    setTimeout(() => { tooltip.style.display = 'none'; }, 1500);
+                }
+            };
+        }
+
+        pinsContainer.appendChild(pin);
     });
 }
 

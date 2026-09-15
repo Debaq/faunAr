@@ -19,21 +19,4 @@
     <path d="M 530 240 L 520 260 L 540 260 Z"/>
   </g>
 
-  <!-- Marcador de ubicación -->
-  <g transform="translate(300, 200)">
-    <circle cx="0" cy="0" r="30" fill="rgba(139, 69, 19, 0.3)" opacity="0.5">
-      <animate attributeName="r" from="30" to="50" dur="2s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" from="0.5" to="0" dur="2s" repeatCount="indefinite"/>
-    </circle>
-    <path d="M 0 -15 L -10 5 L 10 5 Z" fill="#d4a574"/>
-    <circle cx="0" cy="-20" r="8" fill="#8b4513"/>
-  </g>
-
-  <!-- Texto -->
-  <text x="300" y="360" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" fill="#d4a574" font-weight="bold">
-    Área de Exploración
-  </text>
-  <text x="300" y="385" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#a0a0a0" opacity="0.8">
-    Bosque Templado del Sur
-  </text>
 </svg>

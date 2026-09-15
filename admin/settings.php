@@ -205,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const config = settingsData.settings;
                 titleInput.value = config.site?.title || '';
                 baseUrlInput.value = config.site?.baseUrl || '';
-                footerTextInput.value = config.site?.footer_text || 'TecMedHub @ 2025';
+                footerTextInput.value = config.site?.footer_text || '© 2026 TecMedHub';
                 
                 colorStartInput.value = config.theme?.primary_gradient_start || '#2d5016';
                 colorEndInput.value = config.theme?.primary_gradient_end || '#1a2f0a';

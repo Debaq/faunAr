@@ -9,6 +9,10 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>FaunAR - Visor</title>
+    <meta name="description" content="Visor de realidad aumentada de FaunAR: observa fauna, flora y megafauna nativa de Chile en 3D desde tu navegador.">
+    <meta name="author" content="TecMedHub - Universidad Austral de Chile (Sede Puerto Montt)">
+    <meta name="robots" content="noindex, follow">
+    <link rel="canonical" href="https://tmeduca.org/faunAr/">
     <link rel="icon" type="image/png" href="assets/images/favicon.png">
     <link rel="stylesheet" href="css/viewer.css?v=5">
 
@@ -22,15 +26,22 @@
         <p id="loading-status">Iniciando</p>
         <button id="request-permissions-btn" style="display: none; margin-top: 20px; padding: 15px 30px; font-size: 18px; background: #2196F3; color: white; border: none; border-radius: 8px; cursor: pointer;" onclick="requestPermissionsFromUser()">Permitir Sensores</button>
         <button id="start-ar-btn" style="display: none; margin-top: 20px; padding: 15px 30px; font-size: 18px; background: #4CAF50; color: white; border: none; border-radius: 8px; cursor: pointer;" onclick="manualStartAR()">Iniciar AR</button>
+        <button id="view-3d-fallback-btn" style="display: none; margin-top: 14px; padding: 12px 24px; font-size: 15px; background: transparent; color: #d4a574; border: 2px solid #d4a574; border-radius: 8px; cursor: pointer;" onclick="showNoCameraViewer('manual')">📦 Ver el modelo en 3D (sin cámara)</button>
+        <p id="no-camera-hint" style="display: none; margin-top: 10px; font-size: 13px; color: rgba(255,255,255,0.7); max-width: 320px;">No encontramos una cámara en este equipo. Podés ver el modelo igual, girándolo con el mouse.</p>
     </div>
 
-    <button id="back-btn" onclick="window.location.href='index.html'">← Volver</button>
+    <!-- Aviso de modo 3D sin cámara (sin video de fondo) -->
+    <div id="fallback-mode-banner" style="display:none; position: fixed; top: 60px; left: 50%; transform: translateX(-50%); background: rgba(20,20,20,0.9); color: white; padding: 10px 18px; border-radius: 10px; font-size: 13px; z-index: 350; backdrop-filter: blur(10px); text-align: center; max-width: 85%; border: 1px solid rgba(255,255,255,0.15);">
+        📦 Vista 3D sin cámara — arrastrá para rotar el modelo
+    </div>
+
+    <button id="back-btn" onclick="window.location.href='index.html'" aria-label="Volver al portal">← Volver</button>
 
     <!-- Botón para mostrar/ocultar info -->
-    <button id="info-toggle-btn" onclick="toggleInfo()" style="position: fixed; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.6); color: white; border: none; padding: 10px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 300; width: 44px; height: 44px; backdrop-filter: blur(10px);">ℹ️</button>
+    <button id="info-toggle-btn" onclick="toggleInfo()" aria-label="Mostrar u ocultar información" style="position: fixed; top: 10px; right: 10px; background: rgba(0, 0, 0, 0.6); color: white; border: none; padding: 10px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 300; width: 44px; height: 44px; backdrop-filter: blur(10px);">ℹ️</button>
 
     <!-- Botón de control de audio -->
-    <button id="audio-control-btn" onclick="toggleAudio()" style="position: fixed; top: 60px; right: 10px; background: rgba(33, 150, 243, 0.8); color: white; border: none; padding: 10px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 300; width: 44px; height: 44px; backdrop-filter: blur(10px); display: none;">🔊</button>
+    <button id="audio-control-btn" onclick="toggleAudio()" aria-label="Reproducir o pausar sonido" style="position: fixed; top: 60px; right: 10px; background: rgba(33, 150, 243, 0.8); color: white; border: none; padding: 10px; border-radius: 50%; font-size: 18px; cursor: pointer; z-index: 300; width: 44px; height: 44px; backdrop-filter: blur(10px); display: none;">🔊</button>
 
     <!-- Instrucciones de modo 3D -->
     <div id="controls-hint" style="position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.85); color: white; padding: 15px 25px; border-radius: 12px; font-size: 14px; z-index: 400; backdrop-filter: blur(10px); display: none; text-align: center; max-width: 90%;">
@@ -43,7 +54,7 @@
     </div>
 
     <div id="info-panel">
-        <button onclick="toggleInfo()" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
+        <button onclick="toggleInfo()" aria-label="Cerrar información" style="position: absolute; top: 10px; right: 10px; background: transparent; border: none; color: white; font-size: 20px; cursor: pointer;">✕</button>
         <h3 id="animal-name"></h3>
         <p id="animal-scientific"></p>
         <div id="animal-details"></div>
@@ -56,10 +67,10 @@
 
     <!-- Controles de cámara tipo app móvil -->
     <div id="camera-controls">
-        <button id="gallery-btn" onclick="openGallery()"></button>
-        <button id="capture-btn" onclick="capturePhoto()"></button>
-        <button id="capture-model-btn" onclick="captureModel()" title="Capturar modelo"></button>
-        <button id="field-journal-btn" onclick="openFieldJournal()" title="Diario de campo">
+        <button id="gallery-btn" onclick="openGallery()" aria-label="Abrir galería de fotos"></button>
+        <button id="capture-btn" onclick="capturePhoto()" aria-label="Tomar foto"></button>
+        <button id="capture-model-btn" onclick="captureModel()" title="Capturar modelo" aria-label="Capturar modelo 3D"></button>
+        <button id="field-journal-btn" onclick="openFieldJournal()" title="Diario de campo" aria-label="Abrir diario de campo">
             📖
             <span id="field-journal-badge">0</span>
         </button>
@@ -70,12 +81,12 @@
 
     <!-- Preview de foto capturada -->
     <div id="photo-preview">
-        <button id="prev-photo-btn" onclick="navigatePhoto(-1)">❮</button>
+        <button id="prev-photo-btn" onclick="navigatePhoto(-1)" aria-label="Foto anterior">❮</button>
         <div id="photo-preview-content">
             <img id="preview-image" src="" alt="Foto capturada">
             <div id="photo-counter"></div>
         </div>
-        <button id="next-photo-btn" onclick="navigatePhoto(1)">❯</button>
+        <button id="next-photo-btn" onclick="navigatePhoto(1)" aria-label="Foto siguiente">❯</button>
         <div id="photo-preview-actions">
             <button id="download-btn" onclick="downloadPhoto()">Descargar</button>
             <button id="share-btn" onclick="sharePhoto()">Compartir</button>
@@ -87,7 +98,7 @@
     <div id="photo-gallery">
         <div id="photo-gallery-header">
             <h2>Mis Fotos AR</h2>
-            <button onclick="closeGallery()" style="background: transparent; border: none; color: white; font-size: 24px; cursor: pointer;">✕</button>
+            <button onclick="closeGallery()" aria-label="Cerrar galería" style="background: transparent; border: none; color: white; font-size: 24px; cursor: pointer;">✕</button>
         </div>
         <div id="photo-gallery-grid"></div>
     </div>
@@ -96,20 +107,27 @@
     <div id="field-journal">
         <div id="field-journal-header">
             <h2>📖 Diario de Campo</h2>
-            <button onclick="closeFieldJournal()" style="background: transparent; border: none; color: white; font-size: 24px; cursor: pointer;">✕</button>
+            <button onclick="closeFieldJournal()" aria-label="Cerrar diario de campo" style="background: transparent; border: none; color: white; font-size: 24px; cursor: pointer;">✕</button>
         </div>
         <div id="field-journal-content">
             <div id="field-journal-map">
                 <h3>Mapa del Sector</h3>
-                <img id="map-image" src="assets/images/map-placeholder.svg" alt="Mapa del área de exploración">
+                <div id="map-frame">
+                    <img id="map-image" src="assets/images/map-placeholder.svg" alt="Mapa del área de exploración">
+                    <div id="map-pins"></div>
+                </div>
             </div>
             <div id="field-journal-animals">
                 <h3>Fauna Descubierta</h3>
                 <div id="animals-progress"></div>
+                <div id="achievements-strip"></div>
                 <div id="animals-grid"></div>
             </div>
         </div>
     </div>
+
+    <!-- Tooltip de pin del mapa (nombre del animal al tocar un pin) -->
+    <div id="map-pin-tooltip"></div>
 
     <a-scene
         id="ar-scene"

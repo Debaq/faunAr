@@ -62,6 +62,11 @@ async function loadProjects() {
             return;
         }
 
+        // El catálogo dinámico cargó con éxito: ya no hace falta el listado
+        // estático de respaldo (queda en el HTML servido para lectores sin JS).
+        const staticCatalog = document.getElementById('static-catalog');
+        if (staticCatalog) staticCatalog.remove();
+
         // Limpiar array de modelos
         allModelsData = [];
 

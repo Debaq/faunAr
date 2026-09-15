@@ -6,7 +6,19 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>El Nudo</title>
+<title>El Nudo — FaunAR</title>
+<meta name="description" content="Realidad aumentada con reconocimiento de mano: el Nudo de Monte Verde aparece en 3D sostenido sobre tu propia palma, sin marcador impreso.">
+<meta name="author" content="TecMedHub - Universidad Austral de Chile (Sede Puerto Montt)">
+<meta name="keywords" content="El Nudo, Monte Verde, realidad aumentada, hand tracking, MediaPipe, FaunAR">
+<link rel="canonical" href="https://tmeduca.org/faunAr/demo/nudo/">
+<meta property="og:title" content="El Nudo — FaunAR">
+<meta property="og:description" content="Realidad aumentada con reconocimiento de mano: el Nudo de Monte Verde aparece en 3D sostenido sobre tu propia palma.">
+<meta property="og:image" content="https://tmeduca.org/faunAr/assets/images/logo_faunar.png">
+<meta property="og:url" content="https://tmeduca.org/faunAr/demo/nudo/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="El Nudo — FaunAR">
+<meta name="twitter:description" content="Realidad aumentada con reconocimiento de mano, sin marcador impreso.">
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/meshoptimizer@0.18.1/meshopt_decoder.js"></script>
 <script>
@@ -124,12 +136,49 @@
   }
   #nudoInfo.visible { opacity: 1; }
   #nudoInfo strong { color: #ffcf6b; }
+
+  .sr-only {
+    position: absolute;
+    width: 1px; height: 1px;
+    padding: 0; margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  #fallbackCamara {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    background: rgba(0,0,0,0.92);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    font-family: sans-serif;
+    text-align: center;
+  }
+  #fallbackCamara[hidden] { display: none; }
+  #fallbackCamara .tarjetaFallback { max-width: 320px; }
+  #fallbackCamara p { line-height: 1.5; margin-bottom: 14px; }
+  #fallbackCamara a { display: inline-block; color: #ffcf6b; text-decoration: underline; }
 </style>
 </head>
 <body style="margin:0; overflow: hidden;">
 
 <a id="volver" href="../">← Volver</a>
-<div id="ayuda">Muestra tu palma para sostener el nudo</div>
+<h1 class="sr-only">El Nudo en realidad aumentada</h1>
+<div id="ayuda">Esta página pide acceso a tu cámara para reconocer tu mano. Mostrá tu palma para sostener el nudo.</div>
+
+<div id="fallbackCamara" hidden role="alert">
+  <div class="tarjetaFallback">
+    <p>No pudimos acceder a tu cámara. Puede que hayas rechazado el permiso o que el dispositivo no sea compatible con reconocimiento de mano.</p>
+    <p>Revisá los permisos de cámara del navegador y volvé a intentarlo.</p>
+    <a href="../">← Volver al portal de demostraciones</a>
+  </div>
+</div>
 
 <video id="camVideo" autoplay playsinline muted style="position:fixed;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;background:#000;"></video>
 
@@ -303,7 +352,16 @@
       'MARKER_SCALE_MULT: ' + MARKER_SCALE_MULT;
   }
 
+  function showCameraFallback() {
+    var fallback = document.getElementById('fallbackCamara');
+    if (fallback) fallback.hidden = false;
+  }
+
   function setupCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showCameraFallback();
+      return;
+    }
     navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false })
       .then(function (stream) {
         var v = document.getElementById('camVideo');
@@ -311,6 +369,7 @@
       })
       .catch(function (err) {
         console.error('camera error:', err);
+        showCameraFallback();
       });
   }
 

@@ -1,2 +1,7 @@
-Order deny,allow
-Deny from all
+### Solo bloquear los archivos sensibles. El resto de /data/ lo leen
+### directamente el portal y el visor desde el navegador (fetch de JS):
+### categories.json, config.json, instances.json, places.json, i18n/*.json.
+<FilesMatch "^(users|roadmap)\.json$">
+    Order deny,allow
+    Deny from all
+</FilesMatch>

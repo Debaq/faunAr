@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let footerHtml = `
             <div style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 15px;">
                 <img src="https://www.uach.cl/uach/_imag/uach/logo-v2.png" alt="Logo UACh">
-                <img src="assets/images/logo.png" alt="Logo TecMedHub">
+                <img src="assets/images/logo.webp" alt="Logo TecMedHub">
             </div>
         `;
         if (data.contact_info && data.contact_info.institution) {

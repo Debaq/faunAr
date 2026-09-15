@@ -4,14 +4,14 @@
   "name": "Huillín",
   "scientificName": "Lontra provocax",
   "description": "El huillín es una especie de nutria endémica de Chile. Habita en ríos, lagos y costas del sur del país, y es conocido por su agilidad tanto en el agua como en tierra. Su estado de conservación es crítico debido a la pérdida de hábitat y la contaminación.",
-  "thumbnail": "thumbnail.jpg",
+  "thumbnail": "thumbnail.webp",
   "icon": "🦦",
   "silhouette": "silueta_huillin.svg",
   "arMode": "hybrid",
   "gps": {
     "enabled": false,
-    "latitude": -40.0000,
-    "longitude": -73.5000,
+    "latitude": -40.0,
+    "longitude": -73.5,
     "radius": 50
   },
   "marker": {
@@ -36,5 +36,5 @@
     "status": "Críticamente amenazado",
     "wikipedia": "https://es.wikipedia.org/wiki/Lontra_provocax"
   },
-  "image": "imagen_huillin.png"
+  "image": "imagen_huillin.webp"
 }
