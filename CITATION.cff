@@ -17,15 +17,19 @@ abstract: >-
   (Sede Puerto Montt).
 authors:
   - family-names: Baier-Quezada
+    orcid: "https://orcid.org/0000-0003-2818-0990"
     given-names: Nicolás
     affiliation: Universidad Austral de Chile
   - family-names: Uribe-Hernandez
+    orcid: "https://orcid.org/0009-0003-0795-7921"
     given-names: Vanessa
     affiliation: Universidad Austral de Chile
   - family-names: Lopez-Moncada
+    orcid: "https://orcid.org/0000-0002-0810-7684"
     given-names: Fernanda
     affiliation: Universidad Austral de Chile
-  - family-names: Barrietos-Toledo
+  - family-names: Barrientos-Toledo
+    orcid: "https://orcid.org/0000-0002-3306-4161"
     given-names: Haydee
     affiliation: Universidad Austral de Chile
 keywords:
