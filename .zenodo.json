@@ -1,0 +1,50 @@
+{
+  "title": "FaunAR: plataforma web de realidad aumentada para la divulgación de fauna, flora y megafauna nativa de Chile",
+  "upload_type": "software",
+  "version": "v1.0.0",
+  "publication_date": "2026-09-25",
+  "language": "spa",
+  "license": "MIT",
+  "access_right": "open",
+  "description": "<p>FaunAR es una plataforma web de Realidad Aumentada (RA) orientada a la educación ambiental y la divulgación científica, que permite explorar fauna, flora y megafauna nativa de Chile, así como patrimonio cultural local, directamente desde el navegador del teléfono o el computador, sin instalar aplicaciones.</p><p>El sistema combina varios modos de activación de RA: por geolocalización (GPS y brújula), por marcador de imagen (MindAR), por marcador impreso (AR.js), de superficie sin marcador (WebXR / Quick Look mediante &lt;model-viewer&gt;), por reconocimiento de mano (MediaPipe Hands) y panoramas 360° navegables con el giroscopio. Incluye un portal con un catálogo de 16 especies, un visor AR universal, un panel de administración y demostraciones de patrimonio natural y cultural de Puerto Montt (El Nudo de Monte Verde, Chilesaurus diegosuarezi, Gonfoterio y Casa Pauli).</p><p>Desarrollado por TecMedHub (Laboratorio de Prototipado Avanzado de la Universidad Austral de Chile, Sede Puerto Montt). Implementación inicial centrada en el sendero del Parque Laguna Azul, Región de Los Lagos, Chile.</p>",
+  "creators": [
+    {
+      "name": "Baier-Quezada, Nicolás",
+      "affiliation": "Universidad Austral de Chile"
+    },
+    {
+      "name": "Uribe-Hernandez, Vanessa",
+      "affiliation": "Universidad Austral de Chile"
+    },
+    {
+      "name": "Lopez-Moncada, Fernanda",
+      "affiliation": "Universidad Austral de Chile"
+    },
+    {
+      "name": "Barrietos-Toledo, Haydee",
+      "affiliation": "Universidad Austral de Chile"
+    }
+  ],
+  "keywords": [
+    "realidad aumentada",
+    "augmented reality",
+    "WebAR",
+    "WebXR",
+    "educación ambiental",
+    "biodiversidad",
+    "fauna nativa",
+    "Chile",
+    "divulgación científica",
+    "patrimonio cultural",
+    "A-Frame",
+    "MindAR",
+    "AR.js"
+  ],
+  "related_identifiers": [
+    {
+      "identifier": "https://github.com/Debaq/faunAr",
+      "relation": "isSupplementTo",
+      "resource_type": "software"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+cff-version: 1.2.0
+message: "Si utiliza este software, por favor cítelo usando los siguientes metadatos."
+title: "FaunAR: plataforma web de realidad aumentada para la divulgación de fauna, flora y megafauna nativa de Chile"
+type: software
+version: v1.0.0
+date-released: 2026-09-25
+license: MIT
+repository-code: "https://github.com/Debaq/faunAr"
+abstract: >-
+  FaunAR es una plataforma web de Realidad Aumentada orientada a la educación
+  ambiental y la divulgación científica, que permite explorar fauna, flora y
+  megafauna nativa de Chile, así como patrimonio cultural local, desde el
+  navegador sin instalar aplicaciones. Combina RA por geolocalización, por
+  marcador de imagen (MindAR), por marcador impreso (AR.js), de superficie
+  (WebXR / Quick Look), por reconocimiento de mano (MediaPipe Hands) y
+  panoramas 360°. Desarrollado por TecMedHub, Universidad Austral de Chile
+  (Sede Puerto Montt).
+authors:
+  - family-names: Baier-Quezada
+    given-names: Nicolás
+    affiliation: Universidad Austral de Chile
+  - family-names: Uribe-Hernandez
+    given-names: Vanessa
+    affiliation: Universidad Austral de Chile
+  - family-names: Lopez-Moncada
+    given-names: Fernanda
+    affiliation: Universidad Austral de Chile
+  - family-names: Barrietos-Toledo
+    given-names: Haydee
+    affiliation: Universidad Austral de Chile
+keywords:
+  - realidad aumentada
+  - augmented reality
+  - WebAR
+  - WebXR
+  - educación ambiental
+  - biodiversidad
+  - fauna nativa
+  - Chile
+  - divulgación científica
+  - patrimonio cultural
